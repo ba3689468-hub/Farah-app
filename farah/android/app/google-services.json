@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "665183433574",
+    "project_id": "farah-app-caa99",
+    "storage_bucket": "farah-app-caa99.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:665183433574:android:bbe084ea9f77fde3eccea7",
+        "android_client_info": {
+          "package_name": "com.farah.farah"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDPADtr2bc_gI7yitbKEEBSiBsNtyTeD8Q"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
