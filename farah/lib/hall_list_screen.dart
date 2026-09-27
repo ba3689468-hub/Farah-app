@@ -10,10 +10,10 @@ class HallListScreen extends StatefulWidget {
 }
 
 class _HallListScreenState extends State<HallListScreen> {
-  static const Color gold      = Color(0xFF876747);
+  static const Color gold      = Color(0xFF532527);
   static const Color lightGold = Color(0xFFE3DAD3);
   static const Color rose      = Color(0xFFE3DAD3);
-  static const Color deepRose  = Color(0xFF876747);
+  static const Color deepRose  = Color(0xFF532527);
   static const Color cream     = Color(0xFFF3E7E4);
   static const Color chocolate = Color(0xFF532527);
 
@@ -431,9 +431,9 @@ class _HallListScreenState extends State<HallListScreen> {
 class SimpleProfileScreen extends StatelessWidget {
   const SimpleProfileScreen({super.key});
 
-  static const Color gold      = Color(0xFF876747);
+  static const Color gold      = Color(0xFF532527);
   static const Color lightGold = Color(0xFFE3DAD3);
-  static const Color deepRose  = Color(0xFF876747);
+  static const Color deepRose  = Color(0xFF532527);
   static const Color cream     = Color(0xFFF3E7E4);
   static const Color chocolate = Color(0xFF532527);
 
@@ -477,11 +477,11 @@ class SimpleProfileScreen extends StatelessWidget {
                         padding: const EdgeInsets.symmetric(vertical: 14),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(14),
-                          side: const BorderSide(color: Color(0xFF876747), width: 1.2),
+                          side: const BorderSide(color: Color(0xFF532527), width: 1.2),
                         ),
                       ),
                       child: const Text('إلغاء',
-                        style: TextStyle(color: Color(0xFF876747), fontWeight: FontWeight.bold)),
+                        style: TextStyle(color: Color(0xFF532527), fontWeight: FontWeight.bold)),
                     ),
                   ),
                   const SizedBox(width: 12),
