@@ -80,40 +80,47 @@ class _HallListScreenState extends State<HallListScreen> {
   }
 
   Widget _buildTopBar() {
-    final user = FirebaseAuth.instance.currentUser;
-    final name = user?.displayName ?? 'مرحباً';
-    return Container(
-      padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
-      child: Row(
-        children: [
-          Container(
-            width: 46, height: 46,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              gradient: const LinearGradient(
-                colors: [gold, deepRose],
-                begin: Alignment.topLeft, end: Alignment.bottomRight,
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    return FutureBuilder<DocumentSnapshot>(
+      future: uid == null ? null : FirebaseFirestore.instance.collection('users').doc(uid).get(),
+      builder: (context, snap) {
+        String name = 'مرحباً';
+        if (snap.hasData && snap.data != null && snap.data!.exists) {
+          final data = snap.data!.data() as Map<String, dynamic>;
+          name = (data['fullName'] ?? 'مرحباً').toString();
+        }
+        return Container(
+          padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
+          child: Row(
+            children: [
+              Container(
+                width: 46, height: 46,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: const LinearGradient(
+                    colors: [gold, deepRose],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  boxShadow: [BoxShadow(color: gold.withOpacity(0.4), blurRadius: 10, offset: const Offset(0, 3))],
+                ),
+                child: const Icon(Icons.person, color: Colors.white, size: 26),
               ),
-              boxShadow: [BoxShadow(color: gold.withOpacity(0.4), blurRadius: 10, offset: const Offset(0, 3))],
-            ),
-            child: const Icon(Icons.person, color: Colors.white, size: 26),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text('مرحباً بك في فرح', style: TextStyle(color: chocolate, fontSize: 12)),
+                    Text(name, style: const TextStyle(color: chocolate, fontSize: 17, fontWeight: FontWeight.bold)),
+                  ],
+                ),
+              ),
+              IconButton(onPressed: _logout, icon: const Icon(Icons.logout, color: deepRose)),
+            ],
           ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text('مرحباً بك في', style: TextStyle(color: chocolate, fontSize: 12)),
-                Text(name, style: const TextStyle(color: chocolate, fontSize: 17, fontWeight: FontWeight.bold)),
-              ],
-            ),
-          ),
-          IconButton(
-            onPressed: _logout,
-            icon: const Icon(Icons.logout, color: deepRose),
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 
