@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'features/auth/presentation/screens/role_select_screen.dart';
 import 'hall_list_screen.dart';
+import 'core/constants/app_colors.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -10,84 +12,107 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final TextEditingController _emailController = TextEditingController();
-  final TextEditingController _passwordController = TextEditingController();
+  final _emailCtrl = TextEditingController();
+  final _passCtrl = TextEditingController();
   bool _isLoading = false;
-  String? _errorMessage;
+  String? _error;
 
   Future<void> _login() async {
-    setState(() {
-      _isLoading = true;
-      _errorMessage = null;
-    });
+    setState(() { _isLoading = true; _error = null; });
 
     try {
       await FirebaseAuth.instance.signInWithEmailAndPassword(
-        email: _emailController.text.trim(),
-        password: _passwordController.text.trim(),
+        email: _emailCtrl.text.trim(),
+        password: _passCtrl.text.trim(),
       );
-      
       if (mounted) {
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => const HallListScreen()),
+          MaterialPageRoute(builder: (_) => const HallListScreen()),
         );
       }
     } on FirebaseAuthException catch (e) {
       setState(() {
         if (e.code == 'user-not-found') {
-          _errorMessage = 'لا يوجد حساب بهذا البريد الإلكتروني.';
+          _error = 'لا يوجد حساب بهذا البريد.';
         } else if (e.code == 'wrong-password') {
-          _errorMessage = 'كلمة المرور غير صحيحة.';
+          _error = 'كلمة المرور غير صحيحة.';
         } else if (e.code == 'invalid-email') {
-          _errorMessage = 'البريد الإلكتروني غير صالح.';
+          _error = 'البريد الإلكتروني غير صالح.';
         } else {
-          _errorMessage = 'حدث خطأ: ${e.message}';
+          _error = 'حدث خطأ: ${e.message}';
         }
       });
     } catch (e) {
-      setState(() {
-        _errorMessage = 'حدث خطأ غير متوقع.';
-      });
+      setState(() => _error = 'حدث خطأ غير متوقع.');
     } finally {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-      }
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('تسجيل الدخول'), backgroundColor: Colors.pinkAccent),
-      body: Padding(
-        padding: const EdgeInsets.all(20.0),
+      appBar: AppBar(title: const Text('تسجيل الدخول')),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(24),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
           children: [
+            const SizedBox(height: 40),
+            Icon(Icons.celebration,
+                size: 90, color: AppColors.goldPrimary),
+            const SizedBox(height: 20),
+            Text(
+              'مرحباً بك في فرح',
+              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                    color: AppColors.goldPrimary,
+                    fontWeight: FontWeight.bold,
+                  ),
+            ),
+            const SizedBox(height: 40),
+
             TextField(
-              controller: _emailController,
+              controller: _emailCtrl,
               keyboardType: TextInputType.emailAddress,
-              decoration: const InputDecoration(labelText: 'البريد الإلكتروني', border: OutlineInputBorder()),
+              decoration: const InputDecoration(labelText: 'البريد الإلكتروني'),
             ),
             const SizedBox(height: 15),
             TextField(
-              controller: _passwordController,
+              controller: _passCtrl,
               obscureText: true,
-              decoration: const InputDecoration(labelText: 'كلمة المرور', border: OutlineInputBorder()),
+              decoration: const InputDecoration(labelText: 'كلمة المرور'),
             ),
             const SizedBox(height: 20),
-            if (_errorMessage != null)
-              Text(_errorMessage!, style: const TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 10),
+
+            if (_error != null)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 10),
+                child: Text(_error!,
+                    style: const TextStyle(
+                        color: AppColors.error, fontWeight: FontWeight.bold)),
+              ),
+
             ElevatedButton(
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.pinkAccent, minimumSize: const Size(double.infinity, 50)),
               onPressed: _isLoading ? null : _login,
-              child: _isLoading 
-                ? const CircularProgressIndicator(color: Colors.white)
-                : const Text('دخول', style: TextStyle(color: Colors.white, fontSize: 18)),
+              child: _isLoading
+                  ? const CircularProgressIndicator(color: Colors.white)
+                  : const Text('دخول'),
+            ),
+            const SizedBox(height: 15),
+
+            // ⭐ زر الانتقال لإنشاء حساب جديد
+            TextButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (_) => const RoleSelectScreen()),
+                );
+              },
+              child: const Text(
+                'ليس لديك حساب؟ سجّل الآن',
+                style: TextStyle(color: AppColors.goldPrimary, fontSize: 16),
+              ),
             ),
           ],
         ),
