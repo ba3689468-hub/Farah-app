@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'login_screen.dart';
+import 'profile_screen.dart';
 
 class HallListScreen extends StatefulWidget {
   const HallListScreen({super.key});
@@ -415,7 +416,16 @@ class _HallListScreenState extends State<HallListScreen> {
       ),
       child: BottomNavigationBar(
         currentIndex: _currentIndex,
-        onTap: (i) => setState(() => _currentIndex = i),
+        onTap: (i) {
+          if (i == 3) {
+              Navigator.push(
+                    context,
+                          MaterialPageRoute(builder: (_) => const ProfileScreen()),
+                              );
+                                  return;
+                                    }
+                                      setState(() => _currentIndex = i);
+                                      },
         backgroundColor: Colors.transparent,
         elevation: 0,
         selectedItemColor: deepRose,
