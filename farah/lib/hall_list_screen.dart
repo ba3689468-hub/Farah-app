@@ -440,24 +440,70 @@ class SimpleProfileScreen extends StatelessWidget {
   Future<void> _logout(BuildContext context) async {
     final confirm = await showDialog<bool>(
       context: context,
-      builder: (_) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text('تسجيل الخروج', textAlign: TextAlign.right),
-        content: const Text('هل أنت متأكد؟', textAlign: TextAlign.right),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('إلغاء'),
+      builder: (_) => Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        backgroundColor: const Color(0xFFFFF8F0),
+        child: Padding(
+          padding: const EdgeInsets.all(22),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 64, height: 64,
+                decoration: BoxDecoration(
+                  color: Colors.redAccent.withOpacity(0.12),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.logout, color: Colors.redAccent, size: 30),
+              ),
+              const SizedBox(height: 16),
+              const Text('تسجيل الخروج',
+                style: TextStyle(
+                  color: Color(0xFF3E2723),
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                )),
+              const SizedBox(height: 8),
+              const Text('هل أنت متأكد من تسجيل الخروج؟',
+                textAlign: TextAlign.center,
+                style: TextStyle(color: Colors.black54, fontSize: 14)),
+              const SizedBox(height: 22),
+              Row(
+                children: [
+                  Expanded(
+                    child: TextButton(
+                      onPressed: () => Navigator.pop(context, false),
+                      style: TextButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
+                          side: const BorderSide(color: Color(0xFFB76E79), width: 1.2),
+                        ),
+                      ),
+                      child: const Text('إلغاء',
+                        style: TextStyle(color: Color(0xFFB76E79), fontWeight: FontWeight.bold)),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () => Navigator.pop(context, true),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.redAccent,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                        elevation: 0,
+                      ),
+                      child: const Text('خروج',
+                        style: TextStyle(fontWeight: FontWeight.bold)),
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.redAccent,
-              foregroundColor: Colors.white,
-            ),
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('خروج'),
-          ),
-        ],
+        ),
       ),
     );
     if (confirm != true) return;
