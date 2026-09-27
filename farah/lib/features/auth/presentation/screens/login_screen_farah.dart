@@ -1,17 +1,23 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../providers/auth_provider.dart';
 
-class FarahGlassLoginScreen extends StatefulWidget {
+class FarahGlassLoginScreen extends ConsumerStatefulWidget {
   const FarahGlassLoginScreen({super.key});
 
   @override
-  State<FarahGlassLoginScreen> createState() => _FarahGlassLoginScreenState();
+  ConsumerState<FarahGlassLoginScreen> createState() => _FarahGlassLoginScreenState();
 }
 
-class _FarahGlassLoginScreenState extends State<FarahGlassLoginScreen> {
+class _FarahGlassLoginScreenState extends ConsumerState<FarahGlassLoginScreen> {
   final _userCtrl = TextEditingController();
   final _passCtrl = TextEditingController();
+  final _formKey = GlobalKey<FormState>();
+
   bool _obscure = true;
   bool _remember = false;
+  bool _loading = false;
+  String? _error;
 
   static const Color gold      = Color(0xFFD4AF37);
   static const Color lightGold = Color(0xFFF4E5B1);
@@ -25,6 +31,34 @@ class _FarahGlassLoginScreenState extends State<FarahGlassLoginScreen> {
     _userCtrl.dispose();
     _passCtrl.dispose();
     super.dispose();
+  }
+
+  Future<void> _login() async {
+    if (!_formKey.currentState!.validate()) return;
+    FocusScope.of(context).unfocus();
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
+
+    try {
+      final repo = ref.read(authRepositoryProvider);
+      await repo.signIn(_userCtrl.text.trim(), _passCtrl.text.trim());
+    } catch (e) {
+      setState(() => _error = _translateError(e.toString()));
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  String _translateError(String msg) {
+    if (msg.contains('user-not-found')) return 'لا يوجد حساب بهذا البريد';
+    if (msg.contains('wrong-password')) return 'كلمة المرور غير صحيحة';
+    if (msg.contains('invalid-email')) return 'البريد الإلكتروني غير صالح';
+    if (msg.contains('invalid-credential')) return 'بيانات الدخول غير صحيحة';
+    if (msg.contains('too-many-requests')) return 'محاولات كثيرة، حاول لاحقاً';
+    if (msg.contains('network-request-failed')) return 'تحقق من اتصال الإنترنت';
+    return 'حدث خطأ، حاول مرة أخرى';
   }
 
   @override
@@ -43,7 +77,10 @@ class _FarahGlassLoginScreenState extends State<FarahGlassLoginScreen> {
           child: Center(
             child: SingleChildScrollView(
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
-              child: _buildGlassCard(context),
+              child: Form(
+                key: _formKey,
+                child: _buildGlassCard(context),
+              ),
             ),
           ),
         ),
@@ -74,7 +111,7 @@ class _FarahGlassLoginScreenState extends State<FarahGlassLoginScreen> {
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
-                colors: [cream.withOpacity(0.80), rose.withOpacity(0.70)],
+                colors: [cream.withOpacity(0.85), rose.withOpacity(0.75)],
               ),
               borderRadius: const BorderRadius.only(
                 topLeft: Radius.circular(80),
@@ -100,12 +137,33 @@ class _FarahGlassLoginScreenState extends State<FarahGlassLoginScreen> {
                   ),
                 ),
                 const SizedBox(height: 28),
-                _glassField(controller: _userCtrl, hint: 'البريد الإلكتروني أو الهاتف', icon: Icons.person_outline),
+                _glassField(
+                  controller: _userCtrl,
+                  hint: 'البريد الإلكتروني',
+                  icon: Icons.person_outline,
+                  keyboardType: TextInputType.emailAddress,
+                  validator: (v) {
+                    if (v == null || v.isEmpty) return 'البريد مطلوب';
+                    if (!v.contains('@')) return 'بريد غير صالح';
+                    return null;
+                  },
+                ),
                 const SizedBox(height: 18),
                 _glassField(
-                  controller: _passCtrl, hint: '••••••••••••••', icon: Icons.lock_outline, obscure: _obscure,
+                  controller: _passCtrl,
+                  hint: '••••••••••••••',
+                  icon: Icons.lock_outline,
+                  obscure: _obscure,
+                  validator: (v) {
+                    if (v == null || v.isEmpty) return 'كلمة المرور مطلوبة';
+                    if (v.length < 6) return 'كلمة المرور قصيرة';
+                    return null;
+                  },
                   suffix: IconButton(
-                    icon: Icon(_obscure ? Icons.visibility_outlined : Icons.visibility_off_outlined, color: chocolate, size: 20),
+                    icon: Icon(
+                      _obscure ? Icons.visibility_outlined : Icons.visibility_off_outlined,
+                      color: chocolate, size: 20,
+                    ),
                     onPressed: () => setState(() => _obscure = !_obscure),
                   ),
                 ),
@@ -114,7 +172,8 @@ class _FarahGlassLoginScreenState extends State<FarahGlassLoginScreen> {
                   SizedBox(
                     height: 22, width: 22,
                     child: Checkbox(
-                      value: _remember, onChanged: (v) => setState(() => _remember = v!),
+                      value: _remember,
+                      onChanged: _loading ? null : (v) => setState(() => _remember = v!),
                       activeColor: deepRose, checkColor: Colors.white,
                       side: BorderSide(color: chocolate.withOpacity(0.6), width: 1.5),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
@@ -124,13 +183,42 @@ class _FarahGlassLoginScreenState extends State<FarahGlassLoginScreen> {
                   const Text('تذكرني', style: TextStyle(color: chocolate, fontSize: 13)),
                   const Spacer(),
                   TextButton(
-                    onPressed: () {},
-                    style: TextButton.styleFrom(padding: EdgeInsets.zero, minimumSize: const Size(0, 0), tapTargetSize: MaterialTapTargetSize.shrinkWrap),
+                    onPressed: _loading ? null : () {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('قريباً: استعادة كلمة المرور')),
+                      );
+                    },
+                    style: TextButton.styleFrom(
+                      padding: EdgeInsets.zero,
+                      minimumSize: const Size(0, 0),
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    ),
                     child: const Text('نسيت كلمة المرور؟',
-                      style: TextStyle(color: deepRose, fontSize: 13, fontWeight: FontWeight.w600,
-                        decoration: TextDecoration.underline, decorationColor: deepRose)),
+                      style: TextStyle(color: deepRose, fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        decoration: TextDecoration.underline,
+                        decorationColor: deepRose)),
                   ),
                 ]),
+                if (_error != null) ...[
+                  const SizedBox(height: 14),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                    decoration: BoxDecoration(
+                      color: Colors.red.withOpacity(0.12),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: Colors.red.withOpacity(0.4)),
+                    ),
+                    child: Row(children: [
+                      const Icon(Icons.error_outline, color: Colors.red, size: 20),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(_error!,
+                          style: const TextStyle(color: Colors.red, fontSize: 13)),
+                      ),
+                    ]),
+                  ),
+                ],
                 const SizedBox(height: 26),
                 Container(
                   width: 200, height: 54,
@@ -146,29 +234,43 @@ class _FarahGlassLoginScreenState extends State<FarahGlassLoginScreen> {
                     color: Colors.transparent,
                     child: InkWell(
                       borderRadius: BorderRadius.circular(30),
-                      onTap: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('سيتم ربط الزر بـ Firebase لاحقاً')),
-                        );
-                      },
-                      child: const Center(
-                        child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-                          Icon(Icons.celebration, color: Colors.white, size: 20),
-                          SizedBox(width: 10),
-                          Text('دخول', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 17, letterSpacing: 2)),
-                        ]),
+                      onTap: _loading ? null : _login,
+                      child: Center(
+                        child: _loading
+                          ? const SizedBox(
+                              height: 24, width: 24,
+                              child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5),
+                            )
+                          : const Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(Icons.celebration, color: Colors.white, size: 20),
+                                SizedBox(width: 10),
+                                Text('دخول',
+                                  style: TextStyle(color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 17, letterSpacing: 2)),
+                              ],
+                            ),
                       ),
                     ),
                   ),
                 ),
                 const SizedBox(height: 18),
                 Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-                  Text('ليس لديك حساب؟ ', style: TextStyle(color: chocolate.withOpacity(0.75), fontSize: 13)),
+                  Text('ليس لديك حساب؟ ',
+                    style: TextStyle(color: chocolate.withOpacity(0.75), fontSize: 13)),
                   GestureDetector(
-                    onTap: () {},
+                    onTap: _loading ? null : () {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('قريباً: شاشة التسجيل')),
+                      );
+                    },
                     child: const Text('أنشئ حساباً الآن',
-                      style: TextStyle(color: deepRose, fontSize: 13, fontWeight: FontWeight.bold,
-                        decoration: TextDecoration.underline, decorationColor: deepRose)),
+                      style: TextStyle(color: deepRose, fontSize: 13,
+                        fontWeight: FontWeight.bold,
+                        decoration: TextDecoration.underline,
+                        decorationColor: deepRose)),
                   ),
                 ]),
               ],
@@ -205,9 +307,10 @@ class _FarahGlassLoginScreenState extends State<FarahGlassLoginScreen> {
     required IconData icon,
     bool obscure = false,
     Widget? suffix,
+    TextInputType? keyboardType,
+    String? Function(String?)? validator,
   }) {
     return Container(
-      height: 58,
       decoration: BoxDecoration(
         color: Colors.white.withOpacity(0.35),
         borderRadius: BorderRadius.circular(30),
@@ -230,16 +333,20 @@ class _FarahGlassLoginScreenState extends State<FarahGlassLoginScreen> {
         ),
         const SizedBox(width: 12),
         Expanded(
-          child: TextField(
+          child: TextFormField(
             controller: controller,
             obscureText: obscure,
+            keyboardType: keyboardType,
+            validator: validator,
+            enabled: !_loading,
             textAlign: TextAlign.right,
             style: const TextStyle(color: chocolate, fontSize: 15, fontWeight: FontWeight.w500),
             decoration: InputDecoration(
               hintText: hint,
               hintStyle: TextStyle(color: chocolate.withOpacity(0.55), fontSize: 14),
+              errorStyle: const TextStyle(color: Colors.red, fontSize: 11, height: 0.8),
               border: InputBorder.none, enabledBorder: InputBorder.none, focusedBorder: InputBorder.none,
-              isDense: true, contentPadding: EdgeInsets.zero,
+              isDense: true, contentPadding: const EdgeInsets.symmetric(vertical: 14),
             ),
           ),
         ),
