@@ -79,7 +79,7 @@ class _FarahGlassLoginScreenState extends ConsumerState<FarahGlassLoginScreen> {
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [Color(0xFFF3E7E4), Color(0xFFE3DAD3), Color(0xFF874744)],,
+            colors: [Color(0xFFF3E7E4), Color(0xFFE3DAD3), Color(0xFF874744)],
             stops: [0.0, 0.5, 1.0],
           ),
         ),
@@ -234,7 +234,7 @@ class _FarahGlassLoginScreenState extends ConsumerState<FarahGlassLoginScreen> {
                   width: 200, height: 54,
                   decoration: BoxDecoration(
                     gradient: const LinearGradient(
-                      colors: [Color(0xFF532527), Color(0xFF874744)],,
+                      colors: [Color(0xFF532527), Color(0xFF874744), Color(0xFFE3DAD3)],
                       begin: Alignment.centerLeft, end: Alignment.centerRight,
                     ),
                     borderRadius: BorderRadius.circular(30),
@@ -296,7 +296,7 @@ class _FarahGlassLoginScreenState extends ConsumerState<FarahGlassLoginScreen> {
               child: ShaderMask(
                 shaderCallback: (bounds) => const LinearGradient(
                   begin: Alignment.topCenter, end: Alignment.bottomCenter,
-                  colors: [Color(0xFF532527), Color(0xFF532527)],
+                  colors: [Color(0xFF532527), Color(0xFF532527), Color(0xFFE3DAD3)],
                 ).createShader(bounds),
                 child: const Icon(Icons.person, size: 55, color: Colors.white),
               ),
@@ -329,7 +329,7 @@ class _FarahGlassLoginScreenState extends ConsumerState<FarahGlassLoginScreen> {
           width: 46, height: 46,
           decoration: BoxDecoration(
             gradient: const LinearGradient(
-              colors: [Color(0xFF532527), Color(0xFF532527)],
+              colors: [Color(0xFF532527), Color(0xFF532527), Color(0xFFE3DAD3)],
               begin: Alignment.topLeft, end: Alignment.bottomRight,
             ),
             borderRadius: BorderRadius.circular(14),
