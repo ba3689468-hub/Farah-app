@@ -98,7 +98,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [Color(0xFF532527), Color(0xFF532527), Color(0xFFE3DAD3)],
+            colors: [Color(0xFFF3E7E4), Color(0xFFE3DAD3), Color(0xFF874744)],,
             stops: [0.0, 0.5, 1.0],
           ),
         ),
@@ -299,7 +299,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   width: 220, height: 54,
                   decoration: BoxDecoration(
                     gradient: const LinearGradient(
-                      colors: [Color(0xFF532527), Color(0xFF532527), Color(0xFFE3DAD3)],
+                      colors: [Color(0xFF532527), Color(0xFF874744)],,
                       begin: Alignment.centerLeft, end: Alignment.centerRight,
                     ),
                     borderRadius: BorderRadius.circular(30),
