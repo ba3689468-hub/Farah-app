@@ -61,20 +61,22 @@ class _HallListScreenState extends State<HallListScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: cream,
-      body: SafeArea(
-        child: Column(
-          children: [
-            _buildTopBar(),
-            _buildSearchBar(),
-            const SizedBox(height: 12),
-            _buildCategoriesRow(),
-            const SizedBox(height: 14),
-            _buildCitiesRow(),
-            const SizedBox(height: 10),
-            Expanded(child: _buildHallsList()),
-          ],
-        ),
-      ),
+      body: _currentIndex == 3
+          ? const SimpleProfileScreen()
+          : SafeArea(
+              child: Column(
+                children: [
+                  _buildTopBar(),
+                  _buildSearchBar(),
+                  const SizedBox(height: 12),
+                  _buildCategoriesRow(),
+                  const SizedBox(height: 14),
+                  _buildCitiesRow(),
+                  const SizedBox(height: 10),
+                  Expanded(child: _buildHallsList()),
+                ],
+              ),
+            ),
       bottomNavigationBar: _buildBottomNav(),
     );
   }
@@ -404,13 +406,7 @@ class _HallListScreenState extends State<HallListScreen> {
       ),
       child: BottomNavigationBar(
         currentIndex: _currentIndex,
-        onTap: (i) {
-          if (i == 3) {
-            _openProfile();
-            return;
-          }
-          setState(() => _currentIndex = i);
-        },
+        onTap: (i) => setState(() => _currentIndex = i),
         backgroundColor: Colors.transparent,
         elevation: 0,
         selectedItemColor: deepRose,
@@ -524,10 +520,6 @@ class SimpleProfileScreen extends StatelessWidget {
                             alignment: Alignment.topCenter,
                             child: Row(
                               children: [
-                                IconButton(
-                                  onPressed: () => Navigator.pop(context),
-                                  icon: const Icon(Icons.arrow_back, color: Colors.white),
-                                ),
                                 const Spacer(),
                                 const Text('حسابي',
                                     style: TextStyle(
