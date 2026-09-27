@@ -10,12 +10,12 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  static const Color gold      = Color(0xFFD4AF37);
-  static const Color lightGold = Color(0xFFF4E5B1);
-  static const Color rose      = Color(0xFFE8B4B8);
-  static const Color deepRose  = Color(0xFFB76E79);
-  static const Color cream     = Color(0xFFFFF8F0);
-  static const Color chocolate = Color(0xFF3E2723);
+  static const Color gold      = Color(0xFF532527);
+  static const Color lightGold = Color(0xFFE3DAD3);
+  static const Color rose      = Color(0xFFE3DAD3);
+  static const Color deepRose  = Color(0xFF532527);
+  static const Color cream     = Color(0xFFF3E7E4);
+  static const Color chocolate = Color(0xFF532527);
 
   bool _loggingOut = false;
 
