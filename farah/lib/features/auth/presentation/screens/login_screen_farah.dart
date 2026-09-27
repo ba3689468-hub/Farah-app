@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/auth_provider.dart';
+import 'register_screen.dart';
 
 class FarahGlassLoginScreen extends ConsumerStatefulWidget {
   const FarahGlassLoginScreen({super.key});
@@ -59,6 +60,15 @@ class _FarahGlassLoginScreenState extends ConsumerState<FarahGlassLoginScreen> {
     if (msg.contains('too-many-requests')) return 'محاولات كثيرة، حاول لاحقاً';
     if (msg.contains('network-request-failed')) return 'تحقق من اتصال الإنترنت';
     return 'حدث خطأ، حاول مرة أخرى';
+  }
+
+  void _goToRegister() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const RegisterScreen(role: 'user'),
+      ),
+    );
   }
 
   @override
@@ -261,11 +271,7 @@ class _FarahGlassLoginScreenState extends ConsumerState<FarahGlassLoginScreen> {
                   Text('ليس لديك حساب؟ ',
                     style: TextStyle(color: chocolate.withOpacity(0.75), fontSize: 13)),
                   GestureDetector(
-                    onTap: _loading ? null : () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('قريباً: شاشة التسجيل')),
-                      );
-                    },
+                    onTap: _loading ? null : _goToRegister,
                     child: const Text('أنشئ حساباً الآن',
                       style: TextStyle(color: deepRose, fontSize: 13,
                         fontWeight: FontWeight.bold,
