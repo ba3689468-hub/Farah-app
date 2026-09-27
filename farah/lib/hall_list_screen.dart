@@ -10,12 +10,12 @@ class HallListScreen extends StatefulWidget {
 }
 
 class _HallListScreenState extends State<HallListScreen> {
-  static const Color gold      = Color(0xFFD4AF37);
-  static const Color lightGold = Color(0xFFF4E5B1);
-  static const Color rose      = Color(0xFFE8B4B8);
-  static const Color deepRose  = Color(0xFFB76E79);
-  static const Color cream     = Color(0xFFFFF8F0);
-  static const Color chocolate = Color(0xFF3E2723);
+  static const Color gold      = Color(0xFF876747);
+  static const Color lightGold = Color(0xFFE3DAD3);
+  static const Color rose      = Color(0xFFE3DAD3);
+  static const Color deepRose  = Color(0xFF876747);
+  static const Color cream     = Color(0xFFF3E7E4);
+  static const Color chocolate = Color(0xFF532527);
 
   int _currentIndex = 0;
   final _searchCtrl = TextEditingController();
@@ -431,18 +431,18 @@ class _HallListScreenState extends State<HallListScreen> {
 class SimpleProfileScreen extends StatelessWidget {
   const SimpleProfileScreen({super.key});
 
-  static const Color gold      = Color(0xFFD4AF37);
-  static const Color lightGold = Color(0xFFF4E5B1);
-  static const Color deepRose  = Color(0xFFB76E79);
-  static const Color cream     = Color(0xFFFFF8F0);
-  static const Color chocolate = Color(0xFF3E2723);
+  static const Color gold      = Color(0xFF876747);
+  static const Color lightGold = Color(0xFFE3DAD3);
+  static const Color deepRose  = Color(0xFF876747);
+  static const Color cream     = Color(0xFFF3E7E4);
+  static const Color chocolate = Color(0xFF532527);
 
   Future<void> _logout(BuildContext context) async {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (_) => Dialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        backgroundColor: const Color(0xFFFFF8F0),
+        backgroundColor: const Color(0xFFF3E7E4),
         child: Padding(
           padding: const EdgeInsets.all(22),
           child: Column(
@@ -459,7 +459,7 @@ class SimpleProfileScreen extends StatelessWidget {
               const SizedBox(height: 16),
               const Text('تسجيل الخروج',
                 style: TextStyle(
-                  color: Color(0xFF3E2723),
+                  color: Color(0xFF532527),
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
                 )),
@@ -477,11 +477,11 @@ class SimpleProfileScreen extends StatelessWidget {
                         padding: const EdgeInsets.symmetric(vertical: 14),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(14),
-                          side: const BorderSide(color: Color(0xFFB76E79), width: 1.2),
+                          side: const BorderSide(color: Color(0xFF876747), width: 1.2),
                         ),
                       ),
                       child: const Text('إلغاء',
-                        style: TextStyle(color: Color(0xFFB76E79), fontWeight: FontWeight.bold)),
+                        style: TextStyle(color: Color(0xFF876747), fontWeight: FontWeight.bold)),
                     ),
                   ),
                   const SizedBox(width: 12),
