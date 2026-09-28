@@ -10,12 +10,12 @@ class HallListScreen extends StatefulWidget {
 }
 
 class _HallListScreenState extends State<HallListScreen> {
-  static const Color gold      = Color(0xFF532527);
-  static const Color lightGold = Color(0xFFE3DAD3);
-  static const Color rose      = Color(0xFFE3DAD3);
-  static const Color deepRose  = Color(0xFF532527);
+  static const Color gold      = Color(0xFFC0392B);
+  static const Color lightGold = Color(0xFFF2EDE4);
+  static const Color rose      = Color(0xFFF2EDE4);
+  static const Color deepRose  = Color(0xFFC0392B);
   static const Color cream     = Color(0xFFF3E7E4);
-  static const Color chocolate = Color(0xFF532527);
+  static const Color chocolate = Color(0xFFC0392B);
 
   int _currentIndex = 0;
   final _searchCtrl = TextEditingController();
@@ -24,11 +24,11 @@ class _HallListScreenState extends State<HallListScreen> {
   late Future<QuerySnapshot> _hallsFuture;
 
   final List<Map<String, dynamic>> _categories = const [
-    {'name': 'قاعات',  'icon': Icons.celebration,             'color': Color(0xFF532527)},
-    {'name': 'تجميل',  'icon': Icons.face_retouching_natural, 'color': Color(0xFF874744)},
-    {'name': 'ضيافة',  'icon': Icons.restaurant,              'color': Color(0xFFB98A7F)},
-    {'name': 'فساتين', 'icon': Icons.checkroom,               'color': Color(0xFF874744)},
-    {'name': 'ديكورات','icon': Icons.auto_awesome,            'color': Color(0xFF532527)},
+    {'name': 'قاعات',  'icon': Icons.celebration,             'color': Color(0xFFC0392B)},
+    {'name': 'تجميل',  'icon': Icons.face_retouching_natural, 'color': Color(0xFFA93226)},
+    {'name': 'ضيافة',  'icon': Icons.restaurant,              'color': Color(0xFFF2EDE4)},
+    {'name': 'فساتين', 'icon': Icons.checkroom,               'color': Color(0xFFA93226)},
+    {'name': 'ديكورات','icon': Icons.auto_awesome,            'color': Color(0xFFC0392B)},
   ];
 
   final List<String> _cities = const [
@@ -74,9 +74,11 @@ class _HallListScreenState extends State<HallListScreen> {
           SafeArea(
             child: Column(
               children: [
-                _buildBannerCarousel(),
+                _buildTopHeader(),
                 const SizedBox(height: 12),
                 _buildSearchBar(),
+                const SizedBox(height: 14),
+                _buildBannerCarousel(),
                 const SizedBox(height: 12),
                 _buildCategoriesRow(),
                 const SizedBox(height: 14),
@@ -99,9 +101,9 @@ class _HallListScreenState extends State<HallListScreen> {
   // ═══ بانر الإعلانات والعروض ═══
   Widget _buildBannerCarousel() {
     final banners = [
-      {'title': 'خصم 20% على قاعات طرابلس', 'sub': 'لفترة محدودة', 'color1': const Color(0xFF532527), 'color2': const Color(0xFF874744), 'icon': Icons.celebration},
-      {'title': 'احجز صالتك الآن', 'sub': 'واحصل على استشارة مجانية', 'color1': const Color(0xFF874744), 'color2': const Color(0xFFE3DAD3), 'icon': Icons.event_available},
-      {'title': 'عروض الضيافة', 'sub': 'أسعار تنافسية لكل المناسبات', 'color1': const Color(0xFF532527), 'color2': const Color(0xFFB98A7F), 'icon': Icons.restaurant},
+      {'title': 'خصم 20% على قاعات طرابلس', 'sub': 'لفترة محدودة', 'color1': const Color(0xFFC0392B), 'color2': const Color(0xFFA93226), 'icon': Icons.celebration},
+      {'title': 'احجز صالتك الآن', 'sub': 'واحصل على استشارة مجانية', 'color1': const Color(0xFFA93226), 'color2': const Color(0xFFF2EDE4), 'icon': Icons.event_available},
+      {'title': 'عروض الضيافة', 'sub': 'أسعار تنافسية لكل المناسبات', 'color1': const Color(0xFFC0392B), 'color2': const Color(0xFFF2EDE4), 'icon': Icons.restaurant},
     ];
     return SizedBox(
       height: 140,
@@ -158,37 +160,203 @@ class _HallListScreenState extends State<HallListScreen> {
     );
   }
 
-  Widget _buildSearchBar() {
+  Widget _buildTopHeader() {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
-      child: Container(
-        height: 52,
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(30),
-          boxShadow: [BoxShadow(color: deepRose.withOpacity(0.15), blurRadius: 15, offset: const Offset(0, 5))],
-        ),
-        child: Row(children: [
-          const SizedBox(width: 18),
-          const Icon(Icons.search, color: deepRose, size: 22),
-          const SizedBox(width: 10),
-          Expanded(
-            child: TextField(
-              controller: _searchCtrl,
-              textAlign: TextAlign.right,
-              onChanged: (v) => setState(() => _searchText = v.trim()),
-              decoration: const InputDecoration(
-                hintText: 'ابحث عن صالة، خدمة، مدينة...',
-                hintStyle: TextStyle(color: Colors.black38, fontSize: 13),
-                border: InputBorder.none,
+      padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+      child: Row(
+        children: [
+          GestureDetector(
+            onTap: () {},
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(colors: [gold, deepRose], begin: Alignment.topLeft, end: Alignment.bottomRight),
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [BoxShadow(color: gold.withOpacity(0.3), blurRadius: 10, offset: const Offset(0, 4))],
               ),
+              child: const Row(mainAxisSize: MainAxisSize.min, children: [
+                Icon(Icons.account_balance_wallet, color: Colors.white, size: 16),
+                SizedBox(width: 5),
+                Text('0 د.ل', style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
+              ]),
             ),
           ),
-          const SizedBox(width: 14),
-        ]),
+          const Spacer(),
+          Container(
+            width: 48, height: 48,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: const LinearGradient(colors: [gold, deepRose]),
+              boxShadow: [BoxShadow(color: gold.withOpacity(0.35), blurRadius: 15, offset: const Offset(0, 5))],
+            ),
+            child: const Center(
+              child: Text('ف', style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold)),
+            ),
+          ),
+          const Spacer(),
+          Flexible(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                const Text('مرحباً بك في', style: TextStyle(color: Colors.black45, fontSize: 11)),
+                FutureBuilder<DocumentSnapshot>(
+                  future: FirebaseFirestore.instance.collection('users').doc(FirebaseAuth.instance.currentUser?.uid).get(),
+                  builder: (context, snap) {
+                    String name = 'فرح';
+                    if (snap.hasData && snap.data != null && snap.data!.exists) {
+                      final d = snap.data!.data() as Map<String, dynamic>;
+                      name = (d['fullName'] ?? 'فرح').toString();
+                    }
+                    return Text(name,
+                      maxLines: 1, overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(color: chocolate, fontSize: 15, fontWeight: FontWeight.bold));
+                  },
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
+
+  Widget _buildSearchBar() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: Row(
+        children: [
+          Expanded(
+            child: Container(
+              height: 52,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(30),
+                boxShadow: [BoxShadow(color: gold.withOpacity(0.15), blurRadius: 15, offset: const Offset(0, 5))],
+              ),
+              child: Row(children: [
+                const SizedBox(width: 16),
+                const Icon(Icons.search, color: gold, size: 22),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: TextField(
+                    controller: _searchCtrl,
+                    textAlign: TextAlign.right,
+                    onChanged: (v) => setState(() => _searchText = v.trim()),
+                    decoration: const InputDecoration(
+                      hintText: 'ابحث عن صالة، خدمة، مدينة...',
+                      hintStyle: TextStyle(color: Colors.black38, fontSize: 13),
+                      border: InputBorder.none,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 10),
+              ]),
+            ),
+          ),
+          const SizedBox(width: 10),
+          GestureDetector(
+            onTap: _showFilterSheet,
+            child: Container(
+              width: 52, height: 52,
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(colors: [gold, deepRose], begin: Alignment.topLeft, end: Alignment.bottomRight),
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [BoxShadow(color: gold.withOpacity(0.35), blurRadius: 12, offset: const Offset(0, 5))],
+              ),
+              child: const Icon(Icons.tune, color: Colors.white, size: 24),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showFilterSheet() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (_) => StatefulBuilder(
+        builder: (context, setSheet) => Container(
+          padding: const EdgeInsets.all(24),
+          decoration: const BoxDecoration(
+            color: Color(0xFFF2EDE4),
+            borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(child: Container(width: 50, height: 4, decoration: BoxDecoration(color: Colors.black26, borderRadius: BorderRadius.circular(2)))),
+              const SizedBox(height: 20),
+              const Text('الفلترة والبحث المتقدم', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: chocolate)),
+              const SizedBox(height: 22),
+              const Text('المدينة', style: TextStyle(fontWeight: FontWeight.bold, color: chocolate, fontSize: 14)),
+              const SizedBox(height: 10),
+              Wrap(
+                spacing: 8, runSpacing: 8,
+                children: _cities.map((c) => GestureDetector(
+                  onTap: () { setSheet(() {}); setState(() => _selectedCity = c); },
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: _selectedCity == c ? gold : Colors.white,
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: gold.withOpacity(0.3)),
+                    ),
+                    child: Text(c, style: TextStyle(color: _selectedCity == c ? Colors.white : chocolate, fontSize: 13)),
+                  ),
+                )).toList(),
+              ),
+              const SizedBox(height: 22),
+              const Text('السعر', style: TextStyle(fontWeight: FontWeight.bold, color: chocolate, fontSize: 14)),
+              const SizedBox(height: 10),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(15)),
+                child: const Row(children: [
+                  Icon(Icons.attach_money, color: gold, size: 20),
+                  SizedBox(width: 10),
+                  Expanded(child: Text('من 0 د.ل  إلى  20000 د.ل', style: TextStyle(color: chocolate, fontSize: 13))),
+                ]),
+              ),
+              const SizedBox(height: 22),
+              const Text('التقييم', style: TextStyle(fontWeight: FontWeight.bold, color: chocolate, fontSize: 14)),
+              const SizedBox(height: 10),
+              Row(children: List.generate(5, (i) => const Padding(
+                padding: EdgeInsets.only(left: 6),
+                child: Icon(Icons.star, color: Colors.amber, size: 26),
+              ))),
+              const SizedBox(height: 28),
+              Row(children: [
+                Expanded(child: OutlinedButton(
+                  onPressed: () => Navigator.pop(context),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+                    side: const BorderSide(color: gold),
+                  ),
+                  child: Text('إعادة تعيين', style: TextStyle(color: gold, fontWeight: FontWeight.bold)),
+                )),
+                const SizedBox(width: 12),
+                Expanded(child: ElevatedButton(
+                  onPressed: () => Navigator.pop(context),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: gold, foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+                  ),
+                  child: const Text('تطبيق', style: TextStyle(fontWeight: FontWeight.bold)),
+                )),
+              ]),
+              const SizedBox(height: 10),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
 
   Widget _buildCategoriesRow() {
     return SizedBox(
@@ -449,20 +617,18 @@ class _HallListScreenState extends State<HallListScreen> {
 
   Widget _buildBottomNav() {
     final items = [
-      {'icon': Icons.home_outlined, 'active': Icons.home, 'label': 'الرئيسية'},
-      {'icon': Icons.search_outlined, 'active': Icons.search, 'label': 'البحث'},
-      {'icon': Icons.favorite_border, 'active': Icons.favorite, 'label': 'المفضلة'},
-      {'icon': Icons.person_outline, 'active': Icons.person, 'label': 'حسابي'},
+      {'icon': Icons.home_outlined, 'active': Icons.home},
+      {'icon': Icons.search_outlined, 'active': Icons.search},
+      {'icon': Icons.favorite_border, 'active': Icons.favorite},
+      {'icon': Icons.person_outline, 'active': Icons.person},
     ];
     return Container(
       margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(28),
-        boxShadow: [
-          BoxShadow(color: gold.withOpacity(0.15), blurRadius: 20, offset: const Offset(0, 6)),
-        ],
+        boxShadow: [BoxShadow(color: gold.withOpacity(0.15), blurRadius: 20, offset: const Offset(0, 6))],
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -473,28 +639,17 @@ class _HallListScreenState extends State<HallListScreen> {
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 300),
               curve: Curves.easeOut,
-              padding: EdgeInsets.symmetric(horizontal: active ? 18 : 12, vertical: 8),
+              width: 48, height: 48,
               decoration: BoxDecoration(
-                gradient: active
-                  ? const LinearGradient(colors: [gold, deepRose], begin: Alignment.topLeft, end: Alignment.bottomRight)
-                  : null,
+                gradient: active ? const LinearGradient(colors: [gold, deepRose], begin: Alignment.topLeft, end: Alignment.bottomRight) : null,
                 color: active ? null : Colors.transparent,
-                borderRadius: BorderRadius.circular(20),
+                shape: BoxShape.circle,
+                boxShadow: active ? [BoxShadow(color: gold.withOpacity(0.4), blurRadius: 12, offset: const Offset(0, 4))] : [],
               ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    active ? items[i]['active'] as IconData : items[i]['icon'] as IconData,
-                    color: active ? Colors.white : Colors.black45,
-                    size: 22,
-                  ),
-                  if (active) ...[
-                    const SizedBox(width: 8),
-                    Text(items[i]['label'] as String,
-                      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
-                  ],
-                ],
+              child: Icon(
+                active ? items[i]['active'] as IconData : items[i]['icon'] as IconData,
+                color: active ? Colors.white : Colors.black38,
+                size: 24,
               ),
             ),
           );
@@ -525,11 +680,11 @@ class _SimpleProfileScreenState extends State<SimpleProfileScreen> {
         : FirebaseFirestore.instance.collection('users').doc(uid).get();
   }
 
-  static const Color gold      = Color(0xFF532527);
-  static const Color lightGold = Color(0xFFE3DAD3);
-  static const Color deepRose  = Color(0xFF532527);
+  static const Color gold      = Color(0xFFC0392B);
+  static const Color lightGold = Color(0xFFF2EDE4);
+  static const Color deepRose  = Color(0xFFC0392B);
   static const Color cream     = Color(0xFFF3E7E4);
-  static const Color chocolate = Color(0xFF532527);
+  static const Color chocolate = Color(0xFFC0392B);
 
   Future<void> _logout(BuildContext context) async {
     final confirm = await showDialog<bool>(
@@ -553,7 +708,7 @@ class _SimpleProfileScreenState extends State<SimpleProfileScreen> {
               const SizedBox(height: 16),
               const Text('تسجيل الخروج',
                 style: TextStyle(
-                  color: Color(0xFF532527),
+                  color: Color(0xFFC0392B),
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
                 )),
@@ -571,11 +726,11 @@ class _SimpleProfileScreenState extends State<SimpleProfileScreen> {
                         padding: const EdgeInsets.symmetric(vertical: 14),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(14),
-                          side: const BorderSide(color: Color(0xFF532527), width: 1.2),
+                          side: const BorderSide(color: Color(0xFFC0392B), width: 1.2),
                         ),
                       ),
                       child: const Text('إلغاء',
-                        style: TextStyle(color: Color(0xFF532527), fontWeight: FontWeight.bold)),
+                        style: TextStyle(color: Color(0xFFC0392B), fontWeight: FontWeight.bold)),
                     ),
                   ),
                   const SizedBox(width: 12),
