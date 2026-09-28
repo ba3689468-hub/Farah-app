@@ -24,11 +24,11 @@ class _HallListScreenState extends State<HallListScreen> {
   late Future<QuerySnapshot> _hallsFuture;
 
   final List<Map<String, dynamic>> _categories = const [
-    {'name': 'قاعات',  'emoji': '🎉', 'color': Color(0xFF532527)},
-    {'name': 'تجميل',  'emoji': '💄', 'color': Color(0xFF874744)},
-    {'name': 'ضيافة',  'emoji': '🍽️', 'color': Color(0xFFB98A7F)},
-    {'name': 'فساتين', 'emoji': '👗', 'color': Color(0xFF874744)},
-    {'name': 'ديكورات','emoji': '✨', 'color': Color(0xFF532527)},
+    {'name': 'قاعات',  'icon': Icons.celebration,             'color': Color(0xFF532527)},
+    {'name': 'تجميل',  'icon': Icons.face_retouching_natural, 'color': Color(0xFF874744)},
+    {'name': 'ضيافة',  'icon': Icons.restaurant,              'color': Color(0xFFB98A7F)},
+    {'name': 'فساتين', 'icon': Icons.checkroom,               'color': Color(0xFF874744)},
+    {'name': 'ديكورات','icon': Icons.auto_awesome,            'color': Color(0xFF532527)},
   ];
 
   final List<String> _cities = const [
@@ -91,6 +91,7 @@ class _HallListScreenState extends State<HallListScreen> {
           const SimpleProfileScreen(),
         ],
       ),
+      bottomNavigationBar: _buildBottomNav(),
     );
   }
 
@@ -208,16 +209,24 @@ class _HallListScreenState extends State<HallListScreen> {
                   color: Colors.white,
                   boxShadow: [
                     BoxShadow(
-                      color: (cat['color'] as Color).withOpacity(0.25),
+                      color: (cat['color'] as Color).withOpacity(0.3),
                       blurRadius: 15,
                       offset: const Offset(0, 6),
                     ),
                   ],
                 ),
                 child: Center(
-                  child: Text(
-                    cat['emoji'] as String,
-                    style: const TextStyle(fontSize: 32),
+                  child: Container(
+                    width: 48, height: 48,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: LinearGradient(
+                        colors: [cat['color'] as Color, (cat['color'] as Color).withOpacity(0.7)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                    ),
+                    child: Icon(cat['icon'] as IconData, color: Colors.white, size: 24),
                   ),
                 ),
               ),
