@@ -95,6 +95,68 @@ class _HallListScreenState extends State<HallListScreen> {
   }
 
 
+  // ═══ بانر الإعلانات والعروض ═══
+  Widget _buildBannerCarousel() {
+    final banners = [
+      {'title': 'خصم 20% على قاعات طرابلس', 'sub': 'لفترة محدودة', 'color1': const Color(0xFF532527), 'color2': const Color(0xFF874744), 'icon': Icons.celebration},
+      {'title': 'احجز صالتك الآن', 'sub': 'واحصل على استشارة مجانية', 'color1': const Color(0xFF874744), 'color2': const Color(0xFFE3DAD3), 'icon': Icons.event_available},
+      {'title': 'عروض الضيافة', 'sub': 'أسعار تنافسية لكل المناسبات', 'color1': const Color(0xFF532527), 'color2': const Color(0xFFB98A7F), 'icon': Icons.restaurant},
+    ];
+    return SizedBox(
+      height: 140,
+      child: PageView.builder(
+        controller: PageController(viewportFraction: 0.9),
+        itemCount: banners.length,
+        itemBuilder: (context, i) {
+          final b = banners[i];
+          return Container(
+            margin: const EdgeInsets.symmetric(horizontal: 6),
+            padding: const EdgeInsets.all(18),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [b['color1'] as Color, b['color2'] as Color],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: [
+                BoxShadow(color: (b['color1'] as Color).withOpacity(0.3), blurRadius: 15, offset: const Offset(0, 6)),
+              ],
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(b['title'] as String,
+                        style: const TextStyle(color: Colors.white, fontSize: 17, fontWeight: FontWeight.bold)),
+                      const SizedBox(height: 6),
+                      Text(b['sub'] as String,
+                        style: TextStyle(color: Colors.white.withOpacity(0.85), fontSize: 13)),
+                      const SizedBox(height: 10),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.25),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: const Text('اعرف المزيد',
+                          style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold)),
+                      ),
+                    ],
+                  ),
+                ),
+                Icon(b['icon'] as IconData, color: Colors.white.withOpacity(0.35), size: 70),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+  }
+
   Widget _buildSearchBar() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
