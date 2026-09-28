@@ -21,6 +21,7 @@ class _HallListScreenState extends State<HallListScreen> {
   final _searchCtrl = TextEditingController();
   String _searchText = '';
   String _selectedCity = 'الكل';
+  late Future<QuerySnapshot> _hallsFuture;
 
   final List<Map<String, dynamic>> _categories = const [
     {'name': 'قاعات',  'icon': Icons.celebration,              'key': 'venue'},
@@ -33,6 +34,12 @@ class _HallListScreenState extends State<HallListScreen> {
   final List<String> _cities = const [
     'الكل', 'طرابلس', 'بنغازي', 'مصراتة', 'زليتن', 'سبها', 'البيضاء', 'الزاوية',
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    _hallsFuture = FirebaseFirestore.instance.collection('halls').get();
+  }
 
   @override
   void dispose() {
@@ -61,86 +68,28 @@ class _HallListScreenState extends State<HallListScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: cream,
-      body: _currentIndex == 3
-          ? const SimpleProfileScreen()
-          : SafeArea(
-              child: Column(
-                children: [
-                  _buildBannerCarousel(),
-
-                  const SizedBox(height: 12),
-                  _buildSearchBar(),
-                  const SizedBox(height: 12),
-                  _buildCategoriesRow(),
-                  const SizedBox(height: 14),
-                  _buildCitiesRow(),
-                  const SizedBox(height: 10),
-                  Expanded(child: _buildHallsList()),
-                ],
-              ),
-            ),
-      bottomNavigationBar: _buildBottomNav(),
-    );
-  }
-
-  // ═══ بانر الإعلانات والعروض ═══
-  Widget _buildBannerCarousel() {
-    final banners = [
-      {'title': 'خصم 20% على قاعات طرابلس', 'sub': 'لفترة محدودة', 'color1': const Color(0xFF532527), 'color2': const Color(0xFF874744), 'icon': Icons.celebration},
-      {'title': 'احجز صالتك الآن', 'sub': 'واحصل على استشارة مجانية', 'color1': const Color(0xFF874744), 'color2': const Color(0xFFE3DAD3), 'icon': Icons.event_available},
-      {'title': 'عروض الضيافة', 'sub': 'أسعار تنافسية لكل المناسبات', 'color1': const Color(0xFF532527), 'color2': const Color(0xFFB98A7F), 'icon': Icons.restaurant},
-    ];
-    return SizedBox(
-      height: 140,
-      child: PageView.builder(
-        controller: PageController(viewportFraction: 0.9),
-        itemCount: banners.length,
-        itemBuilder: (context, i) {
-          final b = banners[i];
-          return Container(
-            margin: const EdgeInsets.symmetric(horizontal: 6),
-            padding: const EdgeInsets.all(18),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [b['color1'] as Color, b['color2'] as Color],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              borderRadius: BorderRadius.circular(20),
-              boxShadow: [
-                BoxShadow(color: (b['color1'] as Color).withOpacity(0.3), blurRadius: 15, offset: const Offset(0, 6)),
-              ],
-            ),
-            child: Row(
+            body: IndexedStack(
+        index: _currentIndex,
+        children: [
+          SafeArea(
+            child: Column(
               children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(b['title'] as String,
-                        style: const TextStyle(color: Colors.white, fontSize: 17, fontWeight: FontWeight.bold)),
-                      const SizedBox(height: 6),
-                      Text(b['sub'] as String,
-                        style: TextStyle(color: Colors.white.withOpacity(0.85), fontSize: 13)),
-                      const SizedBox(height: 10),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.25),
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: const Text('اعرف المزيد',
-                          style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold)),
-                      ),
-                    ],
-                  ),
-                ),
-                Icon(b['icon'] as IconData, color: Colors.white.withOpacity(0.35), size: 70),
+                _buildBannerCarousel(),
+                const SizedBox(height: 12),
+                _buildSearchBar(),
+                const SizedBox(height: 12),
+                _buildCategoriesRow(),
+                const SizedBox(height: 14),
+                _buildCitiesRow(),
+                const SizedBox(height: 10),
+                Expanded(child: _buildHallsList()),
               ],
             ),
-          );
-        },
+          ),
+          const Center(child: Text('البحث قريباً', style: TextStyle(fontSize: 18))),
+          const Center(child: Text('المفضلة قريباً', style: TextStyle(fontSize: 18))),
+          const SimpleProfileScreen(),
+        ],
       ),
     );
   }
@@ -252,7 +201,7 @@ class _HallListScreenState extends State<HallListScreen> {
 
   Widget _buildHallsList() {
     return FutureBuilder<QuerySnapshot>(
-      future: FirebaseFirestore.instance.collection('halls').get(),
+      future: _hallsFuture,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator(color: gold));
@@ -478,8 +427,23 @@ class _HallListScreenState extends State<HallListScreen> {
 // ══════════════════════════════════════════
 //  شاشة الحساب الشخصي (مدمجة لتجنب مشاكل import)
 // ══════════════════════════════════════════
-class SimpleProfileScreen extends StatelessWidget {
+class SimpleProfileScreen extends StatefulWidget {
   const SimpleProfileScreen({super.key});
+  @override
+  State<SimpleProfileScreen> createState() => _SimpleProfileScreenState();
+}
+
+class _SimpleProfileScreenState extends State<SimpleProfileScreen> {
+  late Future<DocumentSnapshot> _userFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    _userFuture = uid == null
+        ? Future.error('no user')
+        : FirebaseFirestore.instance.collection('users').doc(uid).get();
+  }
 
   static const Color gold      = Color(0xFF532527);
   static const Color lightGold = Color(0xFFE3DAD3);
@@ -568,13 +532,12 @@ class SimpleProfileScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final uid = FirebaseAuth.instance.currentUser?.uid;
-    if (uid == null) return const SizedBox();
+
 
     return Scaffold(
       backgroundColor: cream,
       body: FutureBuilder<DocumentSnapshot>(
-        future: FirebaseFirestore.instance.collection('users').doc(uid).get(),
+        future: _userFuture,
         builder: (context, snap) {
           if (snap.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator(color: gold));
