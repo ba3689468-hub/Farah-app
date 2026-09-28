@@ -66,7 +66,9 @@ class _HallListScreenState extends State<HallListScreen> {
           : SafeArea(
               child: Column(
                 children: [
-                  _buildTopBar(),
+                  _buildBannerCarousel(),
+
+                  const SizedBox(height: 12),
                   _buildSearchBar(),
                   const SizedBox(height: 12),
                   _buildCategoriesRow(),
@@ -81,50 +83,68 @@ class _HallListScreenState extends State<HallListScreen> {
     );
   }
 
-  Widget _buildTopBar() {
-    final uid = FirebaseAuth.instance.currentUser?.uid;
-    return FutureBuilder<DocumentSnapshot>(
-      future: uid == null ? null : FirebaseFirestore.instance.collection('users').doc(uid).get(),
-      builder: (context, snap) {
-        String name = 'مرحباً';
-        if (snap.hasData && snap.data != null && snap.data!.exists) {
-          final data = snap.data!.data() as Map<String, dynamic>;
-          name = (data['fullName'] ?? 'مرحباً').toString();
-        }
-        return Container(
-          padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
-          child: Row(
-            children: [
-              Container(
-                width: 46, height: 46,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: const LinearGradient(
-                    colors: [gold, deepRose],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
+  // ═══ بانر الإعلانات والعروض ═══
+  Widget _buildBannerCarousel() {
+    final banners = [
+      {'title': 'خصم 20% على قاعات طرابلس', 'sub': 'لفترة محدودة', 'color1': const Color(0xFF532527), 'color2': const Color(0xFF874744), 'icon': Icons.celebration},
+      {'title': 'احجز صالتك الآن', 'sub': 'واحصل على استشارة مجانية', 'color1': const Color(0xFF874744), 'color2': const Color(0xFFE3DAD3), 'icon': Icons.event_available},
+      {'title': 'عروض الضيافة', 'sub': 'أسعار تنافسية لكل المناسبات', 'color1': const Color(0xFF532527), 'color2': const Color(0xFFB98A7F), 'icon': Icons.restaurant},
+    ];
+    return SizedBox(
+      height: 140,
+      child: PageView.builder(
+        controller: PageController(viewportFraction: 0.9),
+        itemCount: banners.length,
+        itemBuilder: (context, i) {
+          final b = banners[i];
+          return Container(
+            margin: const EdgeInsets.symmetric(horizontal: 6),
+            padding: const EdgeInsets.all(18),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [b['color1'] as Color, b['color2'] as Color],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: [
+                BoxShadow(color: (b['color1'] as Color).withOpacity(0.3), blurRadius: 15, offset: const Offset(0, 6)),
+              ],
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(b['title'] as String,
+                        style: const TextStyle(color: Colors.white, fontSize: 17, fontWeight: FontWeight.bold)),
+                      const SizedBox(height: 6),
+                      Text(b['sub'] as String,
+                        style: TextStyle(color: Colors.white.withOpacity(0.85), fontSize: 13)),
+                      const SizedBox(height: 10),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.25),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: const Text('اعرف المزيد',
+                          style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold)),
+                      ),
+                    ],
                   ),
-                  boxShadow: [BoxShadow(color: gold.withOpacity(0.4), blurRadius: 10, offset: const Offset(0, 3))],
                 ),
-                child: const Icon(Icons.person, color: Colors.white, size: 26),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text('مرحباً بك في فرح', style: TextStyle(color: chocolate, fontSize: 12)),
-                    Text(name, style: const TextStyle(color: chocolate, fontSize: 17, fontWeight: FontWeight.bold)),
-                  ],
-                ),
-              ),
-              IconButton(onPressed: _logout, icon: const Icon(Icons.logout, color: deepRose)),
-            ],
-          ),
-        );
-      },
+                Icon(b['icon'] as IconData, color: Colors.white.withOpacity(0.35), size: 70),
+              ],
+            ),
+          );
+        },
+      ),
     );
   }
+
 
   Widget _buildSearchBar() {
     return Padding(
@@ -399,27 +419,57 @@ class _HallListScreenState extends State<HallListScreen> {
   }
 
   Widget _buildBottomNav() {
+    final items = [
+      {'icon': Icons.home_outlined, 'active': Icons.home, 'label': 'الرئيسية'},
+      {'icon': Icons.search_outlined, 'active': Icons.search, 'label': 'البحث'},
+      {'icon': Icons.favorite_border, 'active': Icons.favorite, 'label': 'المفضلة'},
+      {'icon': Icons.person_outline, 'active': Icons.person, 'label': 'حسابي'},
+    ];
     return Container(
+      margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
       decoration: BoxDecoration(
         color: Colors.white,
-        boxShadow: [BoxShadow(color: deepRose.withOpacity(0.15), blurRadius: 20, offset: const Offset(0, -5))],
-      ),
-      child: BottomNavigationBar(
-        currentIndex: _currentIndex,
-        onTap: (i) => setState(() => _currentIndex = i),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        selectedItemColor: deepRose,
-        unselectedItemColor: Colors.black38,
-        type: BottomNavigationBarType.fixed,
-        selectedLabelStyle: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
-        unselectedLabelStyle: const TextStyle(fontSize: 11),
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home_outlined), activeIcon: Icon(Icons.home), label: 'الرئيسية'),
-          BottomNavigationBarItem(icon: Icon(Icons.search), label: 'البحث'),
-          BottomNavigationBarItem(icon: Icon(Icons.favorite_border), activeIcon: Icon(Icons.favorite), label: 'المفضلة'),
-          BottomNavigationBarItem(icon: Icon(Icons.person_outline), activeIcon: Icon(Icons.person), label: 'حسابي'),
+        borderRadius: BorderRadius.circular(28),
+        boxShadow: [
+          BoxShadow(color: gold.withOpacity(0.15), blurRadius: 20, offset: const Offset(0, 6)),
         ],
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: List.generate(items.length, (i) {
+          final active = i == _currentIndex;
+          return GestureDetector(
+            onTap: () => setState(() => _currentIndex = i),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 300),
+              curve: Curves.easeOut,
+              padding: EdgeInsets.symmetric(horizontal: active ? 18 : 12, vertical: 8),
+              decoration: BoxDecoration(
+                gradient: active
+                  ? const LinearGradient(colors: [gold, deepRose], begin: Alignment.topLeft, end: Alignment.bottomRight)
+                  : null,
+                color: active ? null : Colors.transparent,
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    active ? items[i]['active'] as IconData : items[i]['icon'] as IconData,
+                    color: active ? Colors.white : Colors.black45,
+                    size: 22,
+                  ),
+                  if (active) ...[
+                    const SizedBox(width: 8),
+                    Text(items[i]['label'] as String,
+                      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
+                  ],
+                ],
+              ),
+            ),
+          );
+        }),
       ),
     );
   }
