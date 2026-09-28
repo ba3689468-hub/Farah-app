@@ -24,11 +24,11 @@ class _HallListScreenState extends State<HallListScreen> {
   late Future<QuerySnapshot> _hallsFuture;
 
   final List<Map<String, dynamic>> _categories = const [
-    {'name': 'قاعات',  'icon': Icons.celebration,              'key': 'venue'},
-    {'name': 'تجميل',  'icon': Icons.face_retouching_natural,  'key': 'beauty'},
-    {'name': 'ضيافة',  'icon': Icons.restaurant,               'key': 'catering'},
-    {'name': 'فساتين', 'icon': Icons.checkroom,                'key': 'dresses'},
-    {'name': 'ديكورات','icon': Icons.auto_awesome,             'key': 'decor'},
+    {'name': 'قاعات',  'emoji': '🎉', 'color': Color(0xFF532527)},
+    {'name': 'تجميل',  'emoji': '💄', 'color': Color(0xFF874744)},
+    {'name': 'ضيافة',  'emoji': '🍽️', 'color': Color(0xFFB98A7F)},
+    {'name': 'فساتين', 'emoji': '👗', 'color': Color(0xFF874744)},
+    {'name': 'ديكورات','emoji': '✨', 'color': Color(0xFF532527)},
   ];
 
   final List<String> _cities = const [
@@ -129,31 +129,40 @@ class _HallListScreenState extends State<HallListScreen> {
 
   Widget _buildCategoriesRow() {
     return SizedBox(
-      height: 90,
+      height: 100,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: 20),
         itemCount: _categories.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 12),
+        separatorBuilder: (_, __) => const SizedBox(width: 14),
         itemBuilder: (context, i) {
           final cat = _categories[i];
           return Column(
             children: [
               Container(
-                width: 56, height: 56,
+                width: 64, height: 64,
                 decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [gold, deepRose],
-                    begin: Alignment.topLeft, end: Alignment.bottomRight,
-                  ),
-                  borderRadius: BorderRadius.circular(18),
-                  boxShadow: [BoxShadow(color: gold.withOpacity(0.35), blurRadius: 10, offset: const Offset(0, 4))],
+                  shape: BoxShape.circle,
+                  color: Colors.white,
+                  boxShadow: [
+                    BoxShadow(
+                      color: (cat['color'] as Color).withOpacity(0.25),
+                      blurRadius: 15,
+                      offset: const Offset(0, 6),
+                    ),
+                  ],
                 ),
-                child: Icon(cat['icon'] as IconData, color: Colors.white, size: 26),
+                child: Center(
+                  child: Text(
+                    cat['emoji'] as String,
+                    style: const TextStyle(fontSize: 32),
+                  ),
+                ),
               ),
-              const SizedBox(height: 6),
+              const SizedBox(height: 8),
               Text(cat['name'] as String,
-                style: const TextStyle(color: chocolate, fontSize: 12, fontWeight: FontWeight.w600)),
+                style: const TextStyle(
+                  color: chocolate, fontSize: 12, fontWeight: FontWeight.w600)),
             ],
           );
         },
