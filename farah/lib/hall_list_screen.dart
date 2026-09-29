@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'features/auth/presentation/screens/login_screen_farah.dart';
+import 'hall_details_screen.dart';
 
 class HallListScreen extends StatefulWidget {
   const HallListScreen({super.key});
@@ -537,7 +538,14 @@ class _HallListScreenState extends State<HallListScreen> {
     final rating = (hall['rating'] ?? 0).toDouble();
     final image = hall['image'] ?? hall['coverImage'];
 
-    return Container(
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => HallDetailsScreen(hallData: hall)),
+        );
+      },
+      child: Container(
       decoration: BoxDecoration(
         color: Colors.white, borderRadius: BorderRadius.circular(18),
         boxShadow: [BoxShadow(color: gold.withOpacity(0.15), blurRadius: 12, offset: const Offset(0, 5))],
@@ -584,6 +592,7 @@ class _HallListScreenState extends State<HallListScreen> {
           ),
         ],
       ),
+      ),
     );
   }
 
@@ -594,7 +603,14 @@ class _HallListScreenState extends State<HallListScreen> {
     final rating = (hall['rating'] ?? 0).toDouble();
     final image = hall['image'] ?? hall['coverImage'];
 
-    return Container(
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => HallDetailsScreen(hallData: hall)),
+        );
+      },
+      child: Container(
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
         color: Colors.white,
@@ -684,6 +700,7 @@ class _HallListScreenState extends State<HallListScreen> {
             ),
           ),
         ],
+      ),
       ),
     );
   }
