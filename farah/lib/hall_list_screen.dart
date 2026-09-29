@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'features/auth/presentation/screens/login_screen_farah.dart';
 import 'hall_details_screen.dart';
+import 'my_bookings_screen.dart';
 
 class HallListScreen extends StatefulWidget {
   const HallListScreen({super.key});
@@ -997,6 +998,51 @@ class _SimpleProfileScreenState extends State<SimpleProfileScreen> {
                 const SizedBox(height: 26),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: () => Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (_) => const MyBookingsScreen()),
+                          ),
+                          child: _profileTile(Icons.calendar_month, 'حجوزاتي'),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: () {},
+                          child: _profileTile(Icons.favorite_border, 'المفضلة'),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: () {},
+                          child: _profileTile(Icons.settings_outlined, 'الإعدادات'),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: () {},
+                          child: _profileTile(Icons.help_outline, 'المساعدة'),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 26),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
                   child: Container(
                     width: double.infinity,
                     height: 54,
@@ -1033,6 +1079,34 @@ class _SimpleProfileScreenState extends State<SimpleProfileScreen> {
             ),
           );
         },
+      ),
+    );
+  }
+
+  Widget _profileTile(IconData icon, String label) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4)),
+        ],
+      ),
+      child: Column(
+        children: [
+          Container(
+            width: 44, height: 44,
+            decoration: BoxDecoration(
+              color: const Color(0xFFC0392B).withOpacity(0.1),
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: Icon(icon, color: const Color(0xFFC0392B), size: 22),
+          ),
+          const SizedBox(height: 8),
+          Text(label,
+            style: const TextStyle(color: Color(0xFF2B1810), fontSize: 12, fontWeight: FontWeight.w600)),
+        ],
       ),
     );
   }
