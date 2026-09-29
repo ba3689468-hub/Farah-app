@@ -22,13 +22,14 @@ class _HallListScreenState extends State<HallListScreen> {
   String _searchText = '';
   String _selectedCity = 'الكل';
   late Future<QuerySnapshot> _hallsFuture;
+  bool _isGrid = false;
 
   final List<Map<String, dynamic>> _categories = const [
-    {'name': 'قاعات',  'icon': Icons.celebration,             'color': Color(0xFFC0392B)},
-    {'name': 'تجميل',  'icon': Icons.face_retouching_natural, 'color': Color(0xFFA93226)},
-    {'name': 'ضيافة',  'icon': Icons.restaurant,              'color': Color(0xFFF2EDE4)},
-    {'name': 'فساتين', 'icon': Icons.checkroom,               'color': Color(0xFFA93226)},
-    {'name': 'ديكورات','icon': Icons.auto_awesome,            'color': Color(0xFFC0392B)},
+    {'name': 'قاعات',  'icon': Icons.meeting_room,     'color': Color(0xFFC0392B)},
+    {'name': 'تجميل',  'icon': Icons.spa,              'color': Color(0xFFC0392B)},
+    {'name': 'ضيافة',  'icon': Icons.restaurant_menu,  'color': Color(0xFFC0392B)},
+    {'name': 'فساتين', 'icon': Icons.checkroom,        'color': Color(0xFFC0392B)},
+    {'name': 'ديكورات','icon': Icons.palette,          'color': Color(0xFFC0392B)},
   ];
 
   final List<String> _cities = const [
@@ -101,58 +102,57 @@ class _HallListScreenState extends State<HallListScreen> {
   // ═══ بانر الإعلانات والعروض ═══
   Widget _buildBannerCarousel() {
     final banners = [
-      {'title': 'خصم 20% على قاعات طرابلس', 'sub': 'لفترة محدودة', 'color1': const Color(0xFFC0392B), 'color2': const Color(0xFFA93226), 'icon': Icons.celebration},
-      {'title': 'احجز صالتك الآن', 'sub': 'واحصل على استشارة مجانية', 'color1': const Color(0xFFA93226), 'color2': const Color(0xFFF2EDE4), 'icon': Icons.event_available},
-      {'title': 'عروض الضيافة', 'sub': 'أسعار تنافسية لكل المناسبات', 'color1': const Color(0xFFC0392B), 'color2': const Color(0xFFF2EDE4), 'icon': Icons.restaurant},
+      {'title': 'خصم 20% على قاعات طرابلس', 'sub': 'لفترة محدودة', 'image': 'https://picsum.photos/seed/hall1/600/300'},
+      {'title': 'احجز صالتك الآن', 'sub': 'استشارة مجانية', 'image': 'https://picsum.photos/seed/hall2/600/300'},
+      {'title': 'عروض الضيافة', 'sub': 'أسعار تنافسية', 'image': 'https://picsum.photos/seed/hall3/600/300'},
     ];
     return SizedBox(
-      height: 140,
+      height: 150,
       child: PageView.builder(
-        controller: PageController(viewportFraction: 0.9),
+        controller: PageController(viewportFraction: 0.92),
         itemCount: banners.length,
         itemBuilder: (context, i) {
           final b = banners[i];
           return Container(
             margin: const EdgeInsets.symmetric(horizontal: 6),
-            padding: const EdgeInsets.all(18),
             decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [b['color1'] as Color, b['color2'] as Color],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
               borderRadius: BorderRadius.circular(20),
-              boxShadow: [
-                BoxShadow(color: (b['color1'] as Color).withOpacity(0.3), blurRadius: 15, offset: const Offset(0, 6)),
-              ],
+              boxShadow: [BoxShadow(color: gold.withOpacity(0.25), blurRadius: 15, offset: const Offset(0, 6))],
             ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(b['title'] as String,
-                        style: const TextStyle(color: Colors.white, fontSize: 17, fontWeight: FontWeight.bold)),
-                      const SizedBox(height: 6),
-                      Text(b['sub'] as String,
-                        style: TextStyle(color: Colors.white.withOpacity(0.85), fontSize: 13)),
-                      const SizedBox(height: 10),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.25),
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: const Text('اعرف المزيد',
-                          style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold)),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(20),
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  Image.network(b['image'] as String, fit: BoxFit.cover,
+                    errorBuilder: (_, __, ___) => Container(color: gold)),
+                  Container(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.centerRight,
+                        end: Alignment.centerLeft,
+                        colors: [gold.withOpacity(0.9), Colors.transparent],
                       ),
-                    ],
+                    ),
                   ),
-                ),
-                Icon(b['icon'] as IconData, color: Colors.white.withOpacity(0.35), size: 70),
-              ],
+                  Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(b['title'] as String,
+                          style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold, shadows: [Shadow(color: Colors.black45, blurRadius: 6)]),
+                          textAlign: TextAlign.right),
+                        const SizedBox(height: 4),
+                        Text(b['sub'] as String,
+                          style: const TextStyle(color: Colors.white70, fontSize: 12),
+                          textAlign: TextAlign.right),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
             ),
           );
         },
@@ -160,65 +160,77 @@ class _HallListScreenState extends State<HallListScreen> {
     );
   }
 
+
   Widget _buildTopHeader() {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+      padding: const EdgeInsets.fromLTRB(16, 10, 16, 0),
       child: Row(
         children: [
           GestureDetector(
             onTap: () {},
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
               decoration: BoxDecoration(
                 gradient: const LinearGradient(colors: [gold, deepRose], begin: Alignment.topLeft, end: Alignment.bottomRight),
-                borderRadius: BorderRadius.circular(20),
-                boxShadow: [BoxShadow(color: gold.withOpacity(0.3), blurRadius: 10, offset: const Offset(0, 4))],
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [BoxShadow(color: gold.withOpacity(0.3), blurRadius: 8, offset: const Offset(0, 3))],
               ),
               child: const Row(mainAxisSize: MainAxisSize.min, children: [
-                Icon(Icons.account_balance_wallet, color: Colors.white, size: 16),
-                SizedBox(width: 5),
-                Text('0 د.ل', style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
+                Icon(Icons.account_balance_wallet, color: Colors.white, size: 14),
+                SizedBox(width: 4),
+                Text('0 د.ل', style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold)),
               ]),
+            ),
+          ),
+          const SizedBox(width: 6),
+          GestureDetector(
+            onTap: () {
+              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('الإشعارات قريباً')));
+            },
+            child: Container(
+              width: 34, height: 34,
+              decoration: BoxDecoration(
+                color: Colors.white, shape: BoxShape.circle,
+                boxShadow: [BoxShadow(color: gold.withOpacity(0.2), blurRadius: 8, offset: const Offset(0, 3))],
+              ),
+              child: const Icon(Icons.notifications_none, color: gold, size: 18),
             ),
           ),
           const Spacer(),
           Container(
-            width: 48, height: 48,
+            width: 44, height: 44,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               gradient: const LinearGradient(colors: [gold, deepRose]),
-              boxShadow: [BoxShadow(color: gold.withOpacity(0.35), blurRadius: 15, offset: const Offset(0, 5))],
+              boxShadow: [BoxShadow(color: gold.withOpacity(0.35), blurRadius: 12, offset: const Offset(0, 4))],
             ),
-            child: const Center(
-              child: Text('ف', style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold)),
-            ),
+            child: const Center(child: Text('ف', style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold))),
           ),
           const Spacer(),
-          Flexible(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                const Text('مرحباً بك في', style: TextStyle(color: Colors.black45, fontSize: 11)),
-                FutureBuilder<DocumentSnapshot>(
-                  future: FirebaseFirestore.instance.collection('users').doc(FirebaseAuth.instance.currentUser?.uid).get(),
-                  builder: (context, snap) {
-                    String name = 'فرح';
-                    if (snap.hasData && snap.data != null && snap.data!.exists) {
-                      final d = snap.data!.data() as Map<String, dynamic>;
-                      name = (d['fullName'] ?? 'فرح').toString();
-                    }
-                    return Text(name,
-                      maxLines: 1, overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(color: chocolate, fontSize: 15, fontWeight: FontWeight.bold));
-                  },
-                ),
-              ],
+          const Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text('مرحباً بك في', style: TextStyle(color: Colors.black45, fontSize: 10)),
+              Text('فرح', style: TextStyle(color: chocolate, fontSize: 15, fontWeight: FontWeight.bold)),
+            ],
+          ),
+          const SizedBox(width: 6),
+          GestureDetector(
+            onTap: () => setState(() => _isGrid = !_isGrid),
+            child: Container(
+              width: 34, height: 34,
+              decoration: BoxDecoration(
+                color: Colors.white, shape: BoxShape.circle,
+                boxShadow: [BoxShadow(color: gold.withOpacity(0.2), blurRadius: 8, offset: const Offset(0, 3))],
+              ),
+              child: Icon(_isGrid ? Icons.view_list : Icons.grid_view, color: gold, size: 18),
             ),
           ),
         ],
       ),
     );
   }
+
 
   Widget _buildSearchBar() {
     return Padding(
@@ -227,24 +239,24 @@ class _HallListScreenState extends State<HallListScreen> {
         children: [
           Expanded(
             child: Container(
-              height: 52,
+              height: 46,
               decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(30),
-                boxShadow: [BoxShadow(color: gold.withOpacity(0.15), blurRadius: 15, offset: const Offset(0, 5))],
+                color: Colors.white, borderRadius: BorderRadius.circular(25),
+                boxShadow: [BoxShadow(color: gold.withOpacity(0.15), blurRadius: 12, offset: const Offset(0, 4))],
               ),
               child: Row(children: [
-                const SizedBox(width: 16),
-                const Icon(Icons.search, color: gold, size: 22),
-                const SizedBox(width: 10),
+                const SizedBox(width: 14),
+                const Icon(Icons.search, color: gold, size: 20),
+                const SizedBox(width: 8),
                 Expanded(
                   child: TextField(
                     controller: _searchCtrl,
                     textAlign: TextAlign.right,
                     onChanged: (v) => setState(() => _searchText = v.trim()),
+                    style: const TextStyle(fontSize: 13),
                     decoration: const InputDecoration(
                       hintText: 'ابحث عن صالة، خدمة، مدينة...',
-                      hintStyle: TextStyle(color: Colors.black38, fontSize: 13),
+                      hintStyle: TextStyle(color: Colors.black38, fontSize: 12),
                       border: InputBorder.none,
                     ),
                   ),
@@ -257,19 +269,20 @@ class _HallListScreenState extends State<HallListScreen> {
           GestureDetector(
             onTap: _showFilterSheet,
             child: Container(
-              width: 52, height: 52,
+              width: 46, height: 46,
               decoration: BoxDecoration(
                 gradient: const LinearGradient(colors: [gold, deepRose], begin: Alignment.topLeft, end: Alignment.bottomRight),
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [BoxShadow(color: gold.withOpacity(0.35), blurRadius: 12, offset: const Offset(0, 5))],
+                borderRadius: BorderRadius.circular(14),
+                boxShadow: [BoxShadow(color: gold.withOpacity(0.35), blurRadius: 10, offset: const Offset(0, 4))],
               ),
-              child: const Icon(Icons.tune, color: Colors.white, size: 24),
+              child: const Icon(Icons.tune, color: Colors.white, size: 20),
             ),
           ),
         ],
       ),
     );
   }
+
 
   void _showFilterSheet() {
     showModalBottomSheet(
@@ -365,43 +378,28 @@ class _HallListScreenState extends State<HallListScreen> {
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: 20),
         itemCount: _categories.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 14),
+        separatorBuilder: (_, __) => const SizedBox(width: 12),
         itemBuilder: (context, i) {
           final cat = _categories[i];
           return Column(
             children: [
               Container(
-                width: 64, height: 64,
+                width: 62, height: 62,
                 decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Colors.white,
+                  gradient: LinearGradient(
+                    colors: [cat['color'] as Color, (cat['color'] as Color).withOpacity(0.75)],
+                    begin: Alignment.topLeft, end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(20),
                   boxShadow: [
-                    BoxShadow(
-                      color: (cat['color'] as Color).withOpacity(0.3),
-                      blurRadius: 15,
-                      offset: const Offset(0, 6),
-                    ),
+                    BoxShadow(color: (cat['color'] as Color).withOpacity(0.3), blurRadius: 12, offset: const Offset(0, 5)),
                   ],
                 ),
-                child: Center(
-                  child: Container(
-                    width: 48, height: 48,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      gradient: LinearGradient(
-                        colors: [cat['color'] as Color, (cat['color'] as Color).withOpacity(0.7)],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
-                    ),
-                    child: Icon(cat['icon'] as IconData, color: Colors.white, size: 24),
-                  ),
-                ),
+                child: Icon(cat['icon'] as IconData, color: Colors.white, size: 26),
               ),
               const SizedBox(height: 8),
               Text(cat['name'] as String,
-                style: const TextStyle(
-                  color: chocolate, fontSize: 12, fontWeight: FontWeight.w600)),
+                style: const TextStyle(color: chocolate, fontSize: 12, fontWeight: FontWeight.w600)),
             ],
           );
         },
@@ -458,15 +456,11 @@ class _HallListScreenState extends State<HallListScreen> {
           return Center(
             child: Padding(
               padding: const EdgeInsets.all(30),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(Icons.error_outline, size: 70, color: Colors.redAccent),
-                  const SizedBox(height: 16),
-                  const Text('تعذر تحميل الصالات',
-                    style: TextStyle(color: chocolate, fontSize: 16, fontWeight: FontWeight.bold)),
-                ],
-              ),
+              child: Column(mainAxisAlignment: MainAxisAlignment.center, children: const [
+                Icon(Icons.error_outline, size: 70, color: Colors.redAccent),
+                SizedBox(height: 16),
+                Text('تعذر تحميل الصالات', style: TextStyle(color: chocolate, fontSize: 16, fontWeight: FontWeight.bold)),
+              ]),
             ),
           );
         }
@@ -475,22 +469,85 @@ class _HallListScreenState extends State<HallListScreen> {
           final data = doc.data() as Map<String, dynamic>;
           final name = (data['name'] ?? '').toString().toLowerCase();
           final city = (data['city'] ?? '').toString();
-          final matchesSearch = _searchText.isEmpty || name.contains(_searchText.toLowerCase());
-          final matchesCity = _selectedCity == 'الكل' || city == _selectedCity;
-          return matchesSearch && matchesCity;
+          return (_searchText.isEmpty || name.contains(_searchText.toLowerCase())) &&
+                 (_selectedCity == 'الكل' || city == _selectedCity);
         }).toList();
 
         if (filtered.isEmpty) return _buildEmptyState();
 
+        if (_isGrid) {
+          return GridView.builder(
+            padding: const EdgeInsets.fromLTRB(20, 10, 20, 20),
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2, crossAxisSpacing: 12, mainAxisSpacing: 12, childAspectRatio: 0.72,
+            ),
+            itemCount: filtered.length,
+            itemBuilder: (context, i) => _buildHallGridCard(filtered[i].data() as Map<String, dynamic>),
+          );
+        }
         return ListView.builder(
           padding: const EdgeInsets.fromLTRB(20, 10, 20, 20),
           itemCount: filtered.length,
-          itemBuilder: (context, i) {
-            final data = filtered[i].data() as Map<String, dynamic>;
-            return _buildHallCard(data);
-          },
+          itemBuilder: (context, i) => _buildHallCard(filtered[i].data() as Map<String, dynamic>),
         );
       },
+    );
+  }
+
+  Widget _buildHallGridCard(Map<String, dynamic> hall) {
+    final name = hall['name'] ?? 'صالة';
+    final city = hall['city'] ?? 'غير محدد';
+    final price = hall['price'] ?? 0;
+    final rating = (hall['rating'] ?? 0).toDouble();
+    final image = hall['image'] ?? hall['coverImage'];
+
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white, borderRadius: BorderRadius.circular(18),
+        boxShadow: [BoxShadow(color: gold.withOpacity(0.15), blurRadius: 12, offset: const Offset(0, 5))],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          ClipRRect(
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(18)),
+            child: SizedBox(
+              height: 110, width: double.infinity,
+              child: image != null
+                ? Image.network(image, fit: BoxFit.cover, errorBuilder: (_, __, ___) => Container(color: gold.withOpacity(0.3), child: const Icon(Icons.celebration, color: Colors.white, size: 40)))
+                : Container(color: gold.withOpacity(0.3), child: const Icon(Icons.celebration, color: Colors.white, size: 40)),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(10),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(name, style: const TextStyle(color: chocolate, fontSize: 13, fontWeight: FontWeight.bold), maxLines: 1, overflow: TextOverflow.ellipsis),
+                const SizedBox(height: 4),
+                Row(children: [
+                  const Icon(Icons.location_on_outlined, color: Colors.black38, size: 12),
+                  const SizedBox(width: 2),
+                  Expanded(child: Text(city, style: const TextStyle(color: Colors.black54, fontSize: 11), maxLines: 1, overflow: TextOverflow.ellipsis)),
+                ]),
+                const SizedBox(height: 6),
+                Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+                  Text('$price د.ل', style: const TextStyle(color: gold, fontSize: 13, fontWeight: FontWeight.bold)),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    decoration: BoxDecoration(color: gold.withOpacity(0.15), borderRadius: BorderRadius.circular(8)),
+                    child: Row(children: [
+                      const Icon(Icons.star, color: gold, size: 12),
+                      const SizedBox(width: 2),
+                      Text(rating.toStringAsFixed(1), style: const TextStyle(color: chocolate, fontSize: 10, fontWeight: FontWeight.bold)),
+                    ]),
+                  ),
+                ]),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -815,13 +872,6 @@ class _SimpleProfileScreenState extends State<SimpleProfileScreen> {
                             child: Row(
                               children: [
                                 const Spacer(),
-                                const Text('حسابي',
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 22,
-                                      fontWeight: FontWeight.bold,
-                                      shadows: [Shadow(color: Colors.black26, blurRadius: 4)],
-                                    )),
                                 const Spacer(),
                                 const SizedBox(width: 48),
                               ],
