@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import '../../../../hall_list_screen.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/auth_provider.dart';
 import 'register_screen.dart';
@@ -45,6 +48,33 @@ class _FarahGlassLoginScreenState extends ConsumerState<FarahGlassLoginScreen> {
     try {
       final repo = ref.read(authRepositoryProvider);
       await repo.signIn(_userCtrl.text.trim(), _passCtrl.text.trim());
+
+      final fbUser = FirebaseAuth.instance.currentUser;
+      if (fbUser != null) {
+        final docRef = FirebaseFirestore.instance.collection('users').doc(fbUser.uid);
+        final doc = await docRef.get();
+        if (!doc.exists) {
+          await docRef.set({
+            'uid': fbUser.uid,
+            'fullName': fbUser.displayName ?? 'مستخدم فرح',
+            'email': fbUser.email ?? '',
+            'phone': fbUser.phoneNumber ?? '',
+            'role': 'user',
+            'walletBalance': 0,
+            'isVerified': true,
+            'isBlocked': false,
+            'fcmTokens': [],
+            'createdAt': FieldValue.serverTimestamp(),
+          });
+        }
+        if (mounted) {
+          Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(builder: (_) => const HallListScreen()),
+            (route) => false,
+          );
+        }
+      }
     } catch (e) {
       setState(() => _error = _translateError(e.toString()));
     } finally {
