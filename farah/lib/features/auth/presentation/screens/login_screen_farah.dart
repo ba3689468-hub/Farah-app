@@ -5,7 +5,7 @@ import '../../../../hall_list_screen.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/auth_provider.dart';
 import 'register_screen.dart';
-
+import 'package:flutter_animate/flutter_animate.dart';
 class FarahGlassLoginScreen extends ConsumerStatefulWidget {
   const FarahGlassLoginScreen({super.key});
 
