@@ -643,90 +643,85 @@ class _HallListScreenState extends State<HallListScreen> {
     final image = hall['image'] ?? hall['coverImage'];
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 16),
+      margin: const EdgeInsets.only(bottom: 18),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(22),
-        boxShadow: [BoxShadow(color: deepRose.withOpacity(0.12), blurRadius: 15, offset: const Offset(0, 6))],
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.07), blurRadius: 18, offset: const Offset(0, 8))],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           ClipRRect(
             borderRadius: const BorderRadius.vertical(top: Radius.circular(22)),
-            child: Container(
-              height: 160,
-              width: double.infinity,
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [lightGold, rose],
-                  begin: Alignment.topLeft, end: Alignment.bottomRight,
+            child: Stack(
+              children: [
+                Container(
+                  height: 180, width: double.infinity,
+                  color: primary.withOpacity(0.1),
+                  child: image != null
+                    ? Image.network(image, fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) => Center(child: Icon(Icons.celebration, size: 60, color: primary.withOpacity(0.3))))
+                    : Center(child: Icon(Icons.celebration, size: 60, color: primary.withOpacity(0.3))),
                 ),
-              ),
-              child: image != null
-                ? Image.network(image, fit: BoxFit.cover,
-                    errorBuilder: (_, __, ___) => const Center(
-                      child: Icon(Icons.image, size: 60, color: Colors.white70)))
-                : const Center(child: Icon(Icons.celebration, size: 60, color: Colors.white70)),
+                // تدرج سفلي
+                Positioned.fill(
+                  child: Container(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [Colors.transparent, Colors.black.withOpacity(0.4)],
+                      ),
+                    ),
+                  ),
+                ),
+                // شارة التقييم
+                Positioned(
+                  top: 12, right: 12,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.star, color: Colors.amber, size: 14),
+                        const SizedBox(width: 3),
+                        Text(rating.toStringAsFixed(1),
+                          style: const TextStyle(color: chocolate, fontSize: 12, fontWeight: FontWeight.bold)),
+                      ],
+                    ),
+                  ),
+                ),
+                // الاسم داخل الصورة
+                Positioned(
+                  bottom: 12, right: 14, left: 14,
+                  child: Text(name,
+                    style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold, shadows: [Shadow(color: Colors.black54, blurRadius: 6)]),
+                    maxLines: 1, overflow: TextOverflow.ellipsis),
+                ),
+              ],
             ),
           ),
           Padding(
             padding: const EdgeInsets.all(14),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            child: Row(
               children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: Text(name,
-                        style: const TextStyle(color: chocolate, fontSize: 17, fontWeight: FontWeight.bold),
-                        maxLines: 1, overflow: TextOverflow.ellipsis),
-                    ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: gold.withOpacity(0.15),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Row(children: [
-                        const Icon(Icons.star, color: gold, size: 16),
-                        const SizedBox(width: 3),
-                        Text(rating.toStringAsFixed(1),
-                          style: const TextStyle(color: chocolate, fontSize: 12, fontWeight: FontWeight.bold)),
-                      ]),
-                    ),
-                  ],
+                const Icon(Icons.location_on_outlined, color: Colors.black45, size: 16),
+                const SizedBox(width: 4),
+                Expanded(
+                  child: Text(city, style: const TextStyle(color: Colors.black54, fontSize: 13)),
                 ),
-                const SizedBox(height: 6),
-                Row(children: [
-                  const Icon(Icons.location_on_outlined, color: deepRose, size: 16),
-                  const SizedBox(width: 4),
-                  Text(city, style: const TextStyle(color: Colors.black54, fontSize: 13)),
-                ]),
-                const SizedBox(height: 10),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    RichText(
-                      text: TextSpan(
-                        children: [
-                          TextSpan(text: '$price ',
-                            style: const TextStyle(color: deepRose, fontSize: 18, fontWeight: FontWeight.bold)),
-                          const TextSpan(text: 'د.ل / ليلة',
-                            style: TextStyle(color: chocolate, fontSize: 12)),
-                        ],
-                      ),
-                    ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                      decoration: BoxDecoration(
-                        gradient: const LinearGradient(colors: [gold, deepRose]),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: const Text('احجز الآن',
-                        style: TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.bold)),
-                    ),
-                  ],
+                RichText(
+                  text: TextSpan(children: [
+                    TextSpan(text: '$price ',
+                      style: const TextStyle(color: primary, fontSize: 17, fontWeight: FontWeight.bold)),
+                    const TextSpan(text: 'د.ل / ليلة',
+                      style: TextStyle(color: chocolate, fontSize: 11)),
+                  ]),
                 ),
               ],
             ),
