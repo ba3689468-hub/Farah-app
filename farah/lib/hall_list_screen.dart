@@ -164,59 +164,68 @@ class _HallListScreenState extends State<HallListScreen> {
 
 
   Widget _buildTopHeader() {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 10, 16, 0),
-      child: Row(
+    return Container(
+      padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [primary, darkRed],
+        ),
+        borderRadius: BorderRadius.only(
+          bottomLeft: Radius.circular(28),
+          bottomRight: Radius.circular(28),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          GestureDetector(
-            onTap: () {},
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(colors: [gold, deepRose], begin: Alignment.topLeft, end: Alignment.bottomRight),
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [BoxShadow(color: gold.withOpacity(0.3), blurRadius: 8, offset: const Offset(0, 3))],
-              ),
-              child: const Row(mainAxisSize: MainAxisSize.min, children: [
-                Icon(Icons.account_balance_wallet, color: Colors.white, size: 14),
-                SizedBox(width: 4),
-                Text('0 د.ل', style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold)),
-              ]),
-            ),
-          ),
-          const SizedBox(width: 6),
-          GestureDetector(
-            onTap: () {
-              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('الإشعارات قريباً')));
-            },
-            child: Container(
-              width: 34, height: 34,
-              decoration: BoxDecoration(
-                color: Colors.white, shape: BoxShape.circle,
-                boxShadow: [BoxShadow(color: gold.withOpacity(0.2), blurRadius: 8, offset: const Offset(0, 3))],
-              ),
-              child: const Icon(Icons.notifications_none, color: gold, size: 18),
-            ),
-          ),
-          const Spacer(),
-          Container(
-            width: 44, height: 44,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              gradient: const LinearGradient(colors: [gold, deepRose]),
-              boxShadow: [BoxShadow(color: gold.withOpacity(0.35), blurRadius: 12, offset: const Offset(0, 4))],
-            ),
-            child: const Center(child: Text('ف', style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold))),
-          ),
-          const Spacer(),
-          const Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
+          Row(
             children: [
-              Text('مرحباً بك في', style: TextStyle(color: Colors.black45, fontSize: 10)),
-              Text('فرح', style: TextStyle(color: chocolate, fontSize: 15, fontWeight: FontWeight.bold)),
+              Container(
+                width: 44, height: 44,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.white.withOpacity(0.2),
+                ),
+                child: const Center(
+                  child: Text('ف', style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold)),
+                ),
+              ),
+              const Spacer(),
+              Container(
+                width: 40, height: 40,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.white.withOpacity(0.2),
+                ),
+                child: const Icon(Icons.notifications_none, color: Colors.white, size: 20),
+              ),
+              const SizedBox(width: 8),
+              Container(
+                width: 40, height: 40,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.white.withOpacity(0.2),
+                ),
+                child: const Icon(Icons.account_balance_wallet, color: Colors.white, size: 20),
+              ),
             ],
           ),
-          const SizedBox(width: 6),
+          const SizedBox(height: 20),
+          const Text('مرحباً بك في',
+            style: TextStyle(color: Colors.white70, fontSize: 13)),
+          const SizedBox(height: 2),
+          RichText(
+            text: const TextSpan(
+              style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
+              children: [
+                TextSpan(text: 'فرح', style: TextStyle(color: Colors.white)),
+                TextSpan(text: ' — ', style: TextStyle(color: Colors.white54)),
+                TextSpan(text: 'لحظاتك تستحق الأفضل', style: TextStyle(color: Color(0xFFF2EDE4), fontSize: 16)),
+              ],
+            ),
+          ),
         ],
       ),
     );
