@@ -392,6 +392,36 @@ class _HallListScreenState extends State<HallListScreen> {
   }
 
 
+  Widget _buildQuickActions() {
+    final items = [
+      {'icon': Icons.verified_user_outlined, 'label': 'حجز آمن'},
+      {'icon': Icons.credit_score_outlined, 'label': 'دفع سهل'},
+      {'icon': Icons.star_border, 'label': 'تقييمات'},
+      {'icon': Icons.headset_mic_outlined, 'label': 'دعم 24/7'},
+    ];
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: items.map((it) => Column(
+          children: [
+            Container(
+              width: 54, height: 54,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: primary.withOpacity(0.1),
+              ),
+              child: Icon(it['icon'] as IconData, color: primary, size: 24),
+            ),
+            const SizedBox(height: 6),
+            Text(it['label'] as String,
+              style: const TextStyle(color: chocolate, fontSize: 11, fontWeight: FontWeight.w600)),
+          ],
+        )).toList(),
+      ),
+    );
+  }
+
   Widget _buildCategoriesRow() {
     return SizedBox(
       height: 100,
