@@ -233,63 +233,72 @@ class _HallListScreenState extends State<HallListScreen> {
 
 
   Widget _buildSearchBar() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
-      child: Row(
-        children: [
-          Expanded(
-            child: Container(
-              height: 46,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(25),
-                boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4))],
-              ),
-              child: Row(
-                children: [
-                  const SizedBox(width: 14),
-                  const Icon(Icons.search, color: Color(0xFFC0392B), size: 20),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: TextField(
-                      controller: _searchCtrl,
-                      textAlign: TextAlign.right,
-                      onChanged: (v) => setState(() => _searchText = v.trim()),
-                      style: const TextStyle(fontSize: 13),
-                      decoration: const InputDecoration(
-                        hintText: 'ابحث عن صالة، خدمة، مدينة...',
-                        hintStyle: TextStyle(color: Colors.black38, fontSize: 12),
-                        border: InputBorder.none,
-                        enabledBorder: InputBorder.none,
-                        focusedBorder: InputBorder.none,
-                        isDense: true,
-                        contentPadding: EdgeInsets.zero,
-                        filled: false,
-                      ),
-                    ),
+    return Transform.translate(
+      offset: const Offset(0, -20),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        child: Container(
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(22),
+            boxShadow: [
+              BoxShadow(color: Colors.black.withOpacity(0.08), blurRadius: 20, offset: const Offset(0, 8)),
+            ],
+          ),
+          child: Row(
+            children: [
+              Expanded(
+                child: Container(
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: cream,
+                    borderRadius: BorderRadius.circular(14),
                   ),
-                  const SizedBox(width: 10),
-                ],
-              ),
-            ),
-          ),
-          const SizedBox(width: 10),
-          GestureDetector(
-            onTap: _showFilterSheet,
-            child: Container(
-              width: 46, height: 46,
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [Color(0xFFC0392B), Color(0xFFA93226)],
-                  begin: Alignment.topLeft, end: Alignment.bottomRight,
+                  child: Row(
+                    children: [
+                      const SizedBox(width: 12),
+                      const Icon(Icons.search, color: primary, size: 20),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: TextField(
+                          controller: _searchCtrl,
+                          textAlign: TextAlign.right,
+                          onChanged: (v) => setState(() => _searchText = v.trim()),
+                          style: const TextStyle(fontSize: 13, color: chocolate),
+                          decoration: const InputDecoration(
+                            hintText: 'ابحث عن صالة، خدمة...',
+                            hintStyle: TextStyle(color: Colors.black38, fontSize: 12),
+                            border: InputBorder.none,
+                            enabledBorder: InputBorder.none,
+                            focusedBorder: InputBorder.none,
+                            isDense: true,
+                            contentPadding: EdgeInsets.zero,
+                            filled: false,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                    ],
+                  ),
                 ),
-                borderRadius: BorderRadius.circular(14),
-                boxShadow: [BoxShadow(color: const Color(0xFFC0392B).withOpacity(0.3), blurRadius: 10, offset: const Offset(0, 4))],
               ),
-              child: const Icon(Icons.tune, color: Colors.white, size: 20),
-            ),
+              const SizedBox(width: 10),
+              GestureDetector(
+                onTap: _showFilterSheet,
+                child: Container(
+                  width: 48, height: 48,
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(colors: [primary, darkRed]),
+                    borderRadius: BorderRadius.circular(14),
+                    boxShadow: [BoxShadow(color: primary.withOpacity(0.3), blurRadius: 10, offset: const Offset(0, 4))],
+                  ),
+                  child: const Icon(Icons.tune, color: Colors.white, size: 20),
+                ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
