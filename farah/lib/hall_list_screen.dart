@@ -164,68 +164,59 @@ class _HallListScreenState extends State<HallListScreen> {
 
 
   Widget _buildTopHeader() {
-    return Container(
-      padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [primary, darkRed],
-        ),
-        borderRadius: BorderRadius.only(
-          bottomLeft: Radius.circular(28),
-          bottomRight: Radius.circular(28),
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 10, 16, 0),
+      child: Row(
         children: [
-          Row(
-            children: [
-              Container(
-                width: 44, height: 44,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Colors.white.withOpacity(0.2),
-                ),
-                child: const Center(
-                  child: Text('ف', style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold)),
-                ),
+          GestureDetector(
+            onTap: () {},
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(colors: [gold, deepRose], begin: Alignment.topLeft, end: Alignment.bottomRight),
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [BoxShadow(color: gold.withOpacity(0.3), blurRadius: 8, offset: const Offset(0, 3))],
               ),
-              const Spacer(),
-              Container(
-                width: 40, height: 40,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Colors.white.withOpacity(0.2),
-                ),
-                child: const Icon(Icons.notifications_none, color: Colors.white, size: 20),
-              ),
-              const SizedBox(width: 8),
-              Container(
-                width: 40, height: 40,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Colors.white.withOpacity(0.2),
-                ),
-                child: const Icon(Icons.account_balance_wallet, color: Colors.white, size: 20),
-              ),
-            ],
-          ),
-          const SizedBox(height: 20),
-          const Text('مرحباً بك في',
-            style: TextStyle(color: Colors.white70, fontSize: 13)),
-          const SizedBox(height: 2),
-          RichText(
-            text: const TextSpan(
-              style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
-              children: [
-                TextSpan(text: 'فرح', style: TextStyle(color: Colors.white)),
-                TextSpan(text: ' — ', style: TextStyle(color: Colors.white54)),
-                TextSpan(text: 'لحظاتك تستحق الأفضل', style: TextStyle(color: Color(0xFFF2EDE4), fontSize: 16)),
-              ],
+              child: const Row(mainAxisSize: MainAxisSize.min, children: [
+                Icon(Icons.account_balance_wallet, color: Colors.white, size: 14),
+                SizedBox(width: 4),
+                Text('0 د.ل', style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold)),
+              ]),
             ),
           ),
+          const SizedBox(width: 6),
+          GestureDetector(
+            onTap: () {
+              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('الإشعارات قريباً')));
+            },
+            child: Container(
+              width: 34, height: 34,
+              decoration: BoxDecoration(
+                color: Colors.white, shape: BoxShape.circle,
+                boxShadow: [BoxShadow(color: gold.withOpacity(0.2), blurRadius: 8, offset: const Offset(0, 3))],
+              ),
+              child: const Icon(Icons.notifications_none, color: gold, size: 18),
+            ),
+          ),
+          const Spacer(),
+          Container(
+            width: 44, height: 44,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: const LinearGradient(colors: [gold, deepRose]),
+              boxShadow: [BoxShadow(color: gold.withOpacity(0.35), blurRadius: 12, offset: const Offset(0, 4))],
+            ),
+            child: const Center(child: Text('ف', style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold))),
+          ),
+          const Spacer(),
+          const Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text('مرحباً بك في', style: TextStyle(color: Colors.black45, fontSize: 10)),
+              Text('فرح', style: TextStyle(color: chocolate, fontSize: 15, fontWeight: FontWeight.bold)),
+            ],
+          ),
+          const SizedBox(width: 6),
         ],
       ),
     );
@@ -233,72 +224,63 @@ class _HallListScreenState extends State<HallListScreen> {
 
 
   Widget _buildSearchBar() {
-    return Transform.translate(
-      offset: const Offset(0, -20),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 20),
-        child: Container(
-          padding: const EdgeInsets.all(14),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(22),
-            boxShadow: [
-              BoxShadow(color: Colors.black.withOpacity(0.08), blurRadius: 20, offset: const Offset(0, 8)),
-            ],
-          ),
-          child: Row(
-            children: [
-              Expanded(
-                child: Container(
-                  height: 48,
-                  decoration: BoxDecoration(
-                    color: cream,
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                  child: Row(
-                    children: [
-                      const SizedBox(width: 12),
-                      const Icon(Icons.search, color: primary, size: 20),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: TextField(
-                          controller: _searchCtrl,
-                          textAlign: TextAlign.right,
-                          onChanged: (v) => setState(() => _searchText = v.trim()),
-                          style: const TextStyle(fontSize: 13, color: chocolate),
-                          decoration: const InputDecoration(
-                            hintText: 'ابحث عن صالة، خدمة...',
-                            hintStyle: TextStyle(color: Colors.black38, fontSize: 12),
-                            border: InputBorder.none,
-                            enabledBorder: InputBorder.none,
-                            focusedBorder: InputBorder.none,
-                            isDense: true,
-                            contentPadding: EdgeInsets.zero,
-                            filled: false,
-                          ),
-                        ),
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: Row(
+        children: [
+          Expanded(
+            child: Container(
+              height: 46,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(25),
+                boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4))],
+              ),
+              child: Row(
+                children: [
+                  const SizedBox(width: 14),
+                  const Icon(Icons.search, color: Color(0xFFC0392B), size: 20),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: TextField(
+                      controller: _searchCtrl,
+                      textAlign: TextAlign.right,
+                      onChanged: (v) => setState(() => _searchText = v.trim()),
+                      style: const TextStyle(fontSize: 13),
+                      decoration: const InputDecoration(
+                        hintText: 'ابحث عن صالة، خدمة، مدينة...',
+                        hintStyle: TextStyle(color: Colors.black38, fontSize: 12),
+                        border: InputBorder.none,
+                        enabledBorder: InputBorder.none,
+                        focusedBorder: InputBorder.none,
+                        isDense: true,
+                        contentPadding: EdgeInsets.zero,
+                        filled: false,
                       ),
-                      const SizedBox(width: 8),
-                    ],
+                    ),
                   ),
-                ),
+                  const SizedBox(width: 10),
+                ],
               ),
-              const SizedBox(width: 10),
-              GestureDetector(
-                onTap: _showFilterSheet,
-                child: Container(
-                  width: 48, height: 48,
-                  decoration: BoxDecoration(
-                    gradient: const LinearGradient(colors: [primary, darkRed]),
-                    borderRadius: BorderRadius.circular(14),
-                    boxShadow: [BoxShadow(color: primary.withOpacity(0.3), blurRadius: 10, offset: const Offset(0, 4))],
-                  ),
-                  child: const Icon(Icons.tune, color: Colors.white, size: 20),
-                ),
-              ),
-            ],
+            ),
           ),
-        ),
+          const SizedBox(width: 10),
+          GestureDetector(
+            onTap: _showFilterSheet,
+            child: Container(
+              width: 46, height: 46,
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [Color(0xFFC0392B), Color(0xFFA93226)],
+                  begin: Alignment.topLeft, end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(14),
+                boxShadow: [BoxShadow(color: const Color(0xFFC0392B).withOpacity(0.3), blurRadius: 10, offset: const Offset(0, 4))],
+              ),
+              child: const Icon(Icons.tune, color: Colors.white, size: 20),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -391,36 +373,6 @@ class _HallListScreenState extends State<HallListScreen> {
     );
   }
 
-
-  Widget _buildQuickActions() {
-    final items = [
-      {'icon': Icons.verified_user_outlined, 'label': 'حجز آمن'},
-      {'icon': Icons.credit_score_outlined, 'label': 'دفع سهل'},
-      {'icon': Icons.star_border, 'label': 'تقييمات'},
-      {'icon': Icons.headset_mic_outlined, 'label': 'دعم 24/7'},
-    ];
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: items.map((it) => Column(
-          children: [
-            Container(
-              width: 54, height: 54,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: primary.withOpacity(0.1),
-              ),
-              child: Icon(it['icon'] as IconData, color: primary, size: 24),
-            ),
-            const SizedBox(height: 6),
-            Text(it['label'] as String,
-              style: const TextStyle(color: chocolate, fontSize: 11, fontWeight: FontWeight.w600)),
-          ],
-        )).toList(),
-      ),
-    );
-  }
 
   Widget _buildCategoriesRow() {
     return SizedBox(
@@ -643,85 +595,90 @@ class _HallListScreenState extends State<HallListScreen> {
     final image = hall['image'] ?? hall['coverImage'];
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 18),
+      margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(22),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.07), blurRadius: 18, offset: const Offset(0, 8))],
+        boxShadow: [BoxShadow(color: deepRose.withOpacity(0.12), blurRadius: 15, offset: const Offset(0, 6))],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           ClipRRect(
             borderRadius: const BorderRadius.vertical(top: Radius.circular(22)),
-            child: Stack(
-              children: [
-                Container(
-                  height: 180, width: double.infinity,
-                  color: primary.withOpacity(0.1),
-                  child: image != null
-                    ? Image.network(image, fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) => Center(child: Icon(Icons.celebration, size: 60, color: primary.withOpacity(0.3))))
-                    : Center(child: Icon(Icons.celebration, size: 60, color: primary.withOpacity(0.3))),
+            child: Container(
+              height: 160,
+              width: double.infinity,
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [lightGold, rose],
+                  begin: Alignment.topLeft, end: Alignment.bottomRight,
                 ),
-                // تدرج سفلي
-                Positioned.fill(
-                  child: Container(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        colors: [Colors.transparent, Colors.black.withOpacity(0.4)],
-                      ),
-                    ),
-                  ),
-                ),
-                // شارة التقييم
-                Positioned(
-                  top: 12, right: 12,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(Icons.star, color: Colors.amber, size: 14),
-                        const SizedBox(width: 3),
-                        Text(rating.toStringAsFixed(1),
-                          style: const TextStyle(color: chocolate, fontSize: 12, fontWeight: FontWeight.bold)),
-                      ],
-                    ),
-                  ),
-                ),
-                // الاسم داخل الصورة
-                Positioned(
-                  bottom: 12, right: 14, left: 14,
-                  child: Text(name,
-                    style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold, shadows: [Shadow(color: Colors.black54, blurRadius: 6)]),
-                    maxLines: 1, overflow: TextOverflow.ellipsis),
-                ),
-              ],
+              ),
+              child: image != null
+                ? Image.network(image, fit: BoxFit.cover,
+                    errorBuilder: (_, __, ___) => const Center(
+                      child: Icon(Icons.image, size: 60, color: Colors.white70)))
+                : const Center(child: Icon(Icons.celebration, size: 60, color: Colors.white70)),
             ),
           ),
           Padding(
             padding: const EdgeInsets.all(14),
-            child: Row(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Icon(Icons.location_on_outlined, color: Colors.black45, size: 16),
-                const SizedBox(width: 4),
-                Expanded(
-                  child: Text(city, style: const TextStyle(color: Colors.black54, fontSize: 13)),
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(name,
+                        style: const TextStyle(color: chocolate, fontSize: 17, fontWeight: FontWeight.bold),
+                        maxLines: 1, overflow: TextOverflow.ellipsis),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: gold.withOpacity(0.15),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Row(children: [
+                        const Icon(Icons.star, color: gold, size: 16),
+                        const SizedBox(width: 3),
+                        Text(rating.toStringAsFixed(1),
+                          style: const TextStyle(color: chocolate, fontSize: 12, fontWeight: FontWeight.bold)),
+                      ]),
+                    ),
+                  ],
                 ),
-                RichText(
-                  text: TextSpan(children: [
-                    TextSpan(text: '$price ',
-                      style: const TextStyle(color: primary, fontSize: 17, fontWeight: FontWeight.bold)),
-                    const TextSpan(text: 'د.ل / ليلة',
-                      style: TextStyle(color: chocolate, fontSize: 11)),
-                  ]),
+                const SizedBox(height: 6),
+                Row(children: [
+                  const Icon(Icons.location_on_outlined, color: deepRose, size: 16),
+                  const SizedBox(width: 4),
+                  Text(city, style: const TextStyle(color: Colors.black54, fontSize: 13)),
+                ]),
+                const SizedBox(height: 10),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    RichText(
+                      text: TextSpan(
+                        children: [
+                          TextSpan(text: '$price ',
+                            style: const TextStyle(color: deepRose, fontSize: 18, fontWeight: FontWeight.bold)),
+                          const TextSpan(text: 'د.ل / ليلة',
+                            style: TextStyle(color: chocolate, fontSize: 12)),
+                        ],
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(colors: [gold, deepRose]),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: const Text('احجز الآن',
+                        style: TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.bold)),
+                    ),
+                  ],
                 ),
               ],
             ),
