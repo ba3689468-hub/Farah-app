@@ -29,7 +29,7 @@ class FarahApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
-      themeMode: ThemeMode.system,
+      themeMode: ThemeMode.light,
       locale: const Locale('ar', 'LY'),
       supportedLocales: const [Locale('ar', 'LY'), Locale('en', 'US')],
       localizationsDelegates: const [

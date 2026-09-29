@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'login_screen.dart';
+import 'features/auth/presentation/screens/login_screen_farah.dart';
 
 class HallListScreen extends StatefulWidget {
   const HallListScreen({super.key});
@@ -53,7 +53,7 @@ class _HallListScreenState extends State<HallListScreen> {
     if (!mounted) return;
     Navigator.pushAndRemoveUntil(
       context,
-      MaterialPageRoute(builder: (_) => const LoginScreen()),
+      MaterialPageRoute(builder: (_) => const FarahGlassLoginScreen()),
       (route) => false,
     );
   }
@@ -85,6 +85,8 @@ class _HallListScreenState extends State<HallListScreen> {
                 const SizedBox(height: 14),
                 _buildCitiesRow(),
                 const SizedBox(height: 10),
+                _buildViewToggle(),
+                const SizedBox(height: 6),
                 Expanded(child: _buildHallsList()),
               ],
             ),
@@ -215,17 +217,6 @@ class _HallListScreenState extends State<HallListScreen> {
             ],
           ),
           const SizedBox(width: 6),
-          GestureDetector(
-            onTap: () => setState(() => _isGrid = !_isGrid),
-            child: Container(
-              width: 34, height: 34,
-              decoration: BoxDecoration(
-                color: Colors.white, shape: BoxShape.circle,
-                boxShadow: [BoxShadow(color: gold.withOpacity(0.2), blurRadius: 8, offset: const Offset(0, 3))],
-              ),
-              child: Icon(_isGrid ? Icons.view_list : Icons.grid_view, color: gold, size: 18),
-            ),
-          ),
         ],
       ),
     );
@@ -441,6 +432,39 @@ class _HallListScreenState extends State<HallListScreen> {
             ),
           );
         },
+      ),
+    );
+  }
+
+  Widget _buildViewToggle() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: Row(
+        children: [
+          const Text('طريقة العرض',
+            style: TextStyle(color: chocolate, fontSize: 13, fontWeight: FontWeight.w600)),
+          const Spacer(),
+          _viewBtn(icon: Icons.view_list, isActive: !_isGrid, onTap: () => setState(() => _isGrid = false)),
+          const SizedBox(width: 8),
+          _viewBtn(icon: Icons.grid_view, isActive: _isGrid, onTap: () => setState(() => _isGrid = true)),
+        ],
+      ),
+    );
+  }
+
+  Widget _viewBtn({required IconData icon, required bool isActive, required VoidCallback onTap}) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 250),
+        width: 36, height: 36,
+        decoration: BoxDecoration(
+          gradient: isActive ? const LinearGradient(colors: [gold, deepRose]) : null,
+          color: isActive ? null : Colors.white,
+          borderRadius: BorderRadius.circular(10),
+          boxShadow: [BoxShadow(color: gold.withOpacity(0.2), blurRadius: 6, offset: const Offset(0, 3))],
+        ),
+        child: Icon(icon, color: isActive ? Colors.white : Colors.black38, size: 18),
       ),
     );
   }
@@ -817,7 +841,7 @@ class _SimpleProfileScreenState extends State<SimpleProfileScreen> {
     if (!context.mounted) return;
     Navigator.pushAndRemoveUntil(
       context,
-      MaterialPageRoute(builder: (_) => const LoginScreen()),
+      MaterialPageRoute(builder: (_) => const FarahGlassLoginScreen()),
       (route) => false,
     );
   }
