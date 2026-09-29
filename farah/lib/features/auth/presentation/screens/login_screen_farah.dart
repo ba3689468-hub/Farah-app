@@ -104,29 +104,36 @@ class _FarahGlassLoginScreenState extends ConsumerState<FarahGlassLoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [Color(0xFFF3E7E4), Color(0xFFF2EDE4), Color(0xFFA93226)],
-            stops: [0.0, 0.5, 1.0],
-          ),
+          body: Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Color(0xFFF3E7E4),
+            Color(0xFFFF2EDE4),
+            Color(0xFFFFA93226),
+          ],
+          stops: [0.0, 0.5, 1.0],
         ),
-        child: SafeArea(
-          child: Center(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
-              child: Form(
-                key: _formKey,
-                child: _buildGlassCard(context),
-              ),
+      ),
+      child: SafeArea(
+        child: Center(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
+            child: Form(
+              key: _formKey,
+              child: _buildGlassCard(context),
             ),
           ),
         ),
       ),
-    );
-  }
+    )
+    .animate()
+    .fadeIn(duration: 1.seconds)
+    .slideY(begin: 0.1, end: 0.0, curve: Curves.easeOut),
+  ); // <--- هذا القوس يغلق الـ Scaffold بشكل صحيح
+}     // <--- هذا القوس يغلق دالة build
 
   Widget _buildGlassCard(BuildContext context) {
     return Stack(
