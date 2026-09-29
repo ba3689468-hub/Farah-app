@@ -317,48 +317,53 @@ class _FarahGlassLoginScreenState extends ConsumerState<FarahGlassLoginScreen> {
     String? Function(String?)? validator,
   }) {
     return Container(
+      height: 58,
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.35),
+        color: Colors.white,
         borderRadius: BorderRadius.circular(30),
-        border: Border.all(color: Colors.white.withOpacity(0.7), width: 1),
-        boxShadow: [BoxShadow(color: deepRose.withOpacity(0.08), blurRadius: 10, offset: const Offset(0, 4))],
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.06), blurRadius: 12, offset: const Offset(0, 4))],
       ),
-      child: Row(children: [
-        const SizedBox(width: 6),
-        Container(
-          width: 46, height: 46,
-          decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              colors: [Color(0xFFC0392B), Color(0xFFC0392B), Color(0xFFF2EDE4)],
-              begin: Alignment.topLeft, end: Alignment.bottomRight,
+      child: Row(
+        children: [
+          const SizedBox(width: 6),
+          Container(
+            width: 46, height: 46,
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [Color(0xFFC0392B), Color(0xFFA93226)],
+                begin: Alignment.topLeft, end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(14),
             ),
-            borderRadius: BorderRadius.circular(14),
-            boxShadow: [BoxShadow(color: gold.withOpacity(0.45), blurRadius: 8, offset: const Offset(0, 3))],
+            child: Icon(icon, color: Colors.white, size: 22),
           ),
-          child: Icon(icon, color: Colors.white, size: 22),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: TextFormField(
-            controller: controller,
-            obscureText: obscure,
-            keyboardType: keyboardType,
-            validator: validator,
-            enabled: !_loading,
-            textAlign: TextAlign.right,
-            style: const TextStyle(color: chocolate, fontSize: 15, fontWeight: FontWeight.w500),
-            decoration: InputDecoration(
-              hintText: hint,
-              hintStyle: TextStyle(color: chocolate.withOpacity(0.55), fontSize: 14),
-              errorStyle: const TextStyle(color: Colors.red, fontSize: 11, height: 0.8),
-              border: InputBorder.none, enabledBorder: InputBorder.none, focusedBorder: InputBorder.none,
-              isDense: true, contentPadding: const EdgeInsets.symmetric(vertical: 14),
+          const SizedBox(width: 12),
+          Expanded(
+            child: TextFormField(
+              controller: controller,
+              obscureText: obscure,
+              keyboardType: keyboardType,
+              validator: validator,
+              enabled: !_loading,
+              textAlign: TextAlign.right,
+              style: const TextStyle(color: chocolate, fontSize: 15, fontWeight: FontWeight.w500),
+              decoration: InputDecoration(
+                hintText: hint,
+                hintStyle: TextStyle(color: chocolate.withOpacity(0.5), fontSize: 14),
+                errorStyle: const TextStyle(color: Colors.red, fontSize: 11, height: 0.8),
+                border: InputBorder.none,
+                enabledBorder: InputBorder.none,
+                focusedBorder: InputBorder.none,
+                isDense: true,
+                contentPadding: const EdgeInsets.symmetric(vertical: 14),
+                filled: false,
+              ),
             ),
           ),
-        ),
-        if (suffix != null) suffix,
-        const SizedBox(width: 10),
-      ]),
+          if (suffix != null) suffix,
+          const SizedBox(width: 10),
+        ],
+      ),
     );
   }
 }

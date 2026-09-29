@@ -232,28 +232,36 @@ class _HallListScreenState extends State<HallListScreen> {
             child: Container(
               height: 46,
               decoration: BoxDecoration(
-                color: Colors.white, borderRadius: BorderRadius.circular(25),
-                boxShadow: [BoxShadow(color: gold.withOpacity(0.15), blurRadius: 12, offset: const Offset(0, 4))],
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(25),
+                boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4))],
               ),
-              child: Row(children: [
-                const SizedBox(width: 14),
-                const Icon(Icons.search, color: gold, size: 20),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: TextField(
-                    controller: _searchCtrl,
-                    textAlign: TextAlign.right,
-                    onChanged: (v) => setState(() => _searchText = v.trim()),
-                    style: const TextStyle(fontSize: 13),
-                    decoration: const InputDecoration(
-                      hintText: 'ابحث عن صالة، خدمة، مدينة...',
-                      hintStyle: TextStyle(color: Colors.black38, fontSize: 12),
-                      border: InputBorder.none,
+              child: Row(
+                children: [
+                  const SizedBox(width: 14),
+                  const Icon(Icons.search, color: Color(0xFFC0392B), size: 20),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: TextField(
+                      controller: _searchCtrl,
+                      textAlign: TextAlign.right,
+                      onChanged: (v) => setState(() => _searchText = v.trim()),
+                      style: const TextStyle(fontSize: 13),
+                      decoration: const InputDecoration(
+                        hintText: 'ابحث عن صالة، خدمة، مدينة...',
+                        hintStyle: TextStyle(color: Colors.black38, fontSize: 12),
+                        border: InputBorder.none,
+                        enabledBorder: InputBorder.none,
+                        focusedBorder: InputBorder.none,
+                        isDense: true,
+                        contentPadding: EdgeInsets.zero,
+                        filled: false,
+                      ),
                     ),
                   ),
-                ),
-                const SizedBox(width: 10),
-              ]),
+                  const SizedBox(width: 10),
+                ],
+              ),
             ),
           ),
           const SizedBox(width: 10),
@@ -262,9 +270,12 @@ class _HallListScreenState extends State<HallListScreen> {
             child: Container(
               width: 46, height: 46,
               decoration: BoxDecoration(
-                gradient: const LinearGradient(colors: [gold, deepRose], begin: Alignment.topLeft, end: Alignment.bottomRight),
+                gradient: const LinearGradient(
+                  colors: [Color(0xFFC0392B), Color(0xFFA93226)],
+                  begin: Alignment.topLeft, end: Alignment.bottomRight,
+                ),
                 borderRadius: BorderRadius.circular(14),
-                boxShadow: [BoxShadow(color: gold.withOpacity(0.35), blurRadius: 10, offset: const Offset(0, 4))],
+                boxShadow: [BoxShadow(color: const Color(0xFFC0392B).withOpacity(0.3), blurRadius: 10, offset: const Offset(0, 4))],
               ),
               child: const Icon(Icons.tune, color: Colors.white, size: 20),
             ),
@@ -273,6 +284,7 @@ class _HallListScreenState extends State<HallListScreen> {
       ),
     );
   }
+
 
 
   void _showFilterSheet() {
