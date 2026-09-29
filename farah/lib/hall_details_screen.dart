@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'booking_screen.dart';
 
 class HallDetailsScreen extends StatefulWidget {
   final Map<String, dynamic> hallData;
@@ -303,8 +304,14 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
             const Spacer(),
             GestureDetector(
               onTap: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('قريباً: شاشة الحجز')),
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => BookingScreen(
+                      hallData: widget.hallData,
+                      hallId: widget.hallId,
+                    ),
+                  ),
                 );
               },
               child: Container(
