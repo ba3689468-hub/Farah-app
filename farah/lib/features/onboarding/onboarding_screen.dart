@@ -28,7 +28,15 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: SafeArea(
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [Color(0xFFF3E7E4), Color(0xFFF2EDE4), Color(0xFFA93226)],
+          ),
+        ),
+        child: SafeArea(
           child: Column(children: [
             Align(
               alignment: Alignment.topLeft,
