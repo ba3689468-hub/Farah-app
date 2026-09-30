@@ -12,13 +12,13 @@ class HallListScreen extends StatefulWidget {
 }
 
 class _HallListScreenState extends State<HallListScreen> {
-  static const Color primary = Color(0xFFC0392B);
-  static const Color primaryDark = Color(0xFFA93226);
-  static const Color textDark = Color(0xFF2B1810);
-  static const Color textLight = Color(0xFF8A7A75);
+  static const Color primary = Color(0xFFE91E63);
+  static const Color primaryDark = Color(0xFFC2185B);
+  static const Color textDark = Color(0xFF1A1A1A);
+  static const Color textLight = Color(0xFF999999);
   static const Color cardWhite = Colors.white;
-  static const Color bgStart = Color(0xFFFFE5E5);
-  static const Color bgEnd = Color(0xFFF5EBE1);
+  static const Color bgStart = Color(0xFFFCE4EC);
+  static const Color bgEnd = Color(0xFFFFF5F7);
 
   int _currentIndex = 0;
   final _searchCtrl = TextEditingController();
@@ -491,10 +491,10 @@ class SimpleProfileScreen extends StatefulWidget {
 }
 
 class _SimpleProfileScreenState extends State<SimpleProfileScreen> {
-  static const Color primary = Color(0xFFC0392B);
-  static const Color primaryDark = Color(0xFFA93226);
-  static const Color textDark = Color(0xFF2B1810);
-  static const Color textLight = Color(0xFF8A7A75);
+  static const Color primary = Color(0xFFE91E63);
+  static const Color primaryDark = Color(0xFFC2185B);
+  static const Color textDark = Color(0xFF1A1A1A);
+  static const Color textLight = Color(0xFF999999);
 
   late Future<DocumentSnapshot> _userFuture;
 
