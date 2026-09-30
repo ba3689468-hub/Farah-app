@@ -104,20 +104,7 @@ class _FarahGlassLoginScreenState extends ConsumerState<FarahGlassLoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-          body: Container(
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            Color(0xFFF3E7E4),
-            Color(0xFFFF2EDE4),
-            Color(0xFFFFA93226),
-          ],
-          stops: [0.0, 0.5, 1.0],
-        ),
-      ),
-      child: SafeArea(
+          body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 40),

@@ -802,7 +802,7 @@ class _SimpleProfileScreenState extends State<SimpleProfileScreen> {
       context: context,
       builder: (_) => Dialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        backgroundColor: const Color(0xFFF3E7E4),
+        backgroundColor: Colors.transparent,
         child: Padding(
           padding: const EdgeInsets.all(22),
           child: Column(
