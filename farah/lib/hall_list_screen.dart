@@ -70,7 +70,7 @@ class _HallListScreenState extends State<HallListScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: cream,
+      backgroundColor: Colors.transparent,
             body: IndexedStack(
         index: _currentIndex,
         children: [
@@ -881,7 +881,7 @@ class _SimpleProfileScreenState extends State<SimpleProfileScreen> {
 
 
     return Scaffold(
-      backgroundColor: cream,
+      backgroundColor: Colors.transparent,
       body: FutureBuilder<DocumentSnapshot>(
         future: _userFuture,
         builder: (context, snap) {

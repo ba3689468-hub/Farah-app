@@ -39,7 +39,7 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
     final images = _getImages(hall);
 
     return Scaffold(
-      backgroundColor: cream,
+      backgroundColor: Colors.transparent,
       body: CustomScrollView(
         slivers: [
           SliverAppBar(

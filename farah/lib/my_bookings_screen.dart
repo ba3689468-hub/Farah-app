@@ -32,7 +32,7 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: cream,
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
         backgroundColor: primary,
         foregroundColor: Colors.white,
@@ -294,7 +294,7 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
       context: context,
       builder: (_) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        backgroundColor: cream,
+        backgroundColor: Colors.transparent,
         title: const Text('إلغاء الحجز', textAlign: TextAlign.right, style: TextStyle(color: chocolate)),
         content: const Text('هل أنت متأكد من إلغاء هذا الحجز؟', textAlign: TextAlign.right),
         actions: [

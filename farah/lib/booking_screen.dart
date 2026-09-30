@@ -41,7 +41,7 @@ class _BookingScreenState extends State<BookingScreen> {
         : int.tryParse(hall['price'].toString()) ?? 0;
 
     return Scaffold(
-      backgroundColor: cream,
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
         backgroundColor: primary,
         foregroundColor: Colors.white,
@@ -478,7 +478,7 @@ class _BookingScreenState extends State<BookingScreen> {
         context: context,
         builder: (_) => AlertDialog(
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          backgroundColor: cream,
+          backgroundColor: Colors.transparent,
           title: Row(
             children: const [
               Icon(Icons.check_circle, color: Colors.green, size: 28),
