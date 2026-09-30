@@ -13,10 +13,10 @@ class BookingScreen extends StatefulWidget {
 }
 
 class _BookingScreenState extends State<BookingScreen> {
-  static const Color primary = Color(0xFFC0392B);
-  static const Color darkRed = Color(0xFFA93226);
-  static const Color cream = Color(0xFFF2EDE4);
-  static const Color chocolate = Color(0xFF2B1810);
+  static const Color primary = Color(0xFFD7BDB0);
+  static const Color darkRed = Color(0xFFC4B5A9);
+  static const Color cream = Color(0xFFEDEEE9);
+  static const Color chocolate = Color(0xFF3E3530);
 
   DateTime? _selectedDate;
   int _guestsCount = 50;
@@ -41,7 +41,7 @@ class _BookingScreenState extends State<BookingScreen> {
         : int.tryParse(hall['price'].toString()) ?? 0;
 
     return Scaffold(
-      backgroundColor: Colors.transparent,
+      backgroundColor: cream,
       appBar: AppBar(
         backgroundColor: primary,
         foregroundColor: Colors.white,
@@ -478,7 +478,7 @@ class _BookingScreenState extends State<BookingScreen> {
         context: context,
         builder: (_) => AlertDialog(
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          backgroundColor: Colors.transparent,
+          backgroundColor: cream,
           title: Row(
             children: const [
               Icon(Icons.check_circle, color: Colors.green, size: 28),

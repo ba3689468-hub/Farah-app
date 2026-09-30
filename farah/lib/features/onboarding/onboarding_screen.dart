@@ -11,9 +11,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   final _pageCtrl = PageController();
   int _current = 0;
 
-  static const Color gold      = Color(0xFFC0392B);
-  static const Color lightGold = Color(0xFFA93226);
-  static const Color chocolate = Color(0xFFC0392B);
+  static const Color gold      = Color(0xFFD7BDB0);
+  static const Color lightGold = Color(0xFFC4B5A9);
+  static const Color chocolate = Color(0xFFD7BDB0);
 
   final List<Map<String, dynamic>> _pages = const [
     {'icon': Icons.celebration, 'title': 'مرحباً بك في فرح', 'desc': 'وجهتك الأولى لحجز صالات الأفراح والمناسبات في جميع المدن الليبية'},
@@ -33,7 +33,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [Color(0xFFF3E7E4), Color(0xFFF2EDE4), Color(0xFFA93226)],
+            colors: [Color(0xFFF5EBE1), Color(0xFFEDEEE9), Color(0xFFC4B5A9)],
           ),
         ),
         child: SafeArea(

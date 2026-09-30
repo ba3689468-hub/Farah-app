@@ -13,10 +13,10 @@ class HallDetailsScreen extends StatefulWidget {
 }
 
 class _HallDetailsScreenState extends State<HallDetailsScreen> {
-  static const Color primary = Color(0xFFC0392B);
-  static const Color darkRed = Color(0xFFA93226);
-  static const Color cream = Color(0xFFF2EDE4);
-  static const Color chocolate = Color(0xFF2B1810);
+  static const Color primary = Color(0xFFD7BDB0);
+  static const Color darkRed = Color(0xFFC4B5A9);
+  static const Color cream = Color(0xFFEDEEE9);
+  static const Color chocolate = Color(0xFF3E3530);
 
   final _pageCtrl = PageController();
   int _currentImage = 0;
@@ -39,7 +39,7 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
     final images = _getImages(hall);
 
     return Scaffold(
-      backgroundColor: Colors.transparent,
+      backgroundColor: cream,
       body: CustomScrollView(
         slivers: [
           SliverAppBar(

@@ -12,12 +12,12 @@ class HallListScreen extends StatefulWidget {
 }
 
 class _HallListScreenState extends State<HallListScreen> {
-  static const Color gold      = Color(0xFFC0392B);
-  static const Color lightGold = Color(0xFFF2EDE4);
-  static const Color rose      = Color(0xFFF2EDE4);
-  static const Color deepRose  = Color(0xFFC0392B);
-  static const Color cream     = Color(0xFFF3E7E4);
-  static const Color chocolate = Color(0xFFC0392B);
+  static const Color gold      = Color(0xFFD7BDB0);
+  static const Color lightGold = Color(0xFFEDEEE9);
+  static const Color rose      = Color(0xFFEDEEE9);
+  static const Color deepRose  = Color(0xFFD7BDB0);
+  static const Color cream     = Color(0xFFF5EBE1);
+  static const Color chocolate = Color(0xFFD7BDB0);
 
   int _currentIndex = 0;
   final _searchCtrl = TextEditingController();
@@ -27,11 +27,11 @@ class _HallListScreenState extends State<HallListScreen> {
   bool _isGrid = false;
 
   final List<Map<String, dynamic>> _categories = const [
-    {'name': 'قاعات',  'icon': Icons.meeting_room,     'color': Color(0xFFC0392B)},
-    {'name': 'تجميل',  'icon': Icons.spa,              'color': Color(0xFFC0392B)},
-    {'name': 'ضيافة',  'icon': Icons.restaurant_menu,  'color': Color(0xFFC0392B)},
-    {'name': 'فساتين', 'icon': Icons.checkroom,        'color': Color(0xFFC0392B)},
-    {'name': 'ديكورات','icon': Icons.palette,          'color': Color(0xFFC0392B)},
+    {'name': 'قاعات',  'icon': Icons.meeting_room,     'color': Color(0xFFD7BDB0)},
+    {'name': 'تجميل',  'icon': Icons.spa,              'color': Color(0xFFD7BDB0)},
+    {'name': 'ضيافة',  'icon': Icons.restaurant_menu,  'color': Color(0xFFD7BDB0)},
+    {'name': 'فساتين', 'icon': Icons.checkroom,        'color': Color(0xFFD7BDB0)},
+    {'name': 'ديكورات','icon': Icons.palette,          'color': Color(0xFFD7BDB0)},
   ];
 
   final List<String> _cities = const [
@@ -70,7 +70,7 @@ class _HallListScreenState extends State<HallListScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.transparent,
+      backgroundColor: cream,
             body: IndexedStack(
         index: _currentIndex,
         children: [
@@ -241,7 +241,7 @@ class _HallListScreenState extends State<HallListScreen> {
               child: Row(
                 children: [
                   const SizedBox(width: 14),
-                  const Icon(Icons.search, color: Color(0xFFC0392B), size: 20),
+                  const Icon(Icons.search, color: Color(0xFFD7BDB0), size: 20),
                   const SizedBox(width: 8),
                   Expanded(
                     child: TextField(
@@ -273,11 +273,11 @@ class _HallListScreenState extends State<HallListScreen> {
               width: 46, height: 46,
               decoration: BoxDecoration(
                 gradient: const LinearGradient(
-                  colors: [Color(0xFFC0392B), Color(0xFFA93226)],
+                  colors: [Color(0xFFD7BDB0), Color(0xFFC4B5A9)],
                   begin: Alignment.topLeft, end: Alignment.bottomRight,
                 ),
                 borderRadius: BorderRadius.circular(14),
-                boxShadow: [BoxShadow(color: const Color(0xFFC0392B).withOpacity(0.3), blurRadius: 10, offset: const Offset(0, 4))],
+                boxShadow: [BoxShadow(color: const Color(0xFFD7BDB0).withOpacity(0.3), blurRadius: 10, offset: const Offset(0, 4))],
               ),
               child: const Icon(Icons.tune, color: Colors.white, size: 20),
             ),
@@ -292,13 +292,13 @@ class _HallListScreenState extends State<HallListScreen> {
   void _showFilterSheet() {
     showModalBottomSheet(
       context: context,
-      backgroundColor: Colors.transparent,
+      backgroundColor: cream,
       isScrollControlled: true,
       builder: (_) => StatefulBuilder(
         builder: (context, setSheet) => Container(
           padding: const EdgeInsets.all(24),
           decoration: const BoxDecoration(
-            color: Color(0xFFF2EDE4),
+            color: Color(0xFFEDEEE9),
             borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
           ),
           child: Column(
@@ -791,18 +791,18 @@ class _SimpleProfileScreenState extends State<SimpleProfileScreen> {
         : FirebaseFirestore.instance.collection('users').doc(uid).get();
   }
 
-  static const Color gold      = Color(0xFFC0392B);
-  static const Color lightGold = Color(0xFFF2EDE4);
-  static const Color deepRose  = Color(0xFFC0392B);
-  static const Color cream     = Color(0xFFF3E7E4);
-  static const Color chocolate = Color(0xFFC0392B);
+  static const Color gold      = Color(0xFFD7BDB0);
+  static const Color lightGold = Color(0xFFEDEEE9);
+  static const Color deepRose  = Color(0xFFD7BDB0);
+  static const Color cream     = Color(0xFFF5EBE1);
+  static const Color chocolate = Color(0xFFD7BDB0);
 
   Future<void> _logout(BuildContext context) async {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (_) => Dialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        backgroundColor: Colors.transparent,
+        backgroundColor: cream,
         child: Padding(
           padding: const EdgeInsets.all(22),
           child: Column(
@@ -819,7 +819,7 @@ class _SimpleProfileScreenState extends State<SimpleProfileScreen> {
               const SizedBox(height: 16),
               const Text('تسجيل الخروج',
                 style: TextStyle(
-                  color: Color(0xFFC0392B),
+                  color: Color(0xFFD7BDB0),
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
                 )),
@@ -837,11 +837,11 @@ class _SimpleProfileScreenState extends State<SimpleProfileScreen> {
                         padding: const EdgeInsets.symmetric(vertical: 14),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(14),
-                          side: const BorderSide(color: Color(0xFFC0392B), width: 1.2),
+                          side: const BorderSide(color: Color(0xFFD7BDB0), width: 1.2),
                         ),
                       ),
                       child: const Text('إلغاء',
-                        style: TextStyle(color: Color(0xFFC0392B), fontWeight: FontWeight.bold)),
+                        style: TextStyle(color: Color(0xFFD7BDB0), fontWeight: FontWeight.bold)),
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -881,7 +881,7 @@ class _SimpleProfileScreenState extends State<SimpleProfileScreen> {
 
 
     return Scaffold(
-      backgroundColor: Colors.transparent,
+      backgroundColor: cream,
       body: FutureBuilder<DocumentSnapshot>(
         future: _userFuture,
         builder: (context, snap) {
@@ -1098,14 +1098,14 @@ class _SimpleProfileScreenState extends State<SimpleProfileScreen> {
           Container(
             width: 44, height: 44,
             decoration: BoxDecoration(
-              color: const Color(0xFFC0392B).withOpacity(0.1),
+              color: const Color(0xFFD7BDB0).withOpacity(0.1),
               borderRadius: BorderRadius.circular(14),
             ),
-            child: Icon(icon, color: const Color(0xFFC0392B), size: 22),
+            child: Icon(icon, color: const Color(0xFFD7BDB0), size: 22),
           ),
           const SizedBox(height: 8),
           Text(label,
-            style: const TextStyle(color: Color(0xFF2B1810), fontSize: 12, fontWeight: FontWeight.w600)),
+            style: const TextStyle(color: Color(0xFF3E3530), fontSize: 12, fontWeight: FontWeight.w600)),
         ],
       ),
     );

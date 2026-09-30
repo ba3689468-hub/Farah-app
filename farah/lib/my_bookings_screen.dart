@@ -10,10 +10,10 @@ class MyBookingsScreen extends StatefulWidget {
 }
 
 class _MyBookingsScreenState extends State<MyBookingsScreen> {
-  static const Color primary = Color(0xFFC0392B);
-  static const Color darkRed = Color(0xFFA93226);
-  static const Color cream = Color(0xFFF2EDE4);
-  static const Color chocolate = Color(0xFF2B1810);
+  static const Color primary = Color(0xFFD7BDB0);
+  static const Color darkRed = Color(0xFFC4B5A9);
+  static const Color cream = Color(0xFFEDEEE9);
+  static const Color chocolate = Color(0xFF3E3530);
 
   String _filter = 'all';
   late Future<QuerySnapshot> _future;
@@ -32,7 +32,7 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.transparent,
+      backgroundColor: cream,
       appBar: AppBar(
         backgroundColor: primary,
         foregroundColor: Colors.white,
@@ -294,7 +294,7 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
       context: context,
       builder: (_) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        backgroundColor: Colors.transparent,
+        backgroundColor: cream,
         title: const Text('إلغاء الحجز', textAlign: TextAlign.right, style: TextStyle(color: chocolate)),
         content: const Text('هل أنت متأكد من إلغاء هذا الحجز؟', textAlign: TextAlign.right),
         actions: [
