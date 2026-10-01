@@ -11,7 +11,6 @@ class OnboardingScreen extends StatefulWidget {
 class _OnboardingScreenState extends State<OnboardingScreen> {
   static const Color primary = Color(0xFFF06292);
   static const Color primaryDark = Color(0xFFEC407A);
-  static const Color bgLight = Color(0xFFFCE4EC);
   static const Color textDark = Color(0xFF1A1A1A);
   static const Color textLight = Color(0xFF999999);
 
@@ -107,7 +106,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                               ),
                               boxShadow: [
                                 BoxShadow(
-                                  color: primary.withOpacity(0.4),
+                                  color: primary.withValues(alpha: 0.4),
                                   blurRadius: 45,
                                   spreadRadius: 5,
                                 ),
@@ -152,7 +151,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       gradient: active
                           ? const LinearGradient(colors: [primary, primaryDark])
                           : null,
-                      color: active ? null : primary.withOpacity(0.25),
+                      color: active ? null : primary.withValues(alpha: 0.25),
                       borderRadius: BorderRadius.circular(10),
                     ),
                   );
@@ -189,7 +188,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(28),
                       ),
-                      shadowColor: primary.withOpacity(0.4),
+                      shadowColor: primary.withValues(alpha: 0.4),
                     ),
                     child: Text(
                       _current == _pages.length - 1 ? 'ابدأ الآن' : 'متابعة',

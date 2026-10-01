@@ -153,7 +153,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
               borderRadius: BorderRadius.circular(100),
               boxShadow: [
                 BoxShadow(
-                    color: deepRose.withOpacity(0.6),
+                    color: deepRose.withValues(alpha: 0.6),
                     blurRadius: 60,
                     spreadRadius: 10)
               ],
@@ -168,7 +168,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
-                colors: [cream.withOpacity(0.85), rose.withOpacity(0.75)],
+                colors: [cream.withValues(alpha: 0.85), rose.withValues(alpha: 0.75)],
               ),
               borderRadius: const BorderRadius.only(
                 topLeft: Radius.circular(80),
@@ -179,7 +179,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
               border: Border.all(color: Colors.transparent, width: 1.4),
               boxShadow: [
                 BoxShadow(
-                    color: deepRose.withOpacity(0.35),
+                    color: deepRose.withValues(alpha: 0.35),
                     blurRadius: 40,
                     offset: const Offset(0, 20))
               ],
@@ -312,9 +312,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                     padding: const EdgeInsets.symmetric(
                         horizontal: 14, vertical: 10),
                     decoration: BoxDecoration(
-                      color: Colors.red.withOpacity(0.12),
+                      color: Colors.red.withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.red.withOpacity(0.4)),
+                      border: Border.all(color: Colors.red.withValues(alpha: 0.4)),
                     ),
                     child: Row(children: [
                       const Icon(Icons.error_outline,
@@ -347,7 +347,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                     borderRadius: BorderRadius.circular(30),
                     boxShadow: [
                       BoxShadow(
-                          color: gold.withOpacity(0.55),
+                          color: gold.withValues(alpha: 0.55),
                           blurRadius: 22,
                           offset: const Offset(0, 8))
                     ],
@@ -389,7 +389,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 Row(mainAxisAlignment: MainAxisAlignment.center, children: [
                   Text('لديك حساب بالفعل؟ ',
                       style: TextStyle(
-                          color: chocolate.withOpacity(0.75), fontSize: 13)),
+                          color: chocolate.withValues(alpha: 0.75), fontSize: 13)),
                   GestureDetector(
                     onTap: _loading ? null : () => Navigator.pop(context),
                     child: const Text('سجّل دخول',
@@ -418,7 +418,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
               border: Border.all(color: gold, width: 2),
               boxShadow: [
                 BoxShadow(
-                    color: gold.withOpacity(0.4),
+                    color: gold.withValues(alpha: 0.4),
                     blurRadius: 22,
                     offset: const Offset(0, 8))
               ],
@@ -459,17 +459,17 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
         decoration: BoxDecoration(
           color: isSelected
-              ? gold.withOpacity(0.25)
-              : Colors.white.withOpacity(0.3),
+              ? gold.withValues(alpha: 0.25)
+              : Colors.white.withValues(alpha: 0.3),
           borderRadius: BorderRadius.circular(18),
           border: Border.all(
-            color: isSelected ? gold : Colors.white.withOpacity(0.6),
+            color: isSelected ? gold : Colors.white.withValues(alpha: 0.6),
             width: isSelected ? 2 : 1,
           ),
           boxShadow: isSelected
               ? [
                   BoxShadow(
-                      color: gold.withOpacity(0.4),
+                      color: gold.withValues(alpha: 0.4),
                       blurRadius: 12,
                       offset: const Offset(0, 4))
                 ]
@@ -479,18 +479,18 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(icon,
-                color: isSelected ? deepRose : chocolate.withOpacity(0.6),
+                color: isSelected ? deepRose : chocolate.withValues(alpha: 0.6),
                 size: 28),
             const SizedBox(height: 6),
             Text(title,
                 style: TextStyle(
-                    color: isSelected ? chocolate : chocolate.withOpacity(0.7),
+                    color: isSelected ? chocolate : chocolate.withValues(alpha: 0.7),
                     fontSize: 13,
                     fontWeight: FontWeight.bold)),
             const SizedBox(height: 2),
             Text(subtitle,
                 style: TextStyle(
-                    color: chocolate.withOpacity(0.55), fontSize: 10)),
+                    color: chocolate.withValues(alpha: 0.55), fontSize: 10)),
           ],
         ),
       ),
@@ -511,10 +511,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       decoration: BoxDecoration(
         color: Colors.transparent,
         borderRadius: BorderRadius.circular(30),
-        border: Border.all(color: Color(0x33FFFFFF), width: 1),
+        border: Border.all(color: const Color(0x33FFFFFF), width: 1),
         boxShadow: [
           BoxShadow(
-              color: deepRose.withOpacity(0.08),
+              color: deepRose.withValues(alpha: 0.08),
               blurRadius: 10,
               offset: const Offset(0, 4))
         ],
@@ -533,7 +533,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             borderRadius: BorderRadius.circular(14),
             boxShadow: [
               BoxShadow(
-                  color: gold.withOpacity(0.45),
+                  color: gold.withValues(alpha: 0.45),
                   blurRadius: 8,
                   offset: const Offset(0, 3))
             ],
@@ -554,7 +554,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             decoration: InputDecoration(
               hintText: hint,
               hintStyle:
-                  TextStyle(color: chocolate.withOpacity(0.55), fontSize: 13),
+                  TextStyle(color: chocolate.withValues(alpha: 0.55), fontSize: 13),
               errorStyle:
                   const TextStyle(color: Colors.red, fontSize: 11, height: 0.8),
               border: InputBorder.none,
