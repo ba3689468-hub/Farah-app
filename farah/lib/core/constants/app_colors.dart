@@ -5,12 +5,12 @@ class AppColors {
   AppColors._();
 
   // الألوان الأساسية
-  static const Color goldPrimary = Color(0xFFC9A961);   // الذهبي الفاخر
+  static const Color goldPrimary = Color(0xFFC9A961); // الذهبي الفاخر
   static const Color goldDark = Color(0xFF9B7B3F);
   static const Color goldLight = Color(0xFFE8D5A0);
 
-  static const Color pinkAccent = Color(0xFFE8A0BF);    // الوردي الراقي
-  static const Color creamSurface = Color(0xFFFFFDF7);  // الأبيض العاجي
+  static const Color pinkAccent = Color(0xFFE8A0BF); // الوردي الراقي
+  static const Color creamSurface = Color(0xFFFFFDF7); // الأبيض العاجي
 
   // ألوان الحالات
   static const Color success = Color(0xFF4CAF50);

@@ -18,7 +18,10 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
   bool? _seenOnboarding;
 
   @override
-  void initState() { super.initState(); _loadSeen(); }
+  void initState() {
+    super.initState();
+    _loadSeen();
+  }
 
   Future<void> _loadSeen() async {
     final p = await SharedPreferences.getInstance();
@@ -40,7 +43,8 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
     }
     final authState = ref.watch(authStateProvider);
     return authState.when(
-      loading: () => const Scaffold(body: Center(child: CircularProgressIndicator())),
+      loading: () =>
+          const Scaffold(body: Center(child: CircularProgressIndicator())),
       error: (e, _) => Scaffold(body: Center(child: Text('خطأ: $e'))),
       data: (fbUser) {
         if (fbUser == null) {
@@ -51,7 +55,8 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
         }
         final userAsync = ref.watch(currentUserProvider);
         return userAsync.when(
-          loading: () => const Scaffold(body: Center(child: CircularProgressIndicator())),
+          loading: () =>
+              const Scaffold(body: Center(child: CircularProgressIndicator())),
           error: (e, _) => Scaffold(body: Center(child: Text('خطأ: $e'))),
           data: (user) {
             if (user == null) {
@@ -100,7 +105,8 @@ class _ProviderPlaceholder extends StatelessWidget {
           children: [
             Icon(Icons.construction, size: 80, color: Colors.amber),
             SizedBox(height: 20),
-            Text('لوحة المزود قيد الإنشاء حالياً', style: TextStyle(fontSize: 18)),
+            Text('لوحة المزود قيد الإنشاء حالياً',
+                style: TextStyle(fontSize: 18)),
           ],
         ),
       ),

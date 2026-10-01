@@ -13,21 +13,21 @@ class RegisterScreen extends ConsumerStatefulWidget {
 
 class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _nameCtrl  = TextEditingController();
+  final _nameCtrl = TextEditingController();
   final _emailCtrl = TextEditingController();
   final _phoneCtrl = TextEditingController();
-  final _passCtrl  = TextEditingController();
+  final _passCtrl = TextEditingController();
 
   bool _obscure = true;
   bool _loading = false;
   String? _error;
   String _selectedRole = 'user';
 
-  static const Color gold      = Color(0xFFF06292);
+  static const Color gold = Color(0xFFF06292);
   static const Color lightGold = Color(0xFFFFF5F7);
-  static const Color rose      = Color(0xFFFFF5F7);
-  static const Color deepRose  = Color(0xFFF06292);
-  static const Color cream     = Color(0xFFFFF5F7);
+  static const Color rose = Color(0xFFFFF5F7);
+  static const Color deepRose = Color(0xFFF06292);
+  static const Color cream = Color(0xFFFFF5F7);
   static const Color chocolate = Color(0xFFF06292);
 
   @override
@@ -48,7 +48,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   Future<void> _register() async {
     if (!_formKey.currentState!.validate()) return;
     FocusScope.of(context).unfocus();
-    setState(() { _loading = true; _error = null; });
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
 
     try {
       final repo = ref.read(authRepositoryProvider);
@@ -107,7 +110,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             children: [
               // زر الرجوع
               Positioned(
-                top: 10, right: 20,
+                top: 10,
+                right: 20,
                 child: Material(
                   color: Colors.transparent,
                   shape: const CircleBorder(),
@@ -119,7 +123,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
               ),
               Center(
                 child: SingleChildScrollView(
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
                   child: Form(
                     key: _formKey,
                     child: _buildGlassCard(context),
@@ -139,12 +144,19 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       alignment: Alignment.topCenter,
       children: [
         Positioned(
-          bottom: -20, left: 20, right: 20,
+          bottom: -20,
+          left: 20,
+          right: 20,
           child: Container(
             height: 100,
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(100),
-              boxShadow: [BoxShadow(color: deepRose.withOpacity(0.6), blurRadius: 60, spreadRadius: 10)],
+              boxShadow: [
+                BoxShadow(
+                    color: deepRose.withOpacity(0.6),
+                    blurRadius: 60,
+                    spreadRadius: 10)
+              ],
             ),
           ),
         ),
@@ -165,19 +177,34 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 bottomRight: Radius.circular(80),
               ),
               border: Border.all(color: Colors.transparent, width: 1.4),
-              boxShadow: [BoxShadow(color: deepRose.withOpacity(0.35), blurRadius: 40, offset: const Offset(0, 20))],
+              boxShadow: [
+                BoxShadow(
+                    color: deepRose.withOpacity(0.35),
+                    blurRadius: 40,
+                    offset: const Offset(0, 20))
+              ],
             ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 const Text('إنشاء حساب',
-                  style: TextStyle(color: chocolate, fontSize: 28, fontWeight: FontWeight.bold,
-                    shadows: [Shadow(color: Colors.white54, blurRadius: 6, offset: Offset(0, 2))])),
+                    style: TextStyle(
+                        color: chocolate,
+                        fontSize: 28,
+                        fontWeight: FontWeight.bold,
+                        shadows: [
+                          Shadow(
+                              color: Colors.white54,
+                              blurRadius: 6,
+                              offset: Offset(0, 2))
+                        ])),
                 const SizedBox(height: 6),
                 Container(
-                  width: 60, height: 2,
+                  width: 60,
+                  height: 2,
                   decoration: BoxDecoration(
-                    gradient: const LinearGradient(colors: [gold, lightGold, gold]),
+                    gradient:
+                        const LinearGradient(colors: [gold, lightGold, gold]),
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
@@ -237,8 +264,11 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   },
                   suffix: IconButton(
                     icon: Icon(
-                      _obscure ? Icons.visibility_outlined : Icons.visibility_off_outlined,
-                      color: chocolate, size: 20,
+                      _obscure
+                          ? Icons.visibility_outlined
+                          : Icons.visibility_off_outlined,
+                      color: chocolate,
+                      size: 20,
                     ),
                     onPressed: () => setState(() => _obscure = !_obscure),
                   ),
@@ -249,7 +279,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 const Align(
                   alignment: Alignment.centerRight,
                   child: Text('نوع الحساب:',
-                    style: TextStyle(color: chocolate, fontSize: 14, fontWeight: FontWeight.bold)),
+                      style: TextStyle(
+                          color: chocolate,
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold)),
                 ),
                 const SizedBox(height: 10),
                 Row(children: [
@@ -276,18 +309,21 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 if (_error != null) ...[
                   const SizedBox(height: 14),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 14, vertical: 10),
                     decoration: BoxDecoration(
                       color: Colors.red.withOpacity(0.12),
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(color: Colors.red.withOpacity(0.4)),
                     ),
                     child: Row(children: [
-                      const Icon(Icons.error_outline, color: Colors.red, size: 20),
+                      const Icon(Icons.error_outline,
+                          color: Colors.red, size: 20),
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(_error!,
-                          style: const TextStyle(color: Colors.red, fontSize: 13)),
+                            style: const TextStyle(
+                                color: Colors.red, fontSize: 13)),
                       ),
                     ]),
                   ),
@@ -296,14 +332,25 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
                 // ── زر إنشاء حساب ──
                 Container(
-                  width: 220, height: 54,
+                  width: 220,
+                  height: 54,
                   decoration: BoxDecoration(
                     gradient: const LinearGradient(
-                      colors: [Color(0xFFF06292), Color(0xFFEC407A), Color(0xFFFFF5F7)],
-                      begin: Alignment.centerLeft, end: Alignment.centerRight,
+                      colors: [
+                        Color(0xFFF06292),
+                        Color(0xFFEC407A),
+                        Color(0xFFFFF5F7)
+                      ],
+                      begin: Alignment.centerLeft,
+                      end: Alignment.centerRight,
                     ),
                     borderRadius: BorderRadius.circular(30),
-                    boxShadow: [BoxShadow(color: gold.withOpacity(0.55), blurRadius: 22, offset: const Offset(0, 8))],
+                    boxShadow: [
+                      BoxShadow(
+                          color: gold.withOpacity(0.55),
+                          blurRadius: 22,
+                          offset: const Offset(0, 8))
+                    ],
                   ),
                   child: Material(
                     color: Colors.transparent,
@@ -312,21 +359,26 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                       onTap: _loading ? null : _register,
                       child: Center(
                         child: _loading
-                          ? const SizedBox(
-                              height: 24, width: 24,
-                              child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5),
-                            )
-                          : const Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(Icons.person_add_alt_1, color: Colors.white, size: 20),
-                                SizedBox(width: 10),
-                                Text('إنشاء حساب',
-                                  style: TextStyle(color: Colors.white,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 16, letterSpacing: 1)),
-                              ],
-                            ),
+                            ? const SizedBox(
+                                height: 24,
+                                width: 24,
+                                child: CircularProgressIndicator(
+                                    color: Colors.white, strokeWidth: 2.5),
+                              )
+                            : const Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(Icons.person_add_alt_1,
+                                      color: Colors.white, size: 20),
+                                  SizedBox(width: 10),
+                                  Text('إنشاء حساب',
+                                      style: TextStyle(
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 16,
+                                          letterSpacing: 1)),
+                                ],
+                              ),
                       ),
                     ),
                   ),
@@ -336,14 +388,17 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 // ── رابط تسجيل الدخول ──
                 Row(mainAxisAlignment: MainAxisAlignment.center, children: [
                   Text('لديك حساب بالفعل؟ ',
-                    style: TextStyle(color: chocolate.withOpacity(0.75), fontSize: 13)),
+                      style: TextStyle(
+                          color: chocolate.withOpacity(0.75), fontSize: 13)),
                   GestureDetector(
                     onTap: _loading ? null : () => Navigator.pop(context),
                     child: const Text('سجّل دخول',
-                      style: TextStyle(color: deepRose, fontSize: 13,
-                        fontWeight: FontWeight.bold,
-                        decoration: TextDecoration.underline,
-                        decorationColor: deepRose)),
+                        style: TextStyle(
+                            color: deepRose,
+                            fontSize: 13,
+                            fontWeight: FontWeight.bold,
+                            decoration: TextDecoration.underline,
+                            decorationColor: deepRose)),
                   ),
                 ]),
               ],
@@ -355,19 +410,32 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         Positioned(
           top: 0,
           child: Container(
-            width: 95, height: 95,
+            width: 95,
+            height: 95,
             decoration: BoxDecoration(
-              shape: BoxShape.circle, color: Colors.white,
+              shape: BoxShape.circle,
+              color: Colors.white,
               border: Border.all(color: gold, width: 2),
-              boxShadow: [BoxShadow(color: gold.withOpacity(0.4), blurRadius: 22, offset: const Offset(0, 8))],
+              boxShadow: [
+                BoxShadow(
+                    color: gold.withOpacity(0.4),
+                    blurRadius: 22,
+                    offset: const Offset(0, 8))
+              ],
             ),
             child: Center(
               child: ShaderMask(
                 shaderCallback: (bounds) => const LinearGradient(
-                  begin: Alignment.topCenter, end: Alignment.bottomCenter,
-                  colors: [Color(0xFFF06292), Color(0xFFF06292), Color(0xFFFFF5F7)],
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Color(0xFFF06292),
+                    Color(0xFFF06292),
+                    Color(0xFFFFF5F7)
+                  ],
                 ).createShader(bounds),
-                child: const Icon(Icons.person_add, size: 55, color: Colors.white),
+                child:
+                    const Icon(Icons.person_add, size: 55, color: Colors.white),
               ),
             ),
           ),
@@ -390,30 +458,39 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
         decoration: BoxDecoration(
-          color: isSelected ? gold.withOpacity(0.25) : Colors.white.withOpacity(0.3),
+          color: isSelected
+              ? gold.withOpacity(0.25)
+              : Colors.white.withOpacity(0.3),
           borderRadius: BorderRadius.circular(18),
           border: Border.all(
             color: isSelected ? gold : Colors.white.withOpacity(0.6),
             width: isSelected ? 2 : 1,
           ),
           boxShadow: isSelected
-            ? [BoxShadow(color: gold.withOpacity(0.4), blurRadius: 12, offset: const Offset(0, 4))]
-            : [],
+              ? [
+                  BoxShadow(
+                      color: gold.withOpacity(0.4),
+                      blurRadius: 12,
+                      offset: const Offset(0, 4))
+                ]
+              : [],
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, color: isSelected ? deepRose : chocolate.withOpacity(0.6), size: 28),
+            Icon(icon,
+                color: isSelected ? deepRose : chocolate.withOpacity(0.6),
+                size: 28),
             const SizedBox(height: 6),
             Text(title,
-              style: TextStyle(
-                color: isSelected ? chocolate : chocolate.withOpacity(0.7),
-                fontSize: 13, fontWeight: FontWeight.bold)),
+                style: TextStyle(
+                    color: isSelected ? chocolate : chocolate.withOpacity(0.7),
+                    fontSize: 13,
+                    fontWeight: FontWeight.bold)),
             const SizedBox(height: 2),
             Text(subtitle,
-              style: TextStyle(
-                color: chocolate.withOpacity(0.55),
-                fontSize: 10)),
+                style: TextStyle(
+                    color: chocolate.withOpacity(0.55), fontSize: 10)),
           ],
         ),
       ),
@@ -435,19 +512,31 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         color: Colors.transparent,
         borderRadius: BorderRadius.circular(30),
         border: Border.all(color: Color(0x33FFFFFF), width: 1),
-        boxShadow: [BoxShadow(color: deepRose.withOpacity(0.08), blurRadius: 10, offset: const Offset(0, 4))],
+        boxShadow: [
+          BoxShadow(
+              color: deepRose.withOpacity(0.08),
+              blurRadius: 10,
+              offset: const Offset(0, 4))
+        ],
       ),
       child: Row(children: [
         const SizedBox(width: 6),
         Container(
-          width: 46, height: 46,
+          width: 46,
+          height: 46,
           decoration: BoxDecoration(
             gradient: const LinearGradient(
               colors: [Color(0xFFF06292), Color(0xFFF06292), Color(0xFFFFF5F7)],
-              begin: Alignment.topLeft, end: Alignment.bottomRight,
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
             ),
             borderRadius: BorderRadius.circular(14),
-            boxShadow: [BoxShadow(color: gold.withOpacity(0.45), blurRadius: 8, offset: const Offset(0, 3))],
+            boxShadow: [
+              BoxShadow(
+                  color: gold.withOpacity(0.45),
+                  blurRadius: 8,
+                  offset: const Offset(0, 3))
+            ],
           ),
           child: Icon(icon, color: Colors.white, size: 22),
         ),
@@ -460,11 +549,14 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             validator: validator,
             enabled: !_loading,
             textAlign: TextAlign.right,
-            style: const TextStyle(color: chocolate, fontSize: 15, fontWeight: FontWeight.w500),
+            style: const TextStyle(
+                color: chocolate, fontSize: 15, fontWeight: FontWeight.w500),
             decoration: InputDecoration(
               hintText: hint,
-              hintStyle: TextStyle(color: chocolate.withOpacity(0.55), fontSize: 13),
-              errorStyle: const TextStyle(color: Colors.red, fontSize: 11, height: 0.8),
+              hintStyle:
+                  TextStyle(color: chocolate.withOpacity(0.55), fontSize: 13),
+              errorStyle:
+                  const TextStyle(color: Colors.red, fontSize: 11, height: 0.8),
               border: InputBorder.none,
               enabledBorder: InputBorder.none,
               focusedBorder: InputBorder.none,

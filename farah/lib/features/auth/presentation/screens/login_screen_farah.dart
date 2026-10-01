@@ -6,11 +6,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/auth_provider.dart';
 import 'register_screen.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+
 class FarahGlassLoginScreen extends ConsumerStatefulWidget {
   const FarahGlassLoginScreen({super.key});
 
   @override
-  ConsumerState<FarahGlassLoginScreen> createState() => _FarahGlassLoginScreenState();
+  ConsumerState<FarahGlassLoginScreen> createState() =>
+      _FarahGlassLoginScreenState();
 }
 
 class _FarahGlassLoginScreenState extends ConsumerState<FarahGlassLoginScreen> {
@@ -23,11 +25,11 @@ class _FarahGlassLoginScreenState extends ConsumerState<FarahGlassLoginScreen> {
   bool _loading = false;
   String? _error;
 
-  static const Color gold      = Color(0xFFF06292);
+  static const Color gold = Color(0xFFF06292);
   static const Color lightGold = Color(0xFFFFF5F7);
-  static const Color rose      = Color(0xFFFFF5F7);
-  static const Color deepRose  = Color(0xFFF06292);
-  static const Color cream     = Color(0xFFFFF5F7);
+  static const Color rose = Color(0xFFFFF5F7);
+  static const Color deepRose = Color(0xFFF06292);
+  static const Color cream = Color(0xFFFFF5F7);
   static const Color chocolate = Color(0xFFF06292);
 
   @override
@@ -51,7 +53,8 @@ class _FarahGlassLoginScreenState extends ConsumerState<FarahGlassLoginScreen> {
 
       final fbUser = FirebaseAuth.instance.currentUser;
       if (fbUser != null) {
-        final docRef = FirebaseFirestore.instance.collection('users').doc(fbUser.uid);
+        final docRef =
+            FirebaseFirestore.instance.collection('users').doc(fbUser.uid);
         final doc = await docRef.get();
         if (!doc.exists) {
           await docRef.set({
@@ -104,36 +107,36 @@ class _FarahGlassLoginScreenState extends ConsumerState<FarahGlassLoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-          body: Container(
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            Color(0xFFFFF5F7),
-            Color(0xFFFF2EDE4),
-            Color(0xFFFFA93226),
-          ],
-          stops: [0.0, 0.5, 1.0],
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Color(0xFFFFF5F7),
+              Color(0xFFFF2EDE4),
+              Color(0xFFFFA93226),
+            ],
+            stops: [0.0, 0.5, 1.0],
+          ),
         ),
-      ),
-      child: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
-            child: Form(
-              key: _formKey,
-              child: _buildGlassCard(context),
+        child: SafeArea(
+          child: Center(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
+              child: Form(
+                key: _formKey,
+                child: _buildGlassCard(context),
+              ),
             ),
           ),
         ),
-      ),
-    )
-    .animate()
-    .fadeIn(duration: 1.seconds)
-    .slideY(begin: 0.1, end: 0.0, curve: Curves.easeOut),
-  ); // <--- هذا القوس يغلق الـ Scaffold بشكل صحيح
-}     // <--- هذا القوس يغلق دالة build
+      )
+          .animate()
+          .fadeIn(duration: 1.seconds)
+          .slideY(begin: 0.1, end: 0.0, curve: Curves.easeOut),
+    ); // <--- هذا القوس يغلق الـ Scaffold بشكل صحيح
+  } // <--- هذا القوس يغلق دالة build
 
   Widget _buildGlassCard(BuildContext context) {
     return Stack(
@@ -141,12 +144,19 @@ class _FarahGlassLoginScreenState extends ConsumerState<FarahGlassLoginScreen> {
       alignment: Alignment.topCenter,
       children: [
         Positioned(
-          bottom: -20, left: 20, right: 20,
+          bottom: -20,
+          left: 20,
+          right: 20,
           child: Container(
             height: 100,
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(100),
-              boxShadow: [BoxShadow(color: deepRose.withOpacity(0.6), blurRadius: 60, spreadRadius: 10)],
+              boxShadow: [
+                BoxShadow(
+                    color: deepRose.withOpacity(0.6),
+                    blurRadius: 60,
+                    spreadRadius: 10)
+              ],
             ),
           ),
         ),
@@ -167,19 +177,34 @@ class _FarahGlassLoginScreenState extends ConsumerState<FarahGlassLoginScreen> {
                 bottomRight: Radius.circular(80),
               ),
               border: Border.all(color: Colors.transparent, width: 1.4),
-              boxShadow: [BoxShadow(color: deepRose.withOpacity(0.35), blurRadius: 40, offset: const Offset(0, 20))],
+              boxShadow: [
+                BoxShadow(
+                    color: deepRose.withOpacity(0.35),
+                    blurRadius: 40,
+                    offset: const Offset(0, 20))
+              ],
             ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 const Text('تسجيل الدخول',
-                  style: TextStyle(color: chocolate, fontSize: 30, fontWeight: FontWeight.bold,
-                    shadows: [Shadow(color: Colors.white54, blurRadius: 6, offset: Offset(0, 2))])),
+                    style: TextStyle(
+                        color: chocolate,
+                        fontSize: 30,
+                        fontWeight: FontWeight.bold,
+                        shadows: [
+                          Shadow(
+                              color: Colors.white54,
+                              blurRadius: 6,
+                              offset: Offset(0, 2))
+                        ])),
                 const SizedBox(height: 6),
                 Container(
-                  width: 60, height: 2,
+                  width: 60,
+                  height: 2,
                   decoration: BoxDecoration(
-                    gradient: const LinearGradient(colors: [gold, lightGold, gold]),
+                    gradient:
+                        const LinearGradient(colors: [gold, lightGold, gold]),
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
@@ -208,8 +233,11 @@ class _FarahGlassLoginScreenState extends ConsumerState<FarahGlassLoginScreen> {
                   },
                   suffix: IconButton(
                     icon: Icon(
-                      _obscure ? Icons.visibility_outlined : Icons.visibility_off_outlined,
-                      color: chocolate, size: 20,
+                      _obscure
+                          ? Icons.visibility_outlined
+                          : Icons.visibility_off_outlined,
+                      color: chocolate,
+                      size: 20,
                     ),
                     onPressed: () => setState(() => _obscure = !_obscure),
                   ),
@@ -217,65 +245,91 @@ class _FarahGlassLoginScreenState extends ConsumerState<FarahGlassLoginScreen> {
                 const SizedBox(height: 14),
                 Row(children: [
                   SizedBox(
-                    height: 22, width: 22,
+                    height: 22,
+                    width: 22,
                     child: Checkbox(
                       value: _remember,
-                      onChanged: _loading ? null : (v) => setState(() => _remember = v!),
-                      activeColor: deepRose, checkColor: Colors.white,
-                      side: BorderSide(color: chocolate.withOpacity(0.6), width: 1.5),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+                      onChanged: _loading
+                          ? null
+                          : (v) => setState(() => _remember = v!),
+                      activeColor: deepRose,
+                      checkColor: Colors.white,
+                      side: BorderSide(
+                          color: chocolate.withOpacity(0.6), width: 1.5),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(4)),
                     ),
                   ),
                   const SizedBox(width: 8),
-                  const Text('تذكرني', style: TextStyle(color: chocolate, fontSize: 13)),
+                  const Text('تذكرني',
+                      style: TextStyle(color: chocolate, fontSize: 13)),
                   const Spacer(),
                   TextButton(
-                    onPressed: _loading ? null : () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('قريباً: استعادة كلمة المرور')),
-                      );
-                    },
+                    onPressed: _loading
+                        ? null
+                        : () {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                  content: Text('قريباً: استعادة كلمة المرور')),
+                            );
+                          },
                     style: TextButton.styleFrom(
                       padding: EdgeInsets.zero,
                       minimumSize: const Size(0, 0),
                       tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                     ),
                     child: const Text('نسيت كلمة المرور؟',
-                      style: TextStyle(color: deepRose, fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                        decoration: TextDecoration.underline,
-                        decorationColor: deepRose)),
+                        style: TextStyle(
+                            color: deepRose,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            decoration: TextDecoration.underline,
+                            decorationColor: deepRose)),
                   ),
                 ]),
                 if (_error != null) ...[
                   const SizedBox(height: 14),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 14, vertical: 10),
                     decoration: BoxDecoration(
                       color: Colors.red.withOpacity(0.12),
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(color: Colors.red.withOpacity(0.4)),
                     ),
                     child: Row(children: [
-                      const Icon(Icons.error_outline, color: Colors.red, size: 20),
+                      const Icon(Icons.error_outline,
+                          color: Colors.red, size: 20),
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(_error!,
-                          style: const TextStyle(color: Colors.red, fontSize: 13)),
+                            style: const TextStyle(
+                                color: Colors.red, fontSize: 13)),
                       ),
                     ]),
                   ),
                 ],
                 const SizedBox(height: 26),
                 Container(
-                  width: 200, height: 54,
+                  width: 200,
+                  height: 54,
                   decoration: BoxDecoration(
                     gradient: const LinearGradient(
-                      colors: [Color(0xFFF06292), Color(0xFFEC407A), Color(0xFFFFF5F7)],
-                      begin: Alignment.centerLeft, end: Alignment.centerRight,
+                      colors: [
+                        Color(0xFFF06292),
+                        Color(0xFFEC407A),
+                        Color(0xFFFFF5F7)
+                      ],
+                      begin: Alignment.centerLeft,
+                      end: Alignment.centerRight,
                     ),
                     borderRadius: BorderRadius.circular(30),
-                    boxShadow: [BoxShadow(color: gold.withOpacity(0.55), blurRadius: 22, offset: const Offset(0, 8))],
+                    boxShadow: [
+                      BoxShadow(
+                          color: gold.withOpacity(0.55),
+                          blurRadius: 22,
+                          offset: const Offset(0, 8))
+                    ],
                   ),
                   child: Material(
                     color: Colors.transparent,
@@ -284,21 +338,26 @@ class _FarahGlassLoginScreenState extends ConsumerState<FarahGlassLoginScreen> {
                       onTap: _loading ? null : _login,
                       child: Center(
                         child: _loading
-                          ? const SizedBox(
-                              height: 24, width: 24,
-                              child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5),
-                            )
-                          : const Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(Icons.celebration, color: Colors.white, size: 20),
-                                SizedBox(width: 10),
-                                Text('دخول',
-                                  style: TextStyle(color: Colors.white,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 17, letterSpacing: 2)),
-                              ],
-                            ),
+                            ? const SizedBox(
+                                height: 24,
+                                width: 24,
+                                child: CircularProgressIndicator(
+                                    color: Colors.white, strokeWidth: 2.5),
+                              )
+                            : const Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(Icons.celebration,
+                                      color: Colors.white, size: 20),
+                                  SizedBox(width: 10),
+                                  Text('دخول',
+                                      style: TextStyle(
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 17,
+                                          letterSpacing: 2)),
+                                ],
+                              ),
                       ),
                     ),
                   ),
@@ -306,14 +365,17 @@ class _FarahGlassLoginScreenState extends ConsumerState<FarahGlassLoginScreen> {
                 const SizedBox(height: 18),
                 Row(mainAxisAlignment: MainAxisAlignment.center, children: [
                   Text('ليس لديك حساب؟ ',
-                    style: TextStyle(color: chocolate.withOpacity(0.75), fontSize: 13)),
+                      style: TextStyle(
+                          color: chocolate.withOpacity(0.75), fontSize: 13)),
                   GestureDetector(
                     onTap: _loading ? null : _goToRegister,
                     child: const Text('أنشئ حساباً الآن',
-                      style: TextStyle(color: deepRose, fontSize: 13,
-                        fontWeight: FontWeight.bold,
-                        decoration: TextDecoration.underline,
-                        decorationColor: deepRose)),
+                        style: TextStyle(
+                            color: deepRose,
+                            fontSize: 13,
+                            fontWeight: FontWeight.bold,
+                            decoration: TextDecoration.underline,
+                            decorationColor: deepRose)),
                   ),
                 ]),
               ],
@@ -323,17 +385,29 @@ class _FarahGlassLoginScreenState extends ConsumerState<FarahGlassLoginScreen> {
         Positioned(
           top: 0,
           child: Container(
-            width: 95, height: 95,
+            width: 95,
+            height: 95,
             decoration: BoxDecoration(
-              shape: BoxShape.circle, color: Colors.white,
+              shape: BoxShape.circle,
+              color: Colors.white,
               border: Border.all(color: gold, width: 2),
-              boxShadow: [BoxShadow(color: gold.withOpacity(0.4), blurRadius: 22, offset: const Offset(0, 8))],
+              boxShadow: [
+                BoxShadow(
+                    color: gold.withOpacity(0.4),
+                    blurRadius: 22,
+                    offset: const Offset(0, 8))
+              ],
             ),
             child: Center(
               child: ShaderMask(
                 shaderCallback: (bounds) => const LinearGradient(
-                  begin: Alignment.topCenter, end: Alignment.bottomCenter,
-                  colors: [Color(0xFFF06292), Color(0xFFF06292), Color(0xFFFFF5F7)],
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Color(0xFFF06292),
+                    Color(0xFFF06292),
+                    Color(0xFFFFF5F7)
+                  ],
                 ).createShader(bounds),
                 child: const Icon(Icons.person, size: 55, color: Colors.white),
               ),
@@ -358,17 +432,24 @@ class _FarahGlassLoginScreenState extends ConsumerState<FarahGlassLoginScreen> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(30),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.06), blurRadius: 12, offset: const Offset(0, 4))],
+        boxShadow: [
+          BoxShadow(
+              color: Colors.black.withOpacity(0.06),
+              blurRadius: 12,
+              offset: const Offset(0, 4))
+        ],
       ),
       child: Row(
         children: [
           const SizedBox(width: 6),
           Container(
-            width: 46, height: 46,
+            width: 46,
+            height: 46,
             decoration: BoxDecoration(
               gradient: const LinearGradient(
                 colors: [Color(0xFFF06292), Color(0xFFEC407A)],
-                begin: Alignment.topLeft, end: Alignment.bottomRight,
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
               ),
               borderRadius: BorderRadius.circular(14),
             ),
@@ -383,11 +464,14 @@ class _FarahGlassLoginScreenState extends ConsumerState<FarahGlassLoginScreen> {
               validator: validator,
               enabled: !_loading,
               textAlign: TextAlign.right,
-              style: const TextStyle(color: chocolate, fontSize: 15, fontWeight: FontWeight.w500),
+              style: const TextStyle(
+                  color: chocolate, fontSize: 15, fontWeight: FontWeight.w500),
               decoration: InputDecoration(
                 hintText: hint,
-                hintStyle: TextStyle(color: chocolate.withOpacity(0.5), fontSize: 14),
-                errorStyle: const TextStyle(color: Colors.red, fontSize: 11, height: 0.8),
+                hintStyle:
+                    TextStyle(color: chocolate.withOpacity(0.5), fontSize: 14),
+                errorStyle: const TextStyle(
+                    color: Colors.red, fontSize: 11, height: 0.8),
                 border: InputBorder.none,
                 enabledBorder: InputBorder.none,
                 focusedBorder: InputBorder.none,

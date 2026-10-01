@@ -22,7 +22,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     {
       'icon': Icons.celebration,
       'title': 'مرحباً بك في فرح',
-      'desc': 'وجهتك الأولى لحجز صالات الأفراح والمناسبات في جميع المدن الليبية',
+      'desc':
+          'وجهتك الأولى لحجز صالات الأفراح والمناسبات في جميع المدن الليبية',
     },
     {
       'icon': Icons.storefront,
@@ -73,11 +74,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       );
                     },
                     child: const Text('تخطي',
-                      style: TextStyle(
-                        color: primary,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 15,
-                      )),
+                        style: TextStyle(
+                          color: primary,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 15,
+                        )),
                   ),
                 ),
               ),
@@ -95,7 +96,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Container(
-                            width: 180, height: 180,
+                            width: 180,
+                            height: 180,
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
                               gradient: const LinearGradient(
@@ -112,24 +114,24 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                               ],
                             ),
                             child: Icon(p['icon'] as IconData,
-                              size: 85, color: Colors.white),
+                                size: 85, color: Colors.white),
                           ),
                           const SizedBox(height: 50),
                           Text(p['title'] as String,
-                            textAlign: TextAlign.center,
-                            style: const TextStyle(
-                              fontSize: 26,
-                              fontWeight: FontWeight.bold,
-                              color: textDark,
-                            )),
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(
+                                fontSize: 26,
+                                fontWeight: FontWeight.bold,
+                                color: textDark,
+                              )),
                           const SizedBox(height: 14),
                           Text(p['desc'] as String,
-                            textAlign: TextAlign.center,
-                            style: const TextStyle(
-                              fontSize: 15,
-                              color: textLight,
-                              height: 1.7,
-                            )),
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(
+                                fontSize: 15,
+                                color: textLight,
+                                height: 1.7,
+                              )),
                         ],
                       ),
                     );

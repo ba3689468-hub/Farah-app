@@ -15,7 +15,8 @@ class AuthRepositoryImpl implements AuthRepository {
 
   @override
   Future<UserCredential> signUp(String email, String password) {
-    return _auth.createUserWithEmailAndPassword(email: email, password: password);
+    return _auth.createUserWithEmailAndPassword(
+        email: email, password: password);
   }
 
   @override

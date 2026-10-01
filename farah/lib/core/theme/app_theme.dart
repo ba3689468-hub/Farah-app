@@ -29,7 +29,9 @@ class AppTheme {
         elevation: 0,
         centerTitle: true,
         titleTextStyle: GoogleFonts.cairo(
-          fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white,
+          fontSize: 20,
+          fontWeight: FontWeight.bold,
+          color: Colors.white,
         ),
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
@@ -37,8 +39,10 @@ class AppTheme {
           backgroundColor: AppColors.goldPrimary,
           foregroundColor: Colors.white,
           minimumSize: const Size(double.infinity, 55),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-          textStyle: GoogleFonts.cairo(fontSize: 18, fontWeight: FontWeight.bold),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+          textStyle:
+              GoogleFonts.cairo(fontSize: 18, fontWeight: FontWeight.bold),
         ),
       ),
       inputDecorationTheme: InputDecorationTheme(
@@ -90,7 +94,9 @@ class AppTheme {
         elevation: 0,
         centerTitle: true,
         titleTextStyle: GoogleFonts.cairo(
-          fontSize: 20, fontWeight: FontWeight.bold, color: AppColors.goldPrimary,
+          fontSize: 20,
+          fontWeight: FontWeight.bold,
+          color: AppColors.goldPrimary,
         ),
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
@@ -98,8 +104,10 @@ class AppTheme {
           backgroundColor: AppColors.goldPrimary,
           foregroundColor: Colors.black,
           minimumSize: const Size(double.infinity, 55),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-          textStyle: GoogleFonts.cairo(fontSize: 18, fontWeight: FontWeight.bold),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+          textStyle:
+              GoogleFonts.cairo(fontSize: 18, fontWeight: FontWeight.bold),
         ),
       ),
     );

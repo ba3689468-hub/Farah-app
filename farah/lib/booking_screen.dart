@@ -46,7 +46,8 @@ class _BookingScreenState extends State<BookingScreen> {
         backgroundColor: primary,
         foregroundColor: Colors.white,
         elevation: 0,
-        title: const Text('حجز القاعة', style: TextStyle(fontWeight: FontWeight.bold)),
+        title: const Text('حجز القاعة',
+            style: TextStyle(fontWeight: FontWeight.bold)),
         centerTitle: true,
       ),
       body: SingleChildScrollView(
@@ -72,12 +73,18 @@ class _BookingScreenState extends State<BookingScreen> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(18),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 12, offset: const Offset(0, 4))],
+        boxShadow: [
+          BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 12,
+              offset: const Offset(0, 4))
+        ],
       ),
       child: Row(
         children: [
           Container(
-            width: 60, height: 60,
+            width: 60,
+            height: 60,
             decoration: BoxDecoration(
               gradient: const LinearGradient(colors: [primary, darkRed]),
               borderRadius: BorderRadius.circular(14),
@@ -89,17 +96,28 @@ class _BookingScreenState extends State<BookingScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('أنت تحجز في', style: TextStyle(color: Colors.black45, fontSize: 11)),
+                const Text('أنت تحجز في',
+                    style: TextStyle(color: Colors.black45, fontSize: 11)),
                 const SizedBox(height: 3),
-                Text(name, style: const TextStyle(color: chocolate, fontSize: 17, fontWeight: FontWeight.bold)),
+                Text(name,
+                    style: const TextStyle(
+                        color: chocolate,
+                        fontSize: 17,
+                        fontWeight: FontWeight.bold)),
               ],
             ),
           ),
           RichText(
             text: TextSpan(children: [
-              TextSpan(text: '$basePrice ',
-                style: const TextStyle(color: primary, fontSize: 17, fontWeight: FontWeight.bold)),
-              const TextSpan(text: 'د.ل', style: TextStyle(color: chocolate, fontSize: 11)),
+              TextSpan(
+                  text: '$basePrice ',
+                  style: const TextStyle(
+                      color: primary,
+                      fontSize: 17,
+                      fontWeight: FontWeight.bold)),
+              const TextSpan(
+                  text: 'د.ل',
+                  style: TextStyle(color: chocolate, fontSize: 11)),
             ]),
           ),
         ],
@@ -110,7 +128,15 @@ class _BookingScreenState extends State<BookingScreen> {
   Widget _buildDateSection() {
     final now = DateTime.now();
     final days = List.generate(14, (i) => now.add(Duration(days: i + 1)));
-    final dayNames = ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
+    final dayNames = [
+      'الأحد',
+      'الاثنين',
+      'الثلاثاء',
+      'الأربعاء',
+      'الخميس',
+      'الجمعة',
+      'السبت'
+    ];
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),
@@ -118,7 +144,12 @@ class _BookingScreenState extends State<BookingScreen> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(18),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 12, offset: const Offset(0, 4))],
+        boxShadow: [
+          BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 12,
+              offset: const Offset(0, 4))
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -131,11 +162,15 @@ class _BookingScreenState extends State<BookingScreen> {
                   color: primary.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: const Icon(Icons.calendar_today, color: primary, size: 18),
+                child:
+                    const Icon(Icons.calendar_today, color: primary, size: 18),
               ),
               const SizedBox(width: 10),
               const Text('اختر التاريخ',
-                style: TextStyle(color: chocolate, fontSize: 16, fontWeight: FontWeight.bold)),
+                  style: TextStyle(
+                      color: chocolate,
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold)),
             ],
           ),
           const SizedBox(height: 14),
@@ -156,20 +191,35 @@ class _BookingScreenState extends State<BookingScreen> {
                     duration: const Duration(milliseconds: 220),
                     width: 62,
                     decoration: BoxDecoration(
-                      gradient: selected ? const LinearGradient(colors: [primary, darkRed]) : null,
+                      gradient: selected
+                          ? const LinearGradient(colors: [primary, darkRed])
+                          : null,
                       color: selected ? null : cream,
                       borderRadius: BorderRadius.circular(14),
-                      border: Border.all(color: selected ? Colors.transparent : primary.withOpacity(0.2)),
+                      border: Border.all(
+                          color: selected
+                              ? Colors.transparent
+                              : primary.withOpacity(0.2)),
                     ),
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Text(dayNames[d.weekday % 7],
-                          style: TextStyle(color: selected ? Colors.white70 : Colors.black45, fontSize: 10)),
+                            style: TextStyle(
+                                color:
+                                    selected ? Colors.white70 : Colors.black45,
+                                fontSize: 10)),
                         const SizedBox(height: 4),
-                        Text('${d.day}', style: TextStyle(color: selected ? Colors.white : chocolate, fontSize: 20, fontWeight: FontWeight.bold)),
+                        Text('${d.day}',
+                            style: TextStyle(
+                                color: selected ? Colors.white : chocolate,
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold)),
                         Text(DateFormat('MMM', 'en').format(d),
-                          style: TextStyle(color: selected ? Colors.white70 : Colors.black45, fontSize: 10)),
+                            style: TextStyle(
+                                color:
+                                    selected ? Colors.white70 : Colors.black45,
+                                fontSize: 10)),
                       ],
                     ),
                   ),
@@ -191,7 +241,10 @@ class _BookingScreenState extends State<BookingScreen> {
                   const SizedBox(width: 8),
                   Text(
                     'التاريخ المختار: ${DateFormat('yyyy/MM/dd').format(_selectedDate!)}',
-                    style: const TextStyle(color: chocolate, fontSize: 12, fontWeight: FontWeight.w600),
+                    style: const TextStyle(
+                        color: chocolate,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600),
                   ),
                 ],
               ),
@@ -209,7 +262,12 @@ class _BookingScreenState extends State<BookingScreen> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(18),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 12, offset: const Offset(0, 4))],
+        boxShadow: [
+          BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 12,
+              offset: const Offset(0, 4))
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -222,11 +280,15 @@ class _BookingScreenState extends State<BookingScreen> {
                   color: primary.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: const Icon(Icons.people_outline, color: primary, size: 18),
+                child:
+                    const Icon(Icons.people_outline, color: primary, size: 18),
               ),
               const SizedBox(width: 10),
               const Text('عدد الضيوف',
-                style: TextStyle(color: chocolate, fontSize: 16, fontWeight: FontWeight.bold)),
+                  style: TextStyle(
+                      color: chocolate,
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold)),
             ],
           ),
           const SizedBox(height: 14),
@@ -235,11 +297,14 @@ class _BookingScreenState extends State<BookingScreen> {
             children: [
               _counterBtn(
                 icon: Icons.remove,
-                onTap: _guestsCount > 10 ? () => setState(() => _guestsCount -= 10) : null,
+                onTap: _guestsCount > 10
+                    ? () => setState(() => _guestsCount -= 10)
+                    : null,
               ),
               Container(
                 margin: const EdgeInsets.symmetric(horizontal: 20),
-                padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 14),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 30, vertical: 14),
                 decoration: BoxDecoration(
                   gradient: const LinearGradient(colors: [primary, darkRed]),
                   borderRadius: BorderRadius.circular(16),
@@ -247,14 +312,20 @@ class _BookingScreenState extends State<BookingScreen> {
                 child: Column(
                   children: [
                     Text('$_guestsCount',
-                      style: const TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.bold)),
-                    const Text('ضيف', style: TextStyle(color: Colors.white70, fontSize: 11)),
+                        style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 28,
+                            fontWeight: FontWeight.bold)),
+                    const Text('ضيف',
+                        style: TextStyle(color: Colors.white70, fontSize: 11)),
                   ],
                 ),
               ),
               _counterBtn(
                 icon: Icons.add,
-                onTap: _guestsCount < 1000 ? () => setState(() => _guestsCount += 10) : null,
+                onTap: _guestsCount < 1000
+                    ? () => setState(() => _guestsCount += 10)
+                    : null,
               ),
             ],
           ),
@@ -268,9 +339,11 @@ class _BookingScreenState extends State<BookingScreen> {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        width: 50, height: 50,
+        width: 50,
+        height: 50,
         decoration: BoxDecoration(
-          color: enabled ? primary.withOpacity(0.1) : Colors.grey.withOpacity(0.1),
+          color:
+              enabled ? primary.withOpacity(0.1) : Colors.grey.withOpacity(0.1),
           borderRadius: BorderRadius.circular(14),
         ),
         child: Icon(icon, color: enabled ? primary : Colors.black26, size: 24),
@@ -285,7 +358,12 @@ class _BookingScreenState extends State<BookingScreen> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(18),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 12, offset: const Offset(0, 4))],
+        boxShadow: [
+          BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 12,
+              offset: const Offset(0, 4))
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -298,13 +376,18 @@ class _BookingScreenState extends State<BookingScreen> {
                   color: primary.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: const Icon(Icons.add_circle_outline, color: primary, size: 18),
+                child: const Icon(Icons.add_circle_outline,
+                    color: primary, size: 18),
               ),
               const SizedBox(width: 10),
               const Text('خدمات إضافية',
-                style: TextStyle(color: chocolate, fontSize: 16, fontWeight: FontWeight.bold)),
+                  style: TextStyle(
+                      color: chocolate,
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold)),
               const Spacer(),
-              Text('(اختياري)', style: TextStyle(color: Colors.black45, fontSize: 11)),
+              Text('(اختياري)',
+                  style: TextStyle(color: Colors.black45, fontSize: 11)),
             ],
           ),
           const SizedBox(height: 14),
@@ -332,32 +415,36 @@ class _BookingScreenState extends State<BookingScreen> {
                 child: Row(
                   children: [
                     Container(
-                      width: 40, height: 40,
+                      width: 40,
+                      height: 40,
                       decoration: BoxDecoration(
                         color: selected ? primary : Colors.white,
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: Icon(service['icon'] as IconData,
-                        color: selected ? Colors.white : primary, size: 20),
+                          color: selected ? Colors.white : primary, size: 20),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Text(service['name'] as String,
-                        style: TextStyle(
-                          color: chocolate,
-                          fontSize: 13,
-                          fontWeight: selected ? FontWeight.bold : FontWeight.w500,
-                        )),
+                          style: TextStyle(
+                            color: chocolate,
+                            fontSize: 13,
+                            fontWeight:
+                                selected ? FontWeight.bold : FontWeight.w500,
+                          )),
                     ),
                     Text('${service['price']} د.ل',
-                      style: TextStyle(
-                        color: selected ? primary : chocolate,
-                        fontSize: 13,
-                        fontWeight: FontWeight.bold,
-                      )),
+                        style: TextStyle(
+                          color: selected ? primary : chocolate,
+                          fontSize: 13,
+                          fontWeight: FontWeight.bold,
+                        )),
                     const SizedBox(width: 8),
                     Icon(
-                      selected ? Icons.check_circle : Icons.radio_button_unchecked,
+                      selected
+                          ? Icons.check_circle
+                          : Icons.radio_button_unchecked,
                       color: selected ? primary : Colors.black26,
                       size: 20,
                     ),
@@ -389,7 +476,12 @@ class _BookingScreenState extends State<BookingScreen> {
       padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
       decoration: BoxDecoration(
         color: Colors.white,
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.08), blurRadius: 20, offset: const Offset(0, -6))],
+        boxShadow: [
+          BoxShadow(
+              color: Colors.black.withOpacity(0.08),
+              blurRadius: 20,
+              offset: const Offset(0, -6))
+        ],
       ),
       child: SafeArea(
         child: Column(
@@ -400,12 +492,21 @@ class _BookingScreenState extends State<BookingScreen> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   const Text('الإجمالي',
-                    style: TextStyle(color: chocolate, fontSize: 15, fontWeight: FontWeight.bold)),
+                      style: TextStyle(
+                          color: chocolate,
+                          fontSize: 15,
+                          fontWeight: FontWeight.bold)),
                   RichText(
                     text: TextSpan(children: [
-                      TextSpan(text: '$total ',
-                        style: const TextStyle(color: primary, fontSize: 22, fontWeight: FontWeight.bold)),
-                      const TextSpan(text: 'د.ل', style: TextStyle(color: chocolate, fontSize: 13)),
+                      TextSpan(
+                          text: '$total ',
+                          style: const TextStyle(
+                              color: primary,
+                              fontSize: 22,
+                              fontWeight: FontWeight.bold)),
+                      const TextSpan(
+                          text: 'د.ل',
+                          style: TextStyle(color: chocolate, fontSize: 13)),
                     ]),
                   ),
                 ],
@@ -421,16 +522,20 @@ class _BookingScreenState extends State<BookingScreen> {
                   backgroundColor: primary,
                   foregroundColor: Colors.white,
                   disabledBackgroundColor: primary.withOpacity(0.5),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20)),
                   elevation: 0,
                 ),
                 child: _loading
-                  ? const SizedBox(
-                      width: 22, height: 22,
-                      child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5),
-                    )
-                  : const Text('تأكيد الحجز',
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                    ? const SizedBox(
+                        width: 22,
+                        height: 22,
+                        child: CircularProgressIndicator(
+                            color: Colors.white, strokeWidth: 2.5),
+                      )
+                    : const Text('تأكيد الحجز',
+                        style: TextStyle(
+                            fontSize: 16, fontWeight: FontWeight.bold)),
               ),
             ),
           ],
@@ -477,13 +582,15 @@ class _BookingScreenState extends State<BookingScreen> {
       await showDialog(
         context: context,
         builder: (_) => AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           backgroundColor: cream,
           title: Row(
             children: const [
               Icon(Icons.check_circle, color: Colors.green, size: 28),
               SizedBox(width: 10),
-              Text('تم الحجز بنجاح', style: TextStyle(color: chocolate, fontSize: 18)),
+              Text('تم الحجز بنجاح',
+                  style: TextStyle(color: chocolate, fontSize: 18)),
             ],
           ),
           content: Text(
@@ -495,7 +602,8 @@ class _BookingScreenState extends State<BookingScreen> {
               style: ElevatedButton.styleFrom(
                 backgroundColor: primary,
                 foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12)),
               ),
               onPressed: () => Navigator.pop(context),
               child: const Text('حسناً'),
