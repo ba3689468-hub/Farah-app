@@ -23,12 +23,12 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   String? _error;
   String _selectedRole = 'user';
 
-  static const Color gold      = Color(0xFFE91E63);
+  static const Color gold      = Color(0xFFF06292);
   static const Color lightGold = Color(0xFFFFF5F7);
   static const Color rose      = Color(0xFFFFF5F7);
-  static const Color deepRose  = Color(0xFFE91E63);
+  static const Color deepRose  = Color(0xFFF06292);
   static const Color cream     = Color(0xFFFFF5F7);
-  static const Color chocolate = Color(0xFFE91E63);
+  static const Color chocolate = Color(0xFFF06292);
 
   @override
   void initState() {
@@ -98,7 +98,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [Color(0xFFFFF5F7), Color(0xFFFFF5F7), Color(0xFFC2185B)],
+            colors: [Color(0xFFFFF5F7), Color(0xFFFFF5F7), Color(0xFFEC407A)],
             stops: [0.0, 0.5, 1.0],
           ),
         ),
@@ -299,7 +299,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   width: 220, height: 54,
                   decoration: BoxDecoration(
                     gradient: const LinearGradient(
-                      colors: [Color(0xFFE91E63), Color(0xFFC2185B), Color(0xFFFFF5F7)],
+                      colors: [Color(0xFFF06292), Color(0xFFEC407A), Color(0xFFFFF5F7)],
                       begin: Alignment.centerLeft, end: Alignment.centerRight,
                     ),
                     borderRadius: BorderRadius.circular(30),
@@ -365,7 +365,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
               child: ShaderMask(
                 shaderCallback: (bounds) => const LinearGradient(
                   begin: Alignment.topCenter, end: Alignment.bottomCenter,
-                  colors: [Color(0xFFE91E63), Color(0xFFE91E63), Color(0xFFFFF5F7)],
+                  colors: [Color(0xFFF06292), Color(0xFFF06292), Color(0xFFFFF5F7)],
                 ).createShader(bounds),
                 child: const Icon(Icons.person_add, size: 55, color: Colors.white),
               ),
@@ -443,7 +443,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           width: 46, height: 46,
           decoration: BoxDecoration(
             gradient: const LinearGradient(
-              colors: [Color(0xFFE91E63), Color(0xFFE91E63), Color(0xFFFFF5F7)],
+              colors: [Color(0xFFF06292), Color(0xFFF06292), Color(0xFFFFF5F7)],
               begin: Alignment.topLeft, end: Alignment.bottomRight,
             ),
             borderRadius: BorderRadius.circular(14),

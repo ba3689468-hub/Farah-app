@@ -9,8 +9,8 @@ class OnboardingScreen extends StatefulWidget {
 }
 
 class _OnboardingScreenState extends State<OnboardingScreen> {
-  static const Color primary = Color(0xFFE91E63);
-  static const Color primaryDark = Color(0xFFC2185B);
+  static const Color primary = Color(0xFFF06292);
+  static const Color primaryDark = Color(0xFFEC407A);
   static const Color bgLight = Color(0xFFFCE4EC);
   static const Color textDark = Color(0xFF1A1A1A);
   static const Color textLight = Color(0xFF999999);
