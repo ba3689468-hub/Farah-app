@@ -166,7 +166,7 @@ class _FarahGlassLoginScreenState extends ConsumerState<FarahGlassLoginScreen> {
                 bottomLeft: Radius.circular(120),
                 bottomRight: Radius.circular(80),
               ),
-              border: Border.all(color: Colors.white.withOpacity(0.6), width: 1.4),
+              border: Border.all(color: Colors.transparent, width: 1.4),
               boxShadow: [BoxShadow(color: deepRose.withOpacity(0.35), blurRadius: 40, offset: const Offset(0, 20))],
             ),
             child: Column(

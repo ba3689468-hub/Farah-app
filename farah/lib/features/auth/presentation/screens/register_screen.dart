@@ -109,7 +109,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
               Positioned(
                 top: 10, right: 20,
                 child: Material(
-                  color: Colors.white.withOpacity(0.3),
+                  color: Colors.transparent,
                   shape: const CircleBorder(),
                   child: IconButton(
                     icon: const Icon(Icons.arrow_back, color: chocolate),
@@ -164,7 +164,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 bottomLeft: Radius.circular(120),
                 bottomRight: Radius.circular(80),
               ),
-              border: Border.all(color: Colors.white.withOpacity(0.6), width: 1.4),
+              border: Border.all(color: Colors.transparent, width: 1.4),
               boxShadow: [BoxShadow(color: deepRose.withOpacity(0.35), blurRadius: 40, offset: const Offset(0, 20))],
             ),
             child: Column(
@@ -432,9 +432,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   }) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.35),
+        color: Colors.transparent,
         borderRadius: BorderRadius.circular(30),
-        border: Border.all(color: Colors.white.withOpacity(0.7), width: 1),
+        border: Border.all(color: Color(0x33FFFFFF), width: 1),
         boxShadow: [BoxShadow(color: deepRose.withOpacity(0.08), blurRadius: 10, offset: const Offset(0, 4))],
       ),
       child: Row(children: [
