@@ -386,7 +386,34 @@ class _HallListScreenState extends State<HallListScreen> {
         }
         if (snapshot.hasError) return _buildEmpty();
 
-        final docs = snapshot.data?.docs ?? [];
+        final allDocs = snapshot.data?.docs ?? [];
+        if (allDocs.isEmpty) return _buildEmpty();
+
+        // تصفية النتائج
+        final docs = allDocs.where((doc) {
+          final d = doc.data() as Map<String, dynamic>;
+          final price = (d['price'] ?? 0) is int
+              ? (d['price'] as int).toDouble()
+              : double.tryParse(d['price'].toString()) ?? 0;
+          final rating = (d['rating'] ?? 0).toDouble();
+          final city = (d['city'] ?? '').toString();
+          final type = (d['type'] ?? '').toString();
+          final isAvailable = d['isAvailable'] ?? true;
+
+          // فلترة السعر
+          if (price < _priceRange.start || price > _priceRange.end) return false;
+          // فلترة التقييم
+          if (rating < _minRating) return false;
+          // فلترة المدينة (من الـ Chips الأساسية)
+          if (_selectedCity != 'الكل' && city != _selectedCity) return false;
+          // فلترة النوع
+          if (_selectedType != 'الكل' && type != _selectedType) return false;
+          // فلترة التوفر
+          if (_onlyAvailable && isAvailable == false) return false;
+
+          return true;
+        }).toList();
+
         if (docs.isEmpty) return _buildEmpty();
 
         // عرض أفقي ببطاقات صغيرة
