@@ -10,8 +10,8 @@ class MyBookingsScreen extends StatefulWidget {
 }
 
 class _MyBookingsScreenState extends State<MyBookingsScreen> {
-  static const Color primary = Color(0xFFC0392B);
-  static const Color darkRed = Color(0xFFA93226);
+  static const Color primary = Color(0xFFE91E63);
+  static const Color darkRed = Color(0xFFC2185B);
   static const Color cream = Color(0xFFEDEEE9);
   static const Color chocolate = Color(0xFF3E3530);
 
@@ -31,16 +31,7 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: cream,
-      appBar: AppBar(
-        backgroundColor: primary,
-        foregroundColor: Colors.white,
-        elevation: 0,
-        title: const Text('حجوزاتي', style: TextStyle(fontWeight: FontWeight.bold)),
-        centerTitle: true,
-      ),
-      body: Column(
+    return Column(
         children: [
           _buildFilterTabs(),
           Expanded(child: _buildBookingsList()),

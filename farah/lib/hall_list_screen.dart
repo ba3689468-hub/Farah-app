@@ -58,7 +58,7 @@ class _HallListScreenState extends State<HallListScreen> {
             children: [
               _buildHome(),
               const Center(child: Text('استكشف', style: TextStyle(fontSize: 18, color: textDark))),
-              const Center(child: Text('حجوزاتي', style: TextStyle(fontSize: 18, color: textDark))),
+              const MyBookingsScreen(),
               const SimpleProfileScreen(),
             ],
           ),
@@ -446,13 +446,7 @@ class _HallListScreenState extends State<HallListScreen> {
         children: List.generate(items.length, (i) {
           final active = i == _currentIndex;
           return GestureDetector(
-            onTap: () {
-              if (i == 2) {
-                Navigator.push(context, MaterialPageRoute(builder: (_) => const MyBookingsScreen()));
-                return;
-              }
-              setState(() => _currentIndex = i);
-            },
+            onTap: () => setState(() => _currentIndex = i),
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 250),
               padding: EdgeInsets.symmetric(horizontal: active ? 14 : 10, vertical: 8),
@@ -605,8 +599,9 @@ class _SimpleProfileScreenState extends State<SimpleProfileScreen> {
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: Row(
                   children: [
-                    Expanded(child: _tile(Icons.calendar_month, 'حجوزاتي',
-                      () => Navigator.push(context, MaterialPageRoute(builder: (_) => const MyBookingsScreen())))),
+                    Expanded(child: _tile(Icons.calendar_month, 'حجوزاتي', () {
+                      Navigator.pop(context);
+                    })),
                     const SizedBox(width: 10),
                     Expanded(child: _tile(Icons.favorite_border, 'المفضلة', () {})),
                   ],
