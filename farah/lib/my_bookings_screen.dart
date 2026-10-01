@@ -11,9 +11,9 @@ class MyBookingsScreen extends StatefulWidget {
 
 class _MyBookingsScreenState extends State<MyBookingsScreen> {
   static const Color primary = Color(0xFFE91E63);
-  static const Color darkRed = Color(0xFFC2185B);
-  static const Color cream = Color(0xFFEDEEE9);
-  static const Color chocolate = Color(0xFF3E3530);
+  static const Color primaryDark = Color(0xFFC2185B);
+  static const Color textDark = Color(0xFF1A1A1A);
+  static const Color textLight = Color(0xFF999999);
 
   String _filter = 'all';
   late Future<QuerySnapshot> _future;
@@ -21,31 +21,40 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
   @override
   void initState() {
     super.initState();
+    _loadBookings();
+  }
+
+  void _loadBookings() {
     final uid = FirebaseAuth.instance.currentUser?.uid;
     _future = FirebaseFirestore.instance
         .collection('bookings')
         .where('userId', isEqualTo: uid)
-        .orderBy('createdAt', descending: true)
         .get();
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: cream,
-      appBar: AppBar(
-        backgroundColor: primary,
-        foregroundColor: Colors.white,
-        elevation: 0,
-        title: const Text('حجوزاتي', style: TextStyle(fontWeight: FontWeight.bold)),
-        centerTitle: true,
-      ),
-      body: Column(
-        children: [
-          _buildFilterTabs(),
-          Expanded(child: _buildBookingsList()),
-        ],
-      ),
+    return Column(
+      children: [
+        const SizedBox(height: 16),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Row(
+            children: const [
+              Text('حجوزاتي',
+                  style: TextStyle(
+                    color: textDark,
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                  )),
+            ],
+          ),
+        ),
+        const SizedBox(height: 14),
+        _buildFilterTabs(),
+        const SizedBox(height: 10),
+        Expanded(child: _buildBookingsList()),
+      ],
     );
   }
 
@@ -57,39 +66,40 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
       {'key': 'completed', 'label': 'مكتملة'},
       {'key': 'cancelled', 'label': 'ملغاة'},
     ];
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 12),
-      color: Colors.white,
-      child: SizedBox(
-        height: 38,
-        child: ListView.separated(
-          scrollDirection: Axis.horizontal,
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          itemCount: tabs.length,
-          separatorBuilder: (_, __) => const SizedBox(width: 8),
-          itemBuilder: (context, i) {
-            final t = tabs[i];
-            final active = t['key'] == _filter;
-            return GestureDetector(
-              onTap: () => setState(() => _filter = t['key'] as String),
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                decoration: BoxDecoration(
-                  gradient: active ? const LinearGradient(colors: [primary, darkRed]) : null,
-                  color: active ? null : cream,
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: active ? Colors.transparent : primary.withOpacity(0.2)),
-                ),
-                child: Text(t['label'] as String,
+    return SizedBox(
+      height: 40,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        itemCount: tabs.length,
+        separatorBuilder: (_, __) => const SizedBox(width: 8),
+        itemBuilder: (context, i) {
+          final t = tabs[i];
+          final active = t['key'] == _filter;
+          return GestureDetector(
+            onTap: () => setState(() => _filter = t['key'] as String),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+              decoration: BoxDecoration(
+                gradient: active
+                    ? const LinearGradient(colors: [primary, primaryDark])
+                    : null,
+                color: active ? null : Colors.white,
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: active
+                    ? [BoxShadow(color: primary.withOpacity(0.3), blurRadius: 10, offset: const Offset(0, 4))]
+                    : [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 8, offset: const Offset(0, 2))],
+              ),
+              child: Text(t['label'] as String,
                   style: TextStyle(
-                    color: active ? Colors.white : chocolate,
+                    color: active ? Colors.white : textDark,
                     fontSize: 12,
                     fontWeight: active ? FontWeight.bold : FontWeight.w500,
                   )),
-              ),
-            );
-          },
-        ),
+            ),
+          );
+        },
       ),
     );
   }
@@ -107,11 +117,17 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
               padding: const EdgeInsets.all(30),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
-                children: const [
-                  Icon(Icons.error_outline, size: 70, color: Colors.redAccent),
-                  SizedBox(height: 16),
-                  Text('تعذر تحميل الحجوزات',
-                    style: TextStyle(color: chocolate, fontSize: 16, fontWeight: FontWeight.bold)),
+                children: [
+                  const Icon(Icons.error_outline, size: 70, color: primary),
+                  const SizedBox(height: 16),
+                  const Text('تعذر تحميل الحجوزات',
+                      style: TextStyle(color: textDark, fontSize: 15, fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 12),
+                  TextButton(
+                    onPressed: () => setState(_loadBookings),
+                    child: const Text('إعادة المحاولة',
+                        style: TextStyle(color: primary, fontWeight: FontWeight.bold)),
+                  ),
                 ],
               ),
             ),
@@ -125,12 +141,10 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
                 return data['status'] == _filter;
               }).toList();
 
-        if (filtered.isEmpty) {
-          return _buildEmpty();
-        }
+        if (filtered.isEmpty) return _buildEmpty();
 
         return ListView.builder(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.fromLTRB(20, 10, 20, 20),
           itemCount: filtered.length,
           itemBuilder: (context, i) {
             final data = filtered[i].data() as Map<String, dynamic>;
@@ -158,10 +172,10 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
             ),
             const SizedBox(height: 20),
             const Text('لا توجد حجوزات',
-              style: TextStyle(color: chocolate, fontSize: 18, fontWeight: FontWeight.bold)),
+                style: TextStyle(color: textDark, fontSize: 17, fontWeight: FontWeight.bold)),
             const SizedBox(height: 8),
             const Text('ابدأ بحجز قاعتك الأولى',
-              style: TextStyle(color: Colors.black54, fontSize: 13)),
+                style: TextStyle(color: textLight, fontSize: 13)),
           ],
         ),
       ),
@@ -184,7 +198,9 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(18),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 12, offset: const Offset(0, 4))],
+        boxShadow: [
+          BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 12, offset: const Offset(0, 4)),
+        ],
       ),
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -196,7 +212,7 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
                 Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    gradient: const LinearGradient(colors: [primary, darkRed]),
+                    gradient: const LinearGradient(colors: [primary, primaryDark]),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: const Icon(Icons.celebration, color: Colors.white, size: 22),
@@ -207,15 +223,21 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(hallName,
-                        style: const TextStyle(color: chocolate, fontSize: 15, fontWeight: FontWeight.bold),
-                        maxLines: 1, overflow: TextOverflow.ellipsis),
+                          style: const TextStyle(
+                              color: textDark, fontSize: 15, fontWeight: FontWeight.bold),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis),
                       const SizedBox(height: 4),
                       Row(
                         children: [
-                          Icon(statusInfo['icon'] as IconData, color: statusInfo['color'] as Color, size: 14),
+                          Icon(statusInfo['icon'] as IconData,
+                              color: statusInfo['color'] as Color, size: 14),
                           const SizedBox(width: 4),
                           Text(statusInfo['label'] as String,
-                            style: TextStyle(color: statusInfo['color'] as Color, fontSize: 12, fontWeight: FontWeight.bold)),
+                              style: TextStyle(
+                                  color: statusInfo['color'] as Color,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold)),
                         ],
                       ),
                     ],
@@ -228,8 +250,13 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
             const SizedBox(height: 14),
             Row(
               children: [
-                Expanded(child: _infoItem(Icons.calendar_today, 'التاريخ',
-                  eventDate != null ? DateFormat('yyyy/MM/dd').format(eventDate) : 'غير محدد')),
+                Expanded(
+                  child: _infoItem(
+                    Icons.calendar_today,
+                    'التاريخ',
+                    eventDate != null ? DateFormat('yyyy/MM/dd').format(eventDate) : 'غير محدد',
+                  ),
+                ),
                 Expanded(child: _infoItem(Icons.people_outline, 'الضيوف', '$guests')),
               ],
             ),
@@ -249,7 +276,10 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
                         border: Border.all(color: Colors.redAccent.withOpacity(0.4)),
                       ),
                       child: const Text('إلغاء',
-                        style: TextStyle(color: Colors.redAccent, fontSize: 12, fontWeight: FontWeight.bold)),
+                          style: TextStyle(
+                              color: Colors.redAccent,
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold)),
                     ),
                   ),
               ],
@@ -268,8 +298,10 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(label, style: const TextStyle(color: Colors.black45, fontSize: 10)),
-            Text(value, style: const TextStyle(color: chocolate, fontSize: 13, fontWeight: FontWeight.bold)),
+            Text(label, style: const TextStyle(color: textLight, fontSize: 10)),
+            Text(value,
+                style: const TextStyle(
+                    color: textDark, fontSize: 13, fontWeight: FontWeight.bold)),
           ],
         ),
       ],
@@ -290,24 +322,30 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
   }
 
   Future<void> _cancelBooking(String docId) async {
-    final confirm = await showDialog<bool>(
+    final ok = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        backgroundColor: cream,
-        title: const Text('إلغاء الحجز', textAlign: TextAlign.right, style: TextStyle(color: chocolate)),
-        content: const Text('هل أنت متأكد من إلغاء هذا الحجز؟', textAlign: TextAlign.right),
+        backgroundColor: Colors.white,
+        title: const Text('إلغاء الحجز',
+            textAlign: TextAlign.right, style: TextStyle(color: textDark)),
+        content: const Text('هل أنت متأكد؟', textAlign: TextAlign.right),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('لا')),
+          TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('لا')),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent, foregroundColor: Colors.white),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.redAccent,
+              foregroundColor: Colors.white,
+            ),
             onPressed: () => Navigator.pop(context, true),
             child: const Text('نعم، إلغاء'),
           ),
         ],
       ),
     );
-    if (confirm != true) return;
+    if (ok != true) return;
     try {
       await FirebaseFirestore.instance
           .collection('bookings')
@@ -317,14 +355,7 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('تم إلغاء الحجز'), backgroundColor: Colors.green),
       );
-      setState(() {
-        final uid = FirebaseAuth.instance.currentUser?.uid;
-        _future = FirebaseFirestore.instance
-            .collection('bookings')
-            .where('userId', isEqualTo: uid)
-            .orderBy('createdAt', descending: true)
-            .get();
-      });
+      setState(_loadBookings);
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
