@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+
 import 'login_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -10,11 +11,11 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  static const Color gold      = Color(0xFF532527);
+  static const Color gold = Color(0xFF532527);
   static const Color lightGold = Color(0xFFE3DAD3);
-  static const Color rose      = Color(0xFFE3DAD3);
-  static const Color deepRose  = Color(0xFF532527);
-  static const Color cream     = Color(0xFFF3E7E4);
+  static const Color rose = Color(0xFFE3DAD3);
+  static const Color deepRose = Color(0xFF532527);
+  static const Color cream = Color(0xFFF3E7E4);
   static const Color chocolate = Color(0xFF532527);
 
   bool _loggingOut = false;
@@ -25,8 +26,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
       builder: (_) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: const Text('تسجيل الخروج', textAlign: TextAlign.right),
-        content: const Text('هل أنت متأكد من تسجيل الخروج؟',
-            textAlign: TextAlign.right),
+        content: const Text(
+          'هل أنت متأكد من تسجيل الخروج؟',
+          textAlign: TextAlign.right,
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
@@ -85,8 +88,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
         children: [
           const Icon(Icons.error_outline, size: 70, color: Colors.redAccent),
           const SizedBox(height: 16),
-          const Text('تعذر تحميل البيانات',
-              style: TextStyle(color: chocolate, fontSize: 16)),
+          const Text(
+            'تعذر تحميل البيانات',
+            style: TextStyle(color: chocolate, fontSize: 16),
+          ),
           const SizedBox(height: 20),
           ElevatedButton(
             onPressed: () => setState(() {}),
@@ -99,13 +104,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Widget _buildContent(Map<String, dynamic> user) {
-    final name  = user['fullName'] ?? 'مستخدم فرح';
+    final name = user['fullName'] ?? 'مستخدم فرح';
     final email = user['email'] ?? '';
     final phone = user['phone'] ?? '';
-    final role  = user['role'] ?? 'user';
+    final role = user['role'] ?? 'user';
     final isProvider = role == 'provider';
     final roleLabel = isProvider ? 'مزوّد خدمة' : 'زبون';
-    final roleIcon  = isProvider ? Icons.storefront : Icons.person;
+    final roleIcon = isProvider ? Icons.storefront : Icons.person;
 
     return SingleChildScrollView(
       child: Column(
@@ -130,26 +135,34 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
                 child: SafeArea(
                   child: Padding(
-                    padding: const EdgeInsets.only(top: 12, right: 20, left: 20),
+                    padding: const EdgeInsets.only(
+                      top: 12,
+                      right: 20,
+                      left: 20,
+                    ),
                     child: Align(
                       alignment: Alignment.topCenter,
                       child: Row(
                         children: [
                           IconButton(
                             onPressed: () => Navigator.pop(context),
-                            icon: const Icon(Icons.arrow_back,
-                                color: Colors.white),
+                            icon: const Icon(
+                              Icons.arrow_back,
+                              color: Colors.white,
+                            ),
                           ),
                           const Spacer(),
-                          const Text('حسابي',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 22,
-                                fontWeight: FontWeight.bold,
-                                shadows: [
-                                  Shadow(color: Colors.black26, blurRadius: 4)
-                                ],
-                              )),
+                          const Text(
+                            'حسابي',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 22,
+                              fontWeight: FontWeight.bold,
+                              shadows: [
+                                Shadow(color: Colors.black26, blurRadius: 4),
+                              ],
+                            ),
+                          ),
                           const Spacer(),
                           const SizedBox(width: 48),
                         ],
@@ -161,7 +174,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
               Positioned(
                 bottom: -55,
                 child: Container(
-                  width: 110, height: 110,
+                  width: 110,
+                  height: 110,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     color: Colors.white,
@@ -191,12 +205,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
           const SizedBox(height: 68),
 
           // ── الاسم ──
-          Text(name,
-              style: const TextStyle(
-                color: chocolate,
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-              )),
+          Text(
+            name,
+            style: const TextStyle(
+              color: chocolate,
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
           const SizedBox(height: 10),
 
           // ── شارة الدور ──
@@ -218,12 +234,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
               children: [
                 Icon(roleIcon, color: Colors.white, size: 16),
                 const SizedBox(width: 6),
-                Text(roleLabel,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 13,
-                      fontWeight: FontWeight.bold,
-                    )),
+                Text(
+                  roleLabel,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 13,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
               ],
             ),
           ),
@@ -247,11 +265,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
               child: Column(
                 children: [
-                  _infoRow(Icons.email_outlined, 'البريد الإلكتروني',
-                      email.isEmpty ? 'غير محدد' : email),
+                  _infoRow(
+                    Icons.email_outlined,
+                    'البريد الإلكتروني',
+                    email.isEmpty ? 'غير محدد' : email,
+                  ),
                   const Divider(height: 26, color: Colors.black12),
-                  _infoRow(Icons.phone_outlined, 'رقم الهاتف',
-                      phone.isEmpty ? 'غير محدد' : phone),
+                  _infoRow(
+                    Icons.phone_outlined,
+                    'رقم الهاتف',
+                    phone.isEmpty ? 'غير محدد' : phone,
+                  ),
                 ],
               ),
             ),
@@ -264,13 +288,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
             child: Row(
               children: [
                 Expanded(
-                  child: _actionTile(
-                      Icons.calendar_month, 'حجوزاتي', deepRose),
+                  child: _actionTile(Icons.calendar_month, 'حجوزاتي', deepRose),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
-                  child: _actionTile(
-                      Icons.favorite_border, 'المفضلة', gold),
+                  child: _actionTile(Icons.favorite_border, 'المفضلة', gold),
                 ),
               ],
             ),
@@ -282,12 +304,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
               children: [
                 Expanded(
                   child: _actionTile(
-                      Icons.settings_outlined, 'الإعدادات', deepRose),
+                    Icons.settings_outlined,
+                    'الإعدادات',
+                    deepRose,
+                  ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
-                  child: _actionTile(
-                      Icons.help_outline, 'المساعدة', gold),
+                  child: _actionTile(Icons.help_outline, 'المساعدة', gold),
                 ),
               ],
             ),
@@ -304,7 +328,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 color: Colors.red.withOpacity(0.08),
                 borderRadius: BorderRadius.circular(30),
                 border: Border.all(
-                    color: Colors.redAccent.withOpacity(0.5), width: 1.2),
+                  color: Colors.redAccent.withOpacity(0.5),
+                  width: 1.2,
+                ),
               ),
               child: Material(
                 color: Colors.transparent,
@@ -314,21 +340,26 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   child: Center(
                     child: _loggingOut
                         ? const SizedBox(
-                            height: 22, width: 22,
+                            height: 22,
+                            width: 22,
                             child: CircularProgressIndicator(
-                                color: Colors.redAccent, strokeWidth: 2.5),
+                              color: Colors.redAccent,
+                              strokeWidth: 2.5,
+                            ),
                           )
                         : Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: const [
                               Icon(Icons.logout, color: Colors.redAccent),
                               SizedBox(width: 10),
-                              Text('تسجيل الخروج',
-                                  style: TextStyle(
-                                    color: Colors.redAccent,
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
-                                  )),
+                              Text(
+                                'تسجيل الخروج',
+                                style: TextStyle(
+                                  color: Colors.redAccent,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
                             ],
                           ),
                   ),
@@ -337,8 +368,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
           ),
           const SizedBox(height: 24),
-          const Text('فرح — الإصدار 1.0.0',
-              style: TextStyle(color: Colors.black38, fontSize: 12)),
+          const Text(
+            'فرح — الإصدار 1.0.0',
+            style: TextStyle(color: Colors.black38, fontSize: 12),
+          ),
           const SizedBox(height: 30),
         ],
       ),
@@ -349,7 +382,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return Row(
       children: [
         Container(
-          width: 42, height: 42,
+          width: 42,
+          height: 42,
           decoration: BoxDecoration(
             gradient: const LinearGradient(
               colors: [gold, deepRose],
@@ -365,16 +399,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(label,
-                  style: const TextStyle(color: Colors.black45, fontSize: 12)),
+              Text(
+                label,
+                style: const TextStyle(color: Colors.black45, fontSize: 12),
+              ),
               const SizedBox(height: 2),
-              Text(value,
-                  style: const TextStyle(
-                    color: chocolate,
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                  ),
-                  overflow: TextOverflow.ellipsis),
+              Text(
+                value,
+                style: const TextStyle(
+                  color: chocolate,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                ),
+                overflow: TextOverflow.ellipsis,
+              ),
             ],
           ),
         ),
@@ -399,7 +437,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
       child: Column(
         children: [
           Container(
-            width: 44, height: 44,
+            width: 44,
+            height: 44,
             decoration: BoxDecoration(
               color: color.withOpacity(0.15),
               borderRadius: BorderRadius.circular(14),
@@ -407,12 +446,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
             child: Icon(icon, color: color, size: 24),
           ),
           const SizedBox(height: 8),
-          Text(label,
-              style: const TextStyle(
-                color: chocolate,
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-              )),
+          Text(
+            label,
+            style: const TextStyle(
+              color: chocolate,
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
         ],
       ),
     );

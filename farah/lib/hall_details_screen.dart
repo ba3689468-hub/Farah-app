@@ -65,7 +65,8 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
                     color: Colors.white.withOpacity(0.9),
                     shape: BoxShape.circle,
                   ),
-                  child: const Icon(Icons.favorite_border, color: chocolate, size: 20),
+                  child: const Icon(Icons.favorite_border,
+                      color: chocolate, size: 20),
                 ),
                 onPressed: () {
                   ScaffoldMessenger.of(context).showSnackBar(
@@ -78,7 +79,9 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
               background: _buildImageGallery(images),
             ),
           ),
-          SliverToBoxAdapter(child: _buildInfoSection(name, city, price, rating, capacity, description)),
+          SliverToBoxAdapter(
+              child: _buildInfoSection(
+                  name, city, price, rating, capacity, description)),
           const SliverToBoxAdapter(child: SizedBox(height: 100)),
         ],
       ),
@@ -101,7 +104,8 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
       return Container(
         color: primary.withOpacity(0.3),
         child: Center(
-          child: Icon(Icons.celebration, size: 80, color: Colors.white.withOpacity(0.6)),
+          child: Icon(Icons.celebration,
+              size: 80, color: Colors.white.withOpacity(0.6)),
         ),
       );
     }
@@ -117,7 +121,8 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
             errorBuilder: (_, __, ___) => Container(
               color: primary.withOpacity(0.3),
               child: Center(
-                child: Icon(Icons.celebration, size: 80, color: Colors.white.withOpacity(0.6)),
+                child: Icon(Icons.celebration,
+                    size: 80, color: Colors.white.withOpacity(0.6)),
               ),
             ),
           ),
@@ -141,7 +146,8 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
         if (images.length > 1)
           Positioned(
             bottom: 16,
-            left: 0, right: 0,
+            left: 0,
+            right: 0,
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: List.generate(images.length, (i) {
@@ -161,7 +167,8 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
           ),
         // شارة التقييم
         Positioned(
-          bottom: 16, right: 16,
+          bottom: 16,
+          right: 16,
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
@@ -175,7 +182,10 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
                 const SizedBox(width: 4),
                 Text(
                   (widget.hallData['rating'] ?? 0).toStringAsFixed(1),
-                  style: const TextStyle(color: chocolate, fontSize: 13, fontWeight: FontWeight.bold),
+                  style: const TextStyle(
+                      color: chocolate,
+                      fontSize: 13,
+                      fontWeight: FontWeight.bold),
                 ),
               ],
             ),
@@ -185,20 +195,23 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
     );
   }
 
-  Widget _buildInfoSection(String name, String city, int price, double rating, int capacity, String description) {
+  Widget _buildInfoSection(String name, String city, int price, double rating,
+      int capacity, String description) {
     return Padding(
       padding: const EdgeInsets.all(20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(name,
-            style: const TextStyle(color: chocolate, fontSize: 24, fontWeight: FontWeight.bold)),
+              style: const TextStyle(
+                  color: chocolate, fontSize: 24, fontWeight: FontWeight.bold)),
           const SizedBox(height: 8),
           Row(
             children: [
               const Icon(Icons.location_on_outlined, color: primary, size: 18),
               const SizedBox(width: 4),
-              Text(city, style: const TextStyle(color: Colors.black54, fontSize: 14)),
+              Text(city,
+                  style: const TextStyle(color: Colors.black54, fontSize: 14)),
             ],
           ),
           const SizedBox(height: 20),
@@ -213,16 +226,20 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
           ),
           const SizedBox(height: 24),
           const Text('الوصف',
-            style: TextStyle(color: chocolate, fontSize: 18, fontWeight: FontWeight.bold)),
+              style: TextStyle(
+                  color: chocolate, fontSize: 18, fontWeight: FontWeight.bold)),
           const SizedBox(height: 10),
           Text(description,
-            style: const TextStyle(color: Colors.black87, fontSize: 14, height: 1.7)),
+              style: const TextStyle(
+                  color: Colors.black87, fontSize: 14, height: 1.7)),
           const SizedBox(height: 24),
           const Text('المرافق والخدمات',
-            style: TextStyle(color: chocolate, fontSize: 18, fontWeight: FontWeight.bold)),
+              style: TextStyle(
+                  color: chocolate, fontSize: 18, fontWeight: FontWeight.bold)),
           const SizedBox(height: 12),
           Wrap(
-            spacing: 8, runSpacing: 8,
+            spacing: 8,
+            runSpacing: 8,
             children: [
               _amenityChip('تكييف'),
               _amenityChip('مواقف سيارات'),
@@ -244,14 +261,24 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(14),
-          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4))],
+          boxShadow: [
+            BoxShadow(
+                color: Colors.black.withOpacity(0.05),
+                blurRadius: 10,
+                offset: const Offset(0, 4))
+          ],
         ),
         child: Column(
           children: [
             Icon(icon, color: primary, size: 20),
             const SizedBox(height: 4),
-            Text(value, style: const TextStyle(color: chocolate, fontSize: 14, fontWeight: FontWeight.bold)),
-            Text(label, style: const TextStyle(color: Colors.black45, fontSize: 10)),
+            Text(value,
+                style: const TextStyle(
+                    color: chocolate,
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold)),
+            Text(label,
+                style: const TextStyle(color: Colors.black45, fontSize: 10)),
           ],
         ),
       ),
@@ -282,7 +309,12 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
       padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
       decoration: BoxDecoration(
         color: Colors.white,
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.08), blurRadius: 20, offset: const Offset(0, -6))],
+        boxShadow: [
+          BoxShadow(
+              color: Colors.black.withOpacity(0.08),
+              blurRadius: 20,
+              offset: const Offset(0, -6))
+        ],
       ),
       child: SafeArea(
         child: Row(
@@ -291,12 +323,19 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Text('السعر يبدأ من', style: TextStyle(color: Colors.black45, fontSize: 11)),
+                const Text('السعر يبدأ من',
+                    style: TextStyle(color: Colors.black45, fontSize: 11)),
                 RichText(
                   text: TextSpan(children: [
-                    TextSpan(text: '$price ',
-                      style: const TextStyle(color: primary, fontSize: 20, fontWeight: FontWeight.bold)),
-                    const TextSpan(text: 'د.ل', style: TextStyle(color: chocolate, fontSize: 12)),
+                    TextSpan(
+                        text: '$price ',
+                        style: const TextStyle(
+                            color: primary,
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold)),
+                    const TextSpan(
+                        text: 'د.ل',
+                        style: TextStyle(color: chocolate, fontSize: 12)),
                   ]),
                 ),
               ],
@@ -315,14 +354,23 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
                 );
               },
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
                 decoration: BoxDecoration(
                   gradient: const LinearGradient(colors: [primary, darkRed]),
                   borderRadius: BorderRadius.circular(20),
-                  boxShadow: [BoxShadow(color: primary.withOpacity(0.4), blurRadius: 15, offset: const Offset(0, 5))],
+                  boxShadow: [
+                    BoxShadow(
+                        color: primary.withOpacity(0.4),
+                        blurRadius: 15,
+                        offset: const Offset(0, 5))
+                  ],
                 ),
                 child: const Text('احجز الآن',
-                  style: TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.bold)),
+                    style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 15,
+                        fontWeight: FontWeight.bold)),
               ),
             ),
           ],

@@ -88,9 +88,11 @@ class _SplashScreenState extends State<SplashScreen>
           children: [
             // زخارف دائرية
             Positioned(
-              top: -100, right: -80,
+              top: -100,
+              right: -80,
               child: Container(
-                width: 280, height: 280,
+                width: 280,
+                height: 280,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   gradient: RadialGradient(
@@ -103,9 +105,11 @@ class _SplashScreenState extends State<SplashScreen>
               ),
             ),
             Positioned(
-              bottom: -120, left: -100,
+              bottom: -120,
+              left: -100,
               child: Container(
-                width: 320, height: 320,
+                width: 320,
+                height: 320,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   gradient: RadialGradient(
@@ -125,7 +129,8 @@ class _SplashScreenState extends State<SplashScreen>
                   ScaleTransition(
                     scale: _scale,
                     child: Container(
-                      width: 140, height: 140,
+                      width: 140,
+                      height: 140,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         gradient: const LinearGradient(
@@ -183,7 +188,8 @@ class _SplashScreenState extends State<SplashScreen>
                   FadeTransition(
                     opacity: _fade,
                     child: const SizedBox(
-                      width: 26, height: 26,
+                      width: 26,
+                      height: 26,
                       child: CircularProgressIndicator(
                         color: primary,
                         strokeWidth: 2.5,
