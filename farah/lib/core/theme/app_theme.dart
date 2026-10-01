@@ -7,12 +7,12 @@ class AppTheme {
   AppTheme._();
 
   static ThemeData get lightTheme {
-    final textTheme = GoogleFonts.cairoTextTheme();
+    final textTheme = GoogleFonts.tajawalTextTheme();
     return ThemeData(
       useMaterial3: true,
       brightness: Brightness.light,
       primaryColor: AppColors.goldPrimary,
-      scaffoldBackgroundColor: const Color(0xFFEDEEE9),
+      scaffoldBackgroundColor: const Color(0xFFFFF5F7),
       colorScheme: const ColorScheme.light(
         primary: AppColors.goldPrimary,
         secondary: AppColors.pinkAccent,
@@ -56,7 +56,7 @@ class AppTheme {
           borderRadius: BorderRadius.circular(12),
           borderSide: const BorderSide(color: AppColors.goldPrimary, width: 2),
         ),
-        labelStyle: GoogleFonts.cairo(),
+        labelStyle: GoogleFonts.tajawal(),
         hintStyle: GoogleFonts.cairo(color: AppColors.lightTextSecondary),
       ),
       cardTheme: CardThemeData(
@@ -68,12 +68,12 @@ class AppTheme {
   }
 
   static ThemeData get darkTheme {
-    final textTheme = GoogleFonts.cairoTextTheme();
+    final textTheme = GoogleFonts.tajawalTextTheme();
     return ThemeData(
       useMaterial3: true,
       brightness: Brightness.dark,
       primaryColor: AppColors.goldPrimary,
-      scaffoldBackgroundColor: const Color(0xFFEDEEE9),
+      scaffoldBackgroundColor: const Color(0xFFFFF5F7),
       colorScheme: const ColorScheme.dark(
         primary: AppColors.goldPrimary,
         secondary: AppColors.pinkAccent,

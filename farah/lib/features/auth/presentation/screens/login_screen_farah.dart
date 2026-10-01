@@ -23,12 +23,12 @@ class _FarahGlassLoginScreenState extends ConsumerState<FarahGlassLoginScreen> {
   bool _loading = false;
   String? _error;
 
-  static const Color gold      = Color(0xFFC0392B);
-  static const Color lightGold = Color(0xFFEDEEE9);
-  static const Color rose      = Color(0xFFEDEEE9);
-  static const Color deepRose  = Color(0xFFC0392B);
-  static const Color cream     = Color(0xFFF5EBE1);
-  static const Color chocolate = Color(0xFFC0392B);
+  static const Color gold      = Color(0xFFE91E63);
+  static const Color lightGold = Color(0xFFFFF5F7);
+  static const Color rose      = Color(0xFFFFF5F7);
+  static const Color deepRose  = Color(0xFFE91E63);
+  static const Color cream     = Color(0xFFFFF5F7);
+  static const Color chocolate = Color(0xFFE91E63);
 
   @override
   void dispose() {
@@ -110,7 +110,7 @@ class _FarahGlassLoginScreenState extends ConsumerState<FarahGlassLoginScreen> {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            Color(0xFFF5EBE1),
+            Color(0xFFFFF5F7),
             Color(0xFFFF2EDE4),
             Color(0xFFFFA93226),
           ],
@@ -271,7 +271,7 @@ class _FarahGlassLoginScreenState extends ConsumerState<FarahGlassLoginScreen> {
                   width: 200, height: 54,
                   decoration: BoxDecoration(
                     gradient: const LinearGradient(
-                      colors: [Color(0xFFC0392B), Color(0xFFA93226), Color(0xFFEDEEE9)],
+                      colors: [Color(0xFFE91E63), Color(0xFFC2185B), Color(0xFFFFF5F7)],
                       begin: Alignment.centerLeft, end: Alignment.centerRight,
                     ),
                     borderRadius: BorderRadius.circular(30),
@@ -333,7 +333,7 @@ class _FarahGlassLoginScreenState extends ConsumerState<FarahGlassLoginScreen> {
               child: ShaderMask(
                 shaderCallback: (bounds) => const LinearGradient(
                   begin: Alignment.topCenter, end: Alignment.bottomCenter,
-                  colors: [Color(0xFFC0392B), Color(0xFFC0392B), Color(0xFFEDEEE9)],
+                  colors: [Color(0xFFE91E63), Color(0xFFE91E63), Color(0xFFFFF5F7)],
                 ).createShader(bounds),
                 child: const Icon(Icons.person, size: 55, color: Colors.white),
               ),
@@ -367,7 +367,7 @@ class _FarahGlassLoginScreenState extends ConsumerState<FarahGlassLoginScreen> {
             width: 46, height: 46,
             decoration: BoxDecoration(
               gradient: const LinearGradient(
-                colors: [Color(0xFFC0392B), Color(0xFFA93226)],
+                colors: [Color(0xFFE91E63), Color(0xFFC2185B)],
                 begin: Alignment.topLeft, end: Alignment.bottomRight,
               ),
               borderRadius: BorderRadius.circular(14),

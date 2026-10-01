@@ -13,10 +13,10 @@ class HallDetailsScreen extends StatefulWidget {
 }
 
 class _HallDetailsScreenState extends State<HallDetailsScreen> {
-  static const Color primary = Color(0xFFC0392B);
-  static const Color darkRed = Color(0xFFA93226);
-  static const Color cream = Color(0xFFEDEEE9);
-  static const Color chocolate = Color(0xFF3E3530);
+  static const Color primary = Color(0xFFE91E63);
+  static const Color darkRed = Color(0xFFC2185B);
+  static const Color cream = Color(0xFFFFF5F7);
+  static const Color chocolate = Color(0xFF1A1A1A);
 
   final _pageCtrl = PageController();
   int _currentImage = 0;
