@@ -25,6 +25,14 @@ class _HallListScreenState extends State<HallListScreen> {
   String _selectedCity = 'الكل';
   late Future<QuerySnapshot> _hallsFuture;
 
+  final List<Map<String, dynamic>> _categoriesList = const [
+    {'name': 'فساتين', 'icon': Icons.checkroom, 'color': Color(0xFFF48FB1)},
+    {'name': 'تجميل', 'icon': Icons.spa, 'color': Color(0xFFF06292)},
+    {'name': 'ضيافة', 'icon': Icons.restaurant_menu, 'color': Color(0xFFBA68C8)},
+    {'name': 'ديكور', 'icon': Icons.auto_awesome, 'color': Color(0xFFEC407A)},
+    {'name': 'متاجر', 'icon': Icons.storefront, 'color': Color(0xFFC2185B)},
+  ];
+
   final List<String> _cities = const [
     'الكل', 'طرابلس', 'بنغازي', 'مصراتة', 'الزاوية', 'سبها',
   ];
@@ -71,6 +79,7 @@ class _HallListScreenState extends State<HallListScreen> {
         SliverToBoxAdapter(child: _buildSearchBar()),
         SliverToBoxAdapter(child: _buildCityChips()),
         SliverToBoxAdapter(child: _buildHeroBanner()),
+        SliverToBoxAdapter(child: _buildCategoryIcons()),
         SliverToBoxAdapter(child: _buildFeaturedTitle()),
         SliverToBoxAdapter(child: _buildHallsSection()),
         const SliverToBoxAdapter(child: SizedBox(height: 30)),
@@ -251,6 +260,45 @@ class _HallListScreenState extends State<HallListScreen> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildCategoryIcons() {
+    return SizedBox(
+      height: 110,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        itemCount: _categoriesList.length,
+        separatorBuilder: (_, __) => const SizedBox(width: 12),
+        itemBuilder: (context, i) {
+          final cat = _categoriesList[i];
+          final color = cat['color'] as Color;
+          return Column(
+            children: [
+              Container(
+                width: 66, height: 66,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [color, color.withOpacity(0.7)],
+                  ),
+                  borderRadius: BorderRadius.circular(22),
+                  boxShadow: [
+                    BoxShadow(color: color.withOpacity(0.35), blurRadius: 12, offset: const Offset(0, 5)),
+                    BoxShadow(color: Colors.white.withOpacity(0.6), blurRadius: 4, offset: const Offset(-2, -2)),
+                  ],
+                ),
+                child: Icon(cat['icon'] as IconData, color: Colors.white, size: 28),
+              ),
+              const SizedBox(height: 8),
+              Text(cat['name'] as String,
+                style: const TextStyle(color: textDark, fontSize: 12, fontWeight: FontWeight.w600)),
+            ],
+          );
+        },
       ),
     );
   }
