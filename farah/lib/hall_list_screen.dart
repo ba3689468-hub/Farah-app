@@ -46,11 +46,7 @@ class _HallListScreenState extends State<HallListScreen> {
     return Scaffold(
       body: Container(
         decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [bgStart, bgEnd],
-          ),
+          color: Color(0xFFFCE4EC),
         ),
         child: SafeArea(
           child: IndexedStack(

@@ -52,11 +52,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     return Scaffold(
       body: Container(
         decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [bgLight, Colors.white, Color(0xFFFFF5F7)],
-          ),
+          color: Color(0xFFFCE4EC),
         ),
         child: SafeArea(
           child: Column(
