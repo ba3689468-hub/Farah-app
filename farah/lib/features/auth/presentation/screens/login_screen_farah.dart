@@ -114,8 +114,8 @@ class _FarahGlassLoginScreenState extends ConsumerState<FarahGlassLoginScreen> {
             end: Alignment.bottomRight,
             colors: [
               Color(0xFFFFF5F7),
-              Color(0xFFFF2EDE4),
-              Color(0xFFFFA93226),
+              Color(0xFFF2EDE4),
+              Color(0xFFA93226),
             ],
             stops: [0.0, 0.5, 1.0],
           ),
@@ -153,7 +153,7 @@ class _FarahGlassLoginScreenState extends ConsumerState<FarahGlassLoginScreen> {
               borderRadius: BorderRadius.circular(100),
               boxShadow: [
                 BoxShadow(
-                    color: deepRose.withOpacity(0.6),
+                    color: deepRose.withValues(alpha: 0.6),
                     blurRadius: 60,
                     spreadRadius: 10)
               ],
@@ -168,7 +168,7 @@ class _FarahGlassLoginScreenState extends ConsumerState<FarahGlassLoginScreen> {
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
-                colors: [cream.withOpacity(0.85), rose.withOpacity(0.75)],
+                colors: [cream.withValues(alpha: 0.85), rose.withValues(alpha: 0.75)],
               ),
               borderRadius: const BorderRadius.only(
                 topLeft: Radius.circular(80),
@@ -179,7 +179,7 @@ class _FarahGlassLoginScreenState extends ConsumerState<FarahGlassLoginScreen> {
               border: Border.all(color: Colors.transparent, width: 1.4),
               boxShadow: [
                 BoxShadow(
-                    color: deepRose.withOpacity(0.35),
+                    color: deepRose.withValues(alpha: 0.35),
                     blurRadius: 40,
                     offset: const Offset(0, 20))
               ],
@@ -255,7 +255,7 @@ class _FarahGlassLoginScreenState extends ConsumerState<FarahGlassLoginScreen> {
                       activeColor: deepRose,
                       checkColor: Colors.white,
                       side: BorderSide(
-                          color: chocolate.withOpacity(0.6), width: 1.5),
+                          color: chocolate.withValues(alpha: 0.6), width: 1.5),
                       shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(4)),
                     ),
@@ -293,9 +293,9 @@ class _FarahGlassLoginScreenState extends ConsumerState<FarahGlassLoginScreen> {
                     padding: const EdgeInsets.symmetric(
                         horizontal: 14, vertical: 10),
                     decoration: BoxDecoration(
-                      color: Colors.red.withOpacity(0.12),
+                      color: Colors.red.withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.red.withOpacity(0.4)),
+                      border: Border.all(color: Colors.red.withValues(alpha: 0.4)),
                     ),
                     child: Row(children: [
                       const Icon(Icons.error_outline,
@@ -326,7 +326,7 @@ class _FarahGlassLoginScreenState extends ConsumerState<FarahGlassLoginScreen> {
                     borderRadius: BorderRadius.circular(30),
                     boxShadow: [
                       BoxShadow(
-                          color: gold.withOpacity(0.55),
+                          color: gold.withValues(alpha: 0.55),
                           blurRadius: 22,
                           offset: const Offset(0, 8))
                     ],
@@ -366,7 +366,7 @@ class _FarahGlassLoginScreenState extends ConsumerState<FarahGlassLoginScreen> {
                 Row(mainAxisAlignment: MainAxisAlignment.center, children: [
                   Text('ليس لديك حساب؟ ',
                       style: TextStyle(
-                          color: chocolate.withOpacity(0.75), fontSize: 13)),
+                          color: chocolate.withValues(alpha: 0.75), fontSize: 13)),
                   GestureDetector(
                     onTap: _loading ? null : _goToRegister,
                     child: const Text('أنشئ حساباً الآن',
@@ -393,7 +393,7 @@ class _FarahGlassLoginScreenState extends ConsumerState<FarahGlassLoginScreen> {
               border: Border.all(color: gold, width: 2),
               boxShadow: [
                 BoxShadow(
-                    color: gold.withOpacity(0.4),
+                    color: gold.withValues(alpha: 0.4),
                     blurRadius: 22,
                     offset: const Offset(0, 8))
               ],
@@ -434,7 +434,7 @@ class _FarahGlassLoginScreenState extends ConsumerState<FarahGlassLoginScreen> {
         borderRadius: BorderRadius.circular(30),
         boxShadow: [
           BoxShadow(
-              color: Colors.black.withOpacity(0.06),
+              color: Colors.black.withValues(alpha: 0.06),
               blurRadius: 12,
               offset: const Offset(0, 4))
         ],
@@ -469,7 +469,7 @@ class _FarahGlassLoginScreenState extends ConsumerState<FarahGlassLoginScreen> {
               decoration: InputDecoration(
                 hintText: hint,
                 hintStyle:
-                    TextStyle(color: chocolate.withOpacity(0.5), fontSize: 14),
+                    TextStyle(color: chocolate.withValues(alpha: 0.5), fontSize: 14),
                 errorStyle: const TextStyle(
                     color: Colors.red, fontSize: 11, height: 0.8),
                 border: InputBorder.none,

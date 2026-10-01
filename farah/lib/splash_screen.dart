@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'hall_list_screen.dart';
 import 'features/auth/presentation/screens/login_screen_farah.dart';
@@ -16,7 +15,6 @@ class _SplashScreenState extends State<SplashScreen>
     with SingleTickerProviderStateMixin {
   static const Color primary = Color(0xFFF06292);
   static const Color primaryDark = Color(0xFFEC407A);
-  static const Color bgLight = Color(0xFFFCE4EC);
 
   late AnimationController _ctrl;
   late Animation<double> _scale;
@@ -97,8 +95,8 @@ class _SplashScreenState extends State<SplashScreen>
                   shape: BoxShape.circle,
                   gradient: RadialGradient(
                     colors: [
-                      primary.withOpacity(0.25),
-                      primary.withOpacity(0.0)
+                      primary.withValues(alpha: 0.25),
+                      primary.withValues(alpha: 0.0)
                     ],
                   ),
                 ),
@@ -114,8 +112,8 @@ class _SplashScreenState extends State<SplashScreen>
                   shape: BoxShape.circle,
                   gradient: RadialGradient(
                     colors: [
-                      primaryDark.withOpacity(0.2),
-                      primaryDark.withOpacity(0.0)
+                      primaryDark.withValues(alpha: 0.2),
+                      primaryDark.withValues(alpha: 0.0)
                     ],
                   ),
                 ),
@@ -140,7 +138,7 @@ class _SplashScreenState extends State<SplashScreen>
                         ),
                         boxShadow: [
                           BoxShadow(
-                            color: primary.withOpacity(0.4),
+                            color: primary.withValues(alpha: 0.4),
                             blurRadius: 40,
                             spreadRadius: 4,
                           ),

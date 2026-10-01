@@ -85,7 +85,7 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
                   border: Border.all(
                       color: active
                           ? Colors.transparent
-                          : primary.withOpacity(0.2)),
+                          : primary.withValues(alpha: 0.2)),
                 ),
                 child: Text(t['label'] as String,
                     style: TextStyle(
@@ -109,12 +109,12 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
           return const Center(child: CircularProgressIndicator(color: primary));
         }
         if (snap.hasError) {
-          return Center(
+          return const Center(
             child: Padding(
-              padding: const EdgeInsets.all(30),
+              padding: EdgeInsets.all(30),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
-                children: const [
+                children: [
                   Icon(Icons.error_outline, size: 70, color: Colors.redAccent),
                   SizedBox(height: 16),
                   Text('تعذر تحميل الحجوزات',
@@ -161,7 +161,7 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
             Container(
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
-                color: primary.withOpacity(0.08),
+                color: primary.withValues(alpha: 0.08),
                 shape: BoxShape.circle,
               ),
               child: const Icon(Icons.event_note_outlined,
@@ -200,7 +200,7 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
         borderRadius: BorderRadius.circular(18),
         boxShadow: [
           BoxShadow(
-              color: Colors.black.withOpacity(0.05),
+              color: Colors.black.withValues(alpha: 0.05),
               blurRadius: 12,
               offset: const Offset(0, 4))
         ],
@@ -282,10 +282,10 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
                       padding: const EdgeInsets.symmetric(
                           horizontal: 14, vertical: 10),
                       decoration: BoxDecoration(
-                        color: Colors.red.withOpacity(0.08),
+                        color: Colors.red.withValues(alpha: 0.08),
                         borderRadius: BorderRadius.circular(10),
                         border: Border.all(
-                            color: Colors.redAccent.withOpacity(0.4)),
+                            color: Colors.redAccent.withValues(alpha: 0.4)),
                       ),
                       child: const Text('إلغاء',
                           style: TextStyle(

@@ -75,7 +75,7 @@ class _BookingScreenState extends State<BookingScreen> {
         borderRadius: BorderRadius.circular(18),
         boxShadow: [
           BoxShadow(
-              color: Colors.black.withOpacity(0.05),
+              color: Colors.black.withValues(alpha: 0.05),
               blurRadius: 12,
               offset: const Offset(0, 4))
         ],
@@ -146,7 +146,7 @@ class _BookingScreenState extends State<BookingScreen> {
         borderRadius: BorderRadius.circular(18),
         boxShadow: [
           BoxShadow(
-              color: Colors.black.withOpacity(0.05),
+              color: Colors.black.withValues(alpha: 0.05),
               blurRadius: 12,
               offset: const Offset(0, 4))
         ],
@@ -159,7 +159,7 @@ class _BookingScreenState extends State<BookingScreen> {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: primary.withOpacity(0.1),
+                  color: primary.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child:
@@ -199,7 +199,7 @@ class _BookingScreenState extends State<BookingScreen> {
                       border: Border.all(
                           color: selected
                               ? Colors.transparent
-                              : primary.withOpacity(0.2)),
+                              : primary.withValues(alpha: 0.2)),
                     ),
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -232,7 +232,7 @@ class _BookingScreenState extends State<BookingScreen> {
             Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: primary.withOpacity(0.08),
+                color: primary.withValues(alpha: 0.08),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Row(
@@ -264,7 +264,7 @@ class _BookingScreenState extends State<BookingScreen> {
         borderRadius: BorderRadius.circular(18),
         boxShadow: [
           BoxShadow(
-              color: Colors.black.withOpacity(0.05),
+              color: Colors.black.withValues(alpha: 0.05),
               blurRadius: 12,
               offset: const Offset(0, 4))
         ],
@@ -277,7 +277,7 @@ class _BookingScreenState extends State<BookingScreen> {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: primary.withOpacity(0.1),
+                  color: primary.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child:
@@ -343,7 +343,7 @@ class _BookingScreenState extends State<BookingScreen> {
         height: 50,
         decoration: BoxDecoration(
           color:
-              enabled ? primary.withOpacity(0.1) : Colors.grey.withOpacity(0.1),
+              enabled ? primary.withValues(alpha: 0.1) : Colors.grey.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(14),
         ),
         child: Icon(icon, color: enabled ? primary : Colors.black26, size: 24),
@@ -360,7 +360,7 @@ class _BookingScreenState extends State<BookingScreen> {
         borderRadius: BorderRadius.circular(18),
         boxShadow: [
           BoxShadow(
-              color: Colors.black.withOpacity(0.05),
+              color: Colors.black.withValues(alpha: 0.05),
               blurRadius: 12,
               offset: const Offset(0, 4))
         ],
@@ -373,7 +373,7 @@ class _BookingScreenState extends State<BookingScreen> {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: primary.withOpacity(0.1),
+                  color: primary.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: const Icon(Icons.add_circle_outline,
@@ -386,7 +386,7 @@ class _BookingScreenState extends State<BookingScreen> {
                       fontSize: 16,
                       fontWeight: FontWeight.bold)),
               const Spacer(),
-              Text('(اختياري)',
+              const Text('(اختياري)',
                   style: TextStyle(color: Colors.black45, fontSize: 11)),
             ],
           ),
@@ -405,7 +405,7 @@ class _BookingScreenState extends State<BookingScreen> {
                 margin: const EdgeInsets.only(bottom: 8),
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: selected ? primary.withOpacity(0.08) : cream,
+                  color: selected ? primary.withValues(alpha: 0.08) : cream,
                   borderRadius: BorderRadius.circular(14),
                   border: Border.all(
                     color: selected ? primary : Colors.transparent,
@@ -478,7 +478,7 @@ class _BookingScreenState extends State<BookingScreen> {
         color: Colors.white,
         boxShadow: [
           BoxShadow(
-              color: Colors.black.withOpacity(0.08),
+              color: Colors.black.withValues(alpha: 0.08),
               blurRadius: 20,
               offset: const Offset(0, -6))
         ],
@@ -521,7 +521,7 @@ class _BookingScreenState extends State<BookingScreen> {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: primary,
                   foregroundColor: Colors.white,
-                  disabledBackgroundColor: primary.withOpacity(0.5),
+                  disabledBackgroundColor: primary.withValues(alpha: 0.5),
                   shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(20)),
                   elevation: 0,
@@ -585,8 +585,8 @@ class _BookingScreenState extends State<BookingScreen> {
           shape:
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           backgroundColor: cream,
-          title: Row(
-            children: const [
+          title: const Row(
+            children: [
               Icon(Icons.check_circle, color: Colors.green, size: 28),
               SizedBox(width: 10),
               Text('تم الحجز بنجاح',

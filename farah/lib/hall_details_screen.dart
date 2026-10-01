@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'booking_screen.dart';
 
 class HallDetailsScreen extends StatefulWidget {
@@ -50,7 +48,7 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
               icon: Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.9),
+                  color: Colors.white.withValues(alpha: 0.9),
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(Icons.arrow_back, color: chocolate, size: 20),
@@ -62,7 +60,7 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
                 icon: Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.9),
+                    color: Colors.white.withValues(alpha: 0.9),
                     shape: BoxShape.circle,
                   ),
                   child: const Icon(Icons.favorite_border,
@@ -102,10 +100,10 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
   Widget _buildImageGallery(List<String> images) {
     if (images.isEmpty) {
       return Container(
-        color: primary.withOpacity(0.3),
+        color: primary.withValues(alpha: 0.3),
         child: Center(
           child: Icon(Icons.celebration,
-              size: 80, color: Colors.white.withOpacity(0.6)),
+              size: 80, color: Colors.white.withValues(alpha: 0.6)),
         ),
       );
     }
@@ -119,10 +117,10 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
             images[i],
             fit: BoxFit.cover,
             errorBuilder: (_, __, ___) => Container(
-              color: primary.withOpacity(0.3),
+              color: primary.withValues(alpha: 0.3),
               child: Center(
                 child: Icon(Icons.celebration,
-                    size: 80, color: Colors.white.withOpacity(0.6)),
+                    size: 80, color: Colors.white.withValues(alpha: 0.6)),
               ),
             ),
           ),
@@ -135,7 +133,7 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
                 gradient: LinearGradient(
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
-                  colors: [Colors.transparent, Colors.black.withOpacity(0.5)],
+                  colors: [Colors.transparent, Colors.black.withValues(alpha: 0.5)],
                   stops: const [0.6, 1.0],
                 ),
               ),
@@ -217,7 +215,7 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
           const SizedBox(height: 20),
           Row(
             children: [
-              _infoChip(Icons.star, '${rating.toStringAsFixed(1)}', 'التقييم'),
+              _infoChip(Icons.star, rating.toStringAsFixed(1), 'التقييم'),
               const SizedBox(width: 12),
               _infoChip(Icons.people_outline, '$capacity', 'السعة'),
               const SizedBox(width: 12),
@@ -263,7 +261,7 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
           borderRadius: BorderRadius.circular(14),
           boxShadow: [
             BoxShadow(
-                color: Colors.black.withOpacity(0.05),
+                color: Colors.black.withValues(alpha: 0.05),
                 blurRadius: 10,
                 offset: const Offset(0, 4))
           ],
@@ -291,12 +289,12 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: primary.withOpacity(0.2)),
+        border: Border.all(color: primary.withValues(alpha: 0.2)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.check_circle, color: primary, size: 14),
+          const Icon(Icons.check_circle, color: primary, size: 14),
           const SizedBox(width: 5),
           Text(name, style: const TextStyle(color: chocolate, fontSize: 12)),
         ],
@@ -311,7 +309,7 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
         color: Colors.white,
         boxShadow: [
           BoxShadow(
-              color: Colors.black.withOpacity(0.08),
+              color: Colors.black.withValues(alpha: 0.08),
               blurRadius: 20,
               offset: const Offset(0, -6))
         ],
@@ -361,7 +359,7 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
                   borderRadius: BorderRadius.circular(20),
                   boxShadow: [
                     BoxShadow(
-                        color: primary.withOpacity(0.4),
+                        color: primary.withValues(alpha: 0.4),
                         blurRadius: 15,
                         offset: const Offset(0, 5))
                   ],
