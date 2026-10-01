@@ -22,6 +22,11 @@ class _HallListScreenState extends State<HallListScreen> {
 
   int _currentIndex = 0;
   bool _isGrid = false;
+  // ═══ الفلترة ═══
+  RangeValues _priceRange = const RangeValues(0, 50000);
+  double _minRating = 0;
+  String _selectedType = 'الكل';
+  bool _onlyAvailable = false;
   final _searchCtrl = TextEditingController();
   String _selectedCity = 'الكل';
   late Future<QuerySnapshot> _hallsFuture;
@@ -124,36 +129,73 @@ class _HallListScreenState extends State<HallListScreen> {
   Widget _buildSearchBar() {
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 8, 20, 12),
-      child: Container(
-        height: 48,
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(24),
-          boxShadow: [BoxShadow(color: primary.withOpacity(0.08), blurRadius: 15, offset: const Offset(0, 4))],
-        ),
-        child: Row(
-          children: [
-            const SizedBox(width: 14),
-            const Icon(Icons.search, color: primary, size: 20),
-            const SizedBox(width: 8),
-            Expanded(
-              child: TextField(
-                controller: _searchCtrl,
-                textAlign: TextAlign.right,
-                decoration: const InputDecoration(
-                  hintText: 'ابحث عن قاعة في ليبيا...',
-                  hintStyle: TextStyle(color: textLight, fontSize: 13),
-                  border: InputBorder.none,
-                  enabledBorder: InputBorder.none,
-                  focusedBorder: InputBorder.none,
-                  isDense: true,
-                  contentPadding: EdgeInsets.zero,
-                ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Container(
+              height: 48,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(24),
+                boxShadow: [BoxShadow(color: primary.withOpacity(0.08), blurRadius: 15, offset: const Offset(0, 4))],
+              ),
+              child: Row(
+                children: [
+                  const SizedBox(width: 14),
+                  const Icon(Icons.search, color: primary, size: 20),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: TextField(
+                      controller: _searchCtrl,
+                      textAlign: TextAlign.right,
+                      onChanged: (v) => setState(() {}),
+                      decoration: const InputDecoration(
+                        hintText: 'ابحث عن قاعة في ليبيا...',
+                        hintStyle: TextStyle(color: textLight, fontSize: 13),
+                        border: InputBorder.none,
+                        enabledBorder: InputBorder.none,
+                        focusedBorder: InputBorder.none,
+                        isDense: true,
+                        contentPadding: EdgeInsets.zero,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 14),
+                ],
               ),
             ),
-            const SizedBox(width: 14),
-          ],
-        ),
+          ),
+          const SizedBox(width: 10),
+          GestureDetector(
+            onTap: _showFilterSheet,
+            child: Container(
+              width: 48, height: 48,
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(colors: [primary, primaryDark]),
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [BoxShadow(color: primary.withOpacity(0.35), blurRadius: 12, offset: const Offset(0, 5))],
+              ),
+              child: Stack(
+                children: [
+                  const Center(
+                    child: Icon(Icons.tune, color: Colors.white, size: 22),
+                  ),
+                  if (_minRating > 0 || _priceRange.start > 0 || _priceRange.end < 50000 || _onlyAvailable || _selectedType != 'الكل')
+                    Positioned(
+                      top: 8, right: 8,
+                      child: Container(
+                        width: 10, height: 10,
+                        decoration: const BoxDecoration(
+                          color: Colors.white,
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -624,6 +666,181 @@ class _HallListScreenState extends State<HallListScreen> {
     );
   }
 }
+
+  void _showFilterSheet() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) {
+        RangeValues tempRange = _priceRange;
+        double tempRating = _minRating;
+        String tempType = _selectedType;
+        bool tempAvail = _onlyAvailable;
+
+        return StatefulBuilder(
+          builder: (ctx, setSheet) => Container(
+            padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Center(
+                  child: Container(
+                    width: 50, height: 4,
+                    decoration: BoxDecoration(
+                      color: Colors.black12,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 18),
+                Row(
+                  children: [
+                    const Text('الفلترة',
+                      style: TextStyle(color: textDark, fontSize: 20, fontWeight: FontWeight.bold)),
+                    const Spacer(),
+                    GestureDetector(
+                      onTap: () {
+                        setSheet(() {
+                          tempRange = const RangeValues(0, 50000);
+                          tempRating = 0;
+                          tempType = 'الكل';
+                          tempAvail = false;
+                        });
+                      },
+                      child: const Text('إعادة تعيين',
+                        style: TextStyle(color: primary, fontSize: 13, fontWeight: FontWeight.bold)),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 22),
+
+                // السعر
+                const Text('نطاق السعر (د.ل)',
+                  style: TextStyle(color: textDark, fontSize: 14, fontWeight: FontWeight.bold)),
+                const SizedBox(height: 8),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text('${tempRange.start.round()}',
+                      style: const TextStyle(color: primary, fontSize: 12, fontWeight: FontWeight.bold)),
+                    Text('${tempRange.end.round()}',
+                      style: const TextStyle(color: primary, fontSize: 12, fontWeight: FontWeight.bold)),
+                  ],
+                ),
+                RangeSlider(
+                  values: tempRange,
+                  min: 0, max: 50000, divisions: 50,
+                  activeColor: primary,
+                  inactiveColor: primary.withOpacity(0.15),
+                  labels: RangeLabels(
+                    '${tempRange.start.round()}',
+                    '${tempRange.end.round()}',
+                  ),
+                  onChanged: (v) => setSheet(() => tempRange = v),
+                ),
+                const SizedBox(height: 12),
+
+                // التقييم
+                const Text('التقييم',
+                  style: TextStyle(color: textDark, fontSize: 14, fontWeight: FontWeight.bold)),
+                const SizedBox(height: 8),
+                Row(
+                  children: List.generate(5, (i) {
+                    final filled = i < tempRating.round();
+                    return GestureDetector(
+                      onTap: () => setSheet(() => tempRating = (i + 1).toDouble()),
+                      child: Padding(
+                        padding: const EdgeInsets.only(right: 6),
+                        child: Icon(
+                          filled ? Icons.star : Icons.star_border,
+                          color: Colors.amber, size: 30,
+                        ),
+                      ),
+                    );
+                  }),
+                ),
+                const SizedBox(height: 18),
+
+                // نوع القاعة
+                const Text('نوع القاعة',
+                  style: TextStyle(color: textDark, fontSize: 14, fontWeight: FontWeight.bold)),
+                const SizedBox(height: 10),
+                Wrap(
+                  spacing: 8, runSpacing: 8,
+                  children: ['الكل', 'قاعات أفراح', 'قاعات مؤتمرات', 'استراحات'].map((t) {
+                    final active = t == tempType;
+                    return GestureDetector(
+                      onTap: () => setSheet(() => tempType = t),
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 200),
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        decoration: BoxDecoration(
+                          gradient: active ? const LinearGradient(colors: [primary, primaryDark]) : null,
+                          color: active ? null : const Color(0xFFFCE4EC),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Text(t,
+                          style: TextStyle(
+                            color: active ? Colors.white : textDark,
+                            fontSize: 12, fontWeight: FontWeight.w600)),
+                      ),
+                    );
+                  }).toList(),
+                ),
+                const SizedBox(height: 18),
+
+                // متوفر الآن
+                Row(
+                  children: [
+                    Switch(
+                      value: tempAvail,
+                      activeColor: primary,
+                      onChanged: (v) => setSheet(() => tempAvail = v),
+                    ),
+                    const SizedBox(width: 8),
+                    const Text('متاح الآن فقط',
+                      style: TextStyle(color: textDark, fontSize: 14, fontWeight: FontWeight.w600)),
+                  ],
+                ),
+                const SizedBox(height: 20),
+
+                // الأزرار
+                SizedBox(
+                  width: double.infinity,
+                  height: 54,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      setState(() {
+                        _priceRange = tempRange;
+                        _minRating = tempRating;
+                        _selectedType = tempType;
+                        _onlyAvailable = tempAvail;
+                      });
+                      Navigator.pop(ctx);
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: primary,
+                      foregroundColor: Colors.white,
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+                    ),
+                    child: const Text('تطبيق الفلترة',
+                      style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
 
 class SimpleProfileScreen extends StatefulWidget {
   const SimpleProfileScreen({super.key});
