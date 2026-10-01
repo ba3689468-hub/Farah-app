@@ -21,6 +21,7 @@ class _HallListScreenState extends State<HallListScreen> {
   static const Color bgEnd = Color(0xFFFFF5F7);
 
   int _currentIndex = 0;
+  bool _isGrid = false;
   final _searchCtrl = TextEditingController();
   String _selectedCity = 'الكل';
   late Future<QuerySnapshot> _hallsFuture;
