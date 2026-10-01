@@ -466,6 +466,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
               hintStyle: TextStyle(color: chocolate.withOpacity(0.55), fontSize: 13),
               errorStyle: const TextStyle(color: Colors.red, fontSize: 11, height: 0.8),
               border: InputBorder.none,
+              filled: false,
               enabledBorder: InputBorder.none,
               focusedBorder: InputBorder.none,
               isDense: true,
