@@ -59,12 +59,6 @@ class _SplashScreenState extends State<SplashScreen>
                   onFinish: () async {
                     final p = await SharedPreferences.getInstance();
                     await p.setBool('seen_onboarding', true);
-                    if (!mounted) return;
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(
-                          builder: (_) => const FarahGlassLoginScreen()),
-                    );
                   },
                 ),
         ),

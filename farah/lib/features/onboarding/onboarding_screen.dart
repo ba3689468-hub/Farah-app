@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../auth/presentation/screens/login_screen_farah.dart';
 
 class OnboardingScreen extends StatefulWidget {
   final VoidCallback onFinish;
@@ -66,7 +67,15 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 child: Padding(
                   padding: const EdgeInsets.all(12),
                   child: TextButton(
-                    onPressed: widget.onFinish,
+                    onPressed: () async {
+                      widget.onFinish();
+                      if (!mounted) return;
+                      Navigator.of(context).pushReplacement(
+                        MaterialPageRoute(
+                          builder: (_) => const FarahGlassLoginScreen(),
+                        ),
+                      );
+                    },
                     child: const Text('تخطي',
                       style: TextStyle(
                         color: primary,
@@ -159,9 +168,15 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   width: double.infinity,
                   height: 56,
                   child: ElevatedButton(
-                    onPressed: () {
+                    onPressed: () async {
                       if (_current == _pages.length - 1) {
                         widget.onFinish();
+                        if (!mounted) return;
+                        Navigator.of(context).pushReplacement(
+                          MaterialPageRoute(
+                            builder: (_) => const FarahGlassLoginScreen(),
+                          ),
+                        );
                       } else {
                         _pageCtrl.nextPage(
                           duration: const Duration(milliseconds: 400),
