@@ -309,13 +309,18 @@ class _HallListScreenState extends State<HallListScreen> {
       child: Row(
         children: [
           GestureDetector(
-            onTap: () {},
-            child: Row(
-              children: const [
-                Text('الكل', style: TextStyle(color: primary, fontSize: 13, fontWeight: FontWeight.bold)),
-                SizedBox(width: 4),
-                Icon(Icons.arrow_back_ios, color: primary, size: 12),
-              ],
+            onTap: () => setState(() => _isGrid = !_isGrid),
+            child: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(10),
+                boxShadow: [BoxShadow(color: primary.withOpacity(0.1), blurRadius: 8, offset: const Offset(0, 3))],
+              ),
+              child: Icon(
+                _isGrid ? Icons.view_list : Icons.grid_view,
+                color: primary, size: 18,
+              ),
             ),
           ),
           const Spacer(),
@@ -342,6 +347,26 @@ class _HallListScreenState extends State<HallListScreen> {
         if (docs.isEmpty) return _buildEmpty();
 
         // عرض أفقي ببطاقات صغيرة
+        if (_isGrid) {
+          return Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: GridView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                crossAxisSpacing: 12,
+                mainAxisSpacing: 12,
+                childAspectRatio: 0.72,
+              ),
+              itemCount: docs.length,
+              itemBuilder: (context, i) {
+                final data = docs[i].data() as Map<String, dynamic>;
+                return _buildHallGridCard(data);
+              },
+            ),
+          );
+        }
         return SizedBox(
           height: 230,
           child: ListView.separated(
@@ -724,6 +749,57 @@ class _SimpleProfileScreenState extends State<SimpleProfileScreen> {
           ),
         ),
       ],
+    );
+  }
+
+  Widget _menuItem(IconData icon, String title, String subtitle, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(18),
+          boxShadow: [
+            BoxShadow(color: primary.withOpacity(0.08), blurRadius: 12, offset: const Offset(0, 4)),
+            BoxShadow(color: Colors.white.withOpacity(0.8), blurRadius: 4, offset: const Offset(-2, -2)),
+          ],
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 46, height: 46,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [primary.withOpacity(0.9), primaryDark],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(14),
+                boxShadow: [
+                  BoxShadow(color: primary.withOpacity(0.3), blurRadius: 8, offset: const Offset(0, 3)),
+                ],
+              ),
+              child: Icon(icon, color: Colors.white, size: 22),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(title,
+                    style: const TextStyle(color: textDark, fontSize: 15, fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 3),
+                  Text(subtitle,
+                    style: const TextStyle(color: textLight, fontSize: 11),
+                    maxLines: 1, overflow: TextOverflow.ellipsis),
+                ],
+              ),
+            ),
+            const Icon(Icons.arrow_back_ios, color: textLight, size: 14),
+          ],
+        ),
+      ),
     );
   }
 
