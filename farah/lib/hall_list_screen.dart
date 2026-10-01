@@ -12,8 +12,8 @@ class HallListScreen extends StatefulWidget {
 }
 
 class _HallListScreenState extends State<HallListScreen> {
-  static const Color primary = Color(0xFFF06292);
-  static const Color primaryDark = Color(0xFFEC407A);
+  static const Color primary = Color(0xFFE91E63);
+  static const Color primaryDark = Color(0xFFC2185B);
   static const Color textDark = Color(0xFF1A1A1A);
   static const Color textLight = Color(0xFF999999);
   static const Color cardWhite = Colors.white;
@@ -44,7 +44,15 @@ class _HallListScreenState extends State<HallListScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: SafeArea(
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [bgStart, bgEnd],
+          ),
+        ),
+        child: SafeArea(
           child: IndexedStack(
             index: _currentIndex,
             children: [
@@ -477,8 +485,8 @@ class SimpleProfileScreen extends StatefulWidget {
 }
 
 class _SimpleProfileScreenState extends State<SimpleProfileScreen> {
-  static const Color primary = Color(0xFFF06292);
-  static const Color primaryDark = Color(0xFFEC407A);
+  static const Color primary = Color(0xFFE91E63);
+  static const Color primaryDark = Color(0xFFC2185B);
   static const Color textDark = Color(0xFF1A1A1A);
   static const Color textLight = Color(0xFF999999);
 
