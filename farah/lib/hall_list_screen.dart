@@ -481,6 +481,83 @@ class _HallListScreenState extends State<HallListScreen> {
     );
   }
 
+  Widget _buildHallGridCard(Map<String, dynamic> hall) {
+    final name = hall['name'] ?? 'قاعة';
+    final city = hall['city'] ?? 'غير محدد';
+    final price = hall['price'] ?? 0;
+    final rating = (hall['rating'] ?? 0).toDouble();
+    final image = hall['image'] ?? hall['coverImage'];
+
+    return GestureDetector(
+      onTap: () => Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => HallDetailsScreen(hallData: hall)),
+      ),
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.06), blurRadius: 12, offset: const Offset(0, 5))],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            ClipRRect(
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+              child: SizedBox(
+                height: 100, width: double.infinity,
+                child: image != null
+                    ? Image.network(image, fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) => Container(
+                          color: primary.withOpacity(0.2),
+                          child: const Icon(Icons.celebration, color: Colors.white, size: 40),
+                        ))
+                    : Container(
+                        color: primary.withOpacity(0.2),
+                        child: const Icon(Icons.celebration, color: Colors.white, size: 40),
+                      ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(10),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(name,
+                      style: const TextStyle(color: textDark, fontSize: 12, fontWeight: FontWeight.bold),
+                      maxLines: 1, overflow: TextOverflow.ellipsis),
+                  const SizedBox(height: 4),
+                  Row(children: [
+                    const Icon(Icons.location_on_outlined, color: textLight, size: 11),
+                    const SizedBox(width: 2),
+                    Expanded(
+                      child: Text(city,
+                          style: const TextStyle(color: textLight, fontSize: 10),
+                          maxLines: 1, overflow: TextOverflow.ellipsis),
+                    ),
+                  ]),
+                  const SizedBox(height: 6),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text('$price',
+                          style: const TextStyle(color: primary, fontSize: 13, fontWeight: FontWeight.bold)),
+                      Row(children: [
+                        const Icon(Icons.star, color: Colors.amber, size: 11),
+                        Text(rating.toStringAsFixed(1),
+                            style: const TextStyle(color: textDark, fontSize: 10, fontWeight: FontWeight.bold)),
+                      ]),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildEmpty() {
     return Padding(
       padding: const EdgeInsets.all(40),
