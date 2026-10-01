@@ -742,29 +742,28 @@ class _SimpleProfileScreenState extends State<SimpleProfileScreen> {
                 ),
               ),
               const SizedBox(height: 18),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: Row(
-                  children: [
-                    Expanded(child: _tile(Icons.calendar_month, 'حجوزاتي', () {
-                      Navigator.pop(context);
-                    })),
-                    const SizedBox(width: 10),
-                    Expanded(child: _tile(Icons.favorite_border, 'المفضلة', () {})),
-                  ],
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: Column(
+                    children: [
+                      _menuItem(Icons.calendar_month, 'حجوزاتي', 'سجل حجوزاتك السابقة والقادمة', () {
+                        Navigator.pop(context);
+                      }),
+                      const SizedBox(height: 10),
+                      _menuItem(Icons.favorite_border, 'المفضلة', 'القاعات المحفوظة', () {}),
+                      const SizedBox(height: 10),
+                      _menuItem(Icons.account_balance_wallet, 'محفظتي', 'رصيدك وطرق الدفع', () {}),
+                      const SizedBox(height: 10),
+                      _menuItem(Icons.notifications_outlined, 'الإشعارات', 'تخصيص التنبيهات', () {}),
+                      const SizedBox(height: 10),
+                      _menuItem(Icons.settings_outlined, 'الإعدادات', 'اللغة والمظهر والخصوصية', () {}),
+                      const SizedBox(height: 10),
+                      _menuItem(Icons.help_outline, 'المساعدة والدعم', 'تواصل معنا', () {}),
+                      const SizedBox(height: 10),
+                      _menuItem(Icons.info_outline, 'عن التطبيق', 'فرح — الإصدار 1.0.0', () {}),
+                    ],
+                  ),
                 ),
-              ),
-              const SizedBox(height: 10),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: Row(
-                  children: [
-                    Expanded(child: _tile(Icons.settings_outlined, 'الإعدادات', () {})),
-                    const SizedBox(width: 10),
-                    Expanded(child: _tile(Icons.help_outline, 'المساعدة', () {})),
-                  ],
-                ),
-              ),
               const SizedBox(height: 22),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
