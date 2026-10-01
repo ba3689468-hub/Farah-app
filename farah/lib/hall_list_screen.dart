@@ -665,7 +665,6 @@ class _HallListScreenState extends State<HallListScreen> {
       ),
     );
   }
-}
 
   void _showFilterSheet() {
     showModalBottomSheet(
@@ -841,6 +840,7 @@ class _HallListScreenState extends State<HallListScreen> {
       },
     );
   }
+}
 
 class SimpleProfileScreen extends StatefulWidget {
   const SimpleProfileScreen({super.key});
