@@ -110,15 +110,10 @@ class _HallListScreenState extends State<HallListScreen> {
           Container(
             width: 44,
             height: 44,
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(colors: [primary, primaryDark]),
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(colors: [primary, primaryDark]),
               shape: BoxShape.circle,
-              boxShadow: [
-                BoxShadow(
-                    color: primary.withValues(alpha: 0.3),
-                    blurRadius: 12,
-                    offset: const Offset(0, 4))
-              ],
+              // ✅ تم حذف التوهج
             ),
             child: const Center(
               child: Text('ف',
@@ -159,12 +154,7 @@ class _HallListScreenState extends State<HallListScreen> {
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(24),
-                boxShadow: [
-                  BoxShadow(
-                      color: primary.withValues(alpha: 0.08),
-                      blurRadius: 15,
-                      offset: const Offset(0, 4))
-                ],
+                // ✅ تم حذف التوهج
               ),
               child: Row(
                 children: [
@@ -201,12 +191,7 @@ class _HallListScreenState extends State<HallListScreen> {
               decoration: BoxDecoration(
                 gradient: const LinearGradient(colors: [primary, primaryDark]),
                 borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(
-                      color: primary.withValues(alpha: 0.35),
-                      blurRadius: 12,
-                      offset: const Offset(0, 5))
-                ],
+                // ✅ تم حذف التوهج
               ),
               child: Stack(
                 children: [
@@ -261,19 +246,7 @@ class _HallListScreenState extends State<HallListScreen> {
                     : null,
                 color: active ? null : Colors.white,
                 borderRadius: BorderRadius.circular(20),
-                boxShadow: active
-                    ? [
-                        BoxShadow(
-                            color: primary.withValues(alpha: 0.3),
-                            blurRadius: 10,
-                            offset: const Offset(0, 4))
-                      ]
-                    : [
-                        BoxShadow(
-                            color: AppColors.primaryDark.withValues(alpha: 0.04),
-                            blurRadius: 8,
-                            offset: const Offset(0, 2))
-                      ],
+                // ✅ تم حذف التوهج
               ),
               child: Text(city,
                   style: TextStyle(
@@ -299,12 +272,7 @@ class _HallListScreenState extends State<HallListScreen> {
           colors: [primary, primaryDark],
         ),
         borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-              color: primary.withValues(alpha: 0.35),
-              blurRadius: 25,
-              offset: const Offset(0, 10))
-        ],
+        // ✅ تم حذف التوهج
       ),
       child: Stack(
         children: [
@@ -404,16 +372,7 @@ class _HallListScreenState extends State<HallListScreen> {
                     colors: [color, color.withValues(alpha: 0.7)],
                   ),
                   borderRadius: BorderRadius.circular(22),
-                  boxShadow: [
-                    BoxShadow(
-                        color: color.withValues(alpha: 0.35),
-                        blurRadius: 12,
-                        offset: const Offset(0, 5)),
-                    BoxShadow(
-                        color: Colors.white.withValues(alpha: 0.6),
-                        blurRadius: 4,
-                        offset: const Offset(-2, -2)),
-                  ],
+                  // ✅ تم حذف التوهج
                 ),
                 child: Icon(cat['icon'] as IconData,
                     color: Colors.white, size: 28),
@@ -443,12 +402,7 @@ class _HallListScreenState extends State<HallListScreen> {
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(10),
-                boxShadow: [
-                  BoxShadow(
-                      color: primary.withValues(alpha: 0.1),
-                      blurRadius: 8,
-                      offset: const Offset(0, 3))
-                ],
+                // ✅ تم حذف التوهج
               ),
               child: Icon(
                 _isGrid ? Icons.view_list : Icons.grid_view,
@@ -481,7 +435,6 @@ class _HallListScreenState extends State<HallListScreen> {
         final allDocs = snapshot.data?.docs ?? [];
         if (allDocs.isEmpty) return _buildEmpty();
 
-        // تصفية النتائج
         final docs = allDocs.where((doc) {
           final d = doc.data() as Map<String, dynamic>;
           final price = (d['price'] ?? 0) is int
@@ -492,17 +445,12 @@ class _HallListScreenState extends State<HallListScreen> {
           final type = (d['type'] ?? '').toString();
           final isAvailable = d['isAvailable'] ?? true;
 
-          // فلترة السعر
           if (price < _priceRange.start || price > _priceRange.end) {
             return false;
           }
-          // فلترة التقييم
           if (rating < _minRating) return false;
-          // فلترة المدينة (من الـ Chips الأساسية)
           if (_selectedCity != 'الكل' && city != _selectedCity) return false;
-          // فلترة النوع
           if (_selectedType != 'الكل' && type != _selectedType) return false;
-          // فلترة التوفر
           if (_onlyAvailable && isAvailable == false) return false;
 
           return true;
@@ -510,7 +458,6 @@ class _HallListScreenState extends State<HallListScreen> {
 
         if (docs.isEmpty) return _buildEmpty();
 
-        // عرض أفقي ببطاقات صغيرة
         if (_isGrid) {
           return Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -565,12 +512,7 @@ class _HallListScreenState extends State<HallListScreen> {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(18),
-          boxShadow: [
-            BoxShadow(
-                color: AppColors.primaryDark.withValues(alpha: 0.06),
-                blurRadius: 15,
-                offset: const Offset(0, 5))
-          ],
+          // ✅ تم حذف التوهج
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -689,12 +631,7 @@ class _HallListScreenState extends State<HallListScreen> {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-                color: AppColors.primaryDark.withValues(alpha: 0.06),
-                blurRadius: 12,
-                offset: const Offset(0, 5))
-          ],
+          // ✅ تم حذف التوهج
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -810,12 +747,7 @@ class _HallListScreenState extends State<HallListScreen> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(28),
-        boxShadow: [
-          BoxShadow(
-              color: primary.withValues(alpha: 0.12),
-              blurRadius: 25,
-              offset: const Offset(0, 8))
-        ],
+        // ✅ تم حذف التوهج
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -832,14 +764,7 @@ class _HallListScreenState extends State<HallListScreen> {
                     ? const LinearGradient(colors: [primary, primaryDark])
                     : null,
                 borderRadius: BorderRadius.circular(20),
-                boxShadow: active
-                    ? [
-                        BoxShadow(
-                            color: primary.withValues(alpha: 0.35),
-                            blurRadius: 10,
-                            offset: const Offset(0, 3))
-                      ]
-                    : [],
+                // ✅ تم حذف التوهج
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
@@ -927,8 +852,6 @@ class _HallListScreenState extends State<HallListScreen> {
                   ],
                 ),
                 const SizedBox(height: 22),
-
-                // السعر
                 const Text('نطاق السعر (د.ل)',
                     style: TextStyle(
                         color: textDark,
@@ -964,8 +887,6 @@ class _HallListScreenState extends State<HallListScreen> {
                   onChanged: (v) => setSheet(() => tempRange = v),
                 ),
                 const SizedBox(height: 12),
-
-                // التقييم
                 const Text('التقييم',
                     style: TextStyle(
                         color: textDark,
@@ -990,8 +911,6 @@ class _HallListScreenState extends State<HallListScreen> {
                   }),
                 ),
                 const SizedBox(height: 18),
-
-                // نوع القاعة
                 const Text('نوع القاعة',
                     style: TextStyle(
                         color: textDark,
@@ -1028,8 +947,6 @@ class _HallListScreenState extends State<HallListScreen> {
                   }).toList(),
                 ),
                 const SizedBox(height: 18),
-
-                // متوفر الآن
                 Row(
                   children: [
                     Switch(
@@ -1046,8 +963,6 @@ class _HallListScreenState extends State<HallListScreen> {
                   ],
                 ),
                 const SizedBox(height: 20),
-
-                // الأزرار
                 SizedBox(
                   width: double.infinity,
                   height: 54,
@@ -1162,16 +1077,11 @@ class _SimpleProfileScreenState extends State<SimpleProfileScreen> {
               Container(
                 width: 110,
                 height: 110,
-                decoration: BoxDecoration(
+                decoration: const BoxDecoration(
                   shape: BoxShape.circle,
                   gradient:
-                      const LinearGradient(colors: [primary, primaryDark]),
-                  boxShadow: [
-                    BoxShadow(
-                        color: primary.withValues(alpha: 0.35),
-                        blurRadius: 25,
-                        offset: const Offset(0, 10))
-                  ],
+                      LinearGradient(colors: [primary, primaryDark]),
+                  // ✅ تم حذف التوهج
                 ),
                 child: Icon(isProvider ? Icons.storefront : Icons.person,
                     size: 55, color: Colors.white),
@@ -1190,12 +1100,7 @@ class _SimpleProfileScreenState extends State<SimpleProfileScreen> {
                   gradient:
                       const LinearGradient(colors: [primary, primaryDark]),
                   borderRadius: BorderRadius.circular(20),
-                  boxShadow: [
-                    BoxShadow(
-                        color: primary.withValues(alpha: 0.3),
-                        blurRadius: 10,
-                        offset: const Offset(0, 4))
-                  ],
+                  // ✅ تم حذف التوهج
                 ),
                 child: Text(isProvider ? 'مزوّد خدمة' : 'زبون',
                     style: const TextStyle(
@@ -1211,12 +1116,7 @@ class _SimpleProfileScreenState extends State<SimpleProfileScreen> {
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(20),
-                    boxShadow: [
-                      BoxShadow(
-                          color: AppColors.primaryDark.withValues(alpha: 0.05),
-                          blurRadius: 15,
-                          offset: const Offset(0, 6))
-                    ],
+                    // ✅ تم حذف التوهج
                   ),
                   child: Column(
                     children: [
@@ -1343,16 +1243,7 @@ class _SimpleProfileScreenState extends State<SimpleProfileScreen> {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(18),
-          boxShadow: [
-            BoxShadow(
-                color: primary.withValues(alpha: 0.08),
-                blurRadius: 12,
-                offset: const Offset(0, 4)),
-            BoxShadow(
-                color: Colors.white.withValues(alpha: 0.8),
-                blurRadius: 4,
-                offset: const Offset(-2, -2)),
-          ],
+          // ✅ تم حذف التوهج
         ),
         child: Row(
           children: [
@@ -1366,12 +1257,7 @@ class _SimpleProfileScreenState extends State<SimpleProfileScreen> {
                   end: Alignment.bottomRight,
                 ),
                 borderRadius: BorderRadius.circular(14),
-                boxShadow: [
-                  BoxShadow(
-                      color: primary.withValues(alpha: 0.3),
-                      blurRadius: 8,
-                      offset: const Offset(0, 3)),
-                ],
+                // ✅ تم حذف التوهج
               ),
               child: Icon(icon, color: Colors.white, size: 22),
             ),
