@@ -37,7 +37,7 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
       appBar: AppBar(
         backgroundColor: primary,
         foregroundColor: Colors.white,
-        elevation: 0,
+        elevation: 0, // ✅ إزالة الظل
         title: const Text('حجوزاتي',
             style: TextStyle(fontWeight: FontWeight.bold)),
         centerTitle: true,
@@ -87,6 +87,7 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
                       color: active
                           ? Colors.transparent
                           : primary.withValues(alpha: 0.2)),
+                  // ✅ تم حذف التوهج
                 ),
                 child: Text(t['label'] as String,
                     style: TextStyle(
@@ -199,12 +200,7 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(18),
-        boxShadow: [
-          BoxShadow(
-              color: AppColors.primaryDark.withValues(alpha: 0.05),
-              blurRadius: 12,
-              offset: const Offset(0, 4))
-        ],
+        boxShadow: [], // ✅ تم حذف التوهج تماماً
       ),
       child: Padding(
         padding: const EdgeInsets.all(16),
