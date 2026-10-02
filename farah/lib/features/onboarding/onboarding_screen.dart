@@ -1,10 +1,11 @@
 import 'package:farah/core/constants/app_colors.dart';
 import 'package:flutter/material.dart';
-import '../auth/presentation/screens/login_screen_farah.dart';
+import '../../auth/presentation/screens/login_screen_farah.dart';
 
 class OnboardingScreen extends StatefulWidget {
   final VoidCallback onFinish;
   const OnboardingScreen({super.key, required this.onFinish});
+
   @override
   State<OnboardingScreen> createState() => _OnboardingScreenState();
 }
@@ -22,23 +23,22 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     {
       'icon': Icons.celebration,
       'title': 'مرحباً بك في فرح',
-      'desc':
-          'وجهتك الأولى لحجز صالات الأفراح والمناسبات في جميع المدن الليبية',
+      'desc': 'وجهتك الأولى لحجز صالات الأفراح والمناسبات في جميع المدن الليبية.',
     },
     {
       'icon': Icons.storefront,
-      'title': 'تصفّح واختر',
-      'desc': 'اكتشف أفضل القاعات والمزوّدين حسب المدينة والسعر والتقييم',
+      'title': 'اكتشف وأقارن',
+      'desc': 'اكتشف أفضل القاعات والمزودين حسب المدينة والسعر والتقييم.',
     },
     {
       'icon': Icons.event_available,
       'title': 'احجز بسهولة',
-      'desc': 'اختر تاريخك وعدد الضيوف وأتمم حجزك في دقائق',
+      'desc': 'اختر تاريخك وحدد الضيوف وأتمم حجزك في دقائق.',
     },
     {
       'icon': Icons.verified_user,
-      'title': 'دفع آمن',
-      'desc': 'ادفع إلكترونياً أو بعربون أو عند الحضور — بكل سهولة وأمان',
+      'title': 'ادفع بآمان',
+      'desc': 'ادفع إلكترونياً أو عند الحضور — بكل سهولة وأمان.',
     },
   ];
 
@@ -52,13 +52,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
-        decoration: const BoxDecoration(
-          color: AppColors.softBackground,
-        ),
+        // ✅ خلفية موحدة بدون تدرجات
+        color: AppColors.softBackground,
         child: SafeArea(
           child: Column(
             children: [
-              // زر تخطي
               Align(
                 alignment: Alignment.topLeft,
                 child: Padding(
@@ -66,7 +64,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   child: TextButton(
                     onPressed: () async {
                       widget.onFinish();
-                      if (!mounted) return;
+                      if (mounted) return;
                       Navigator.of(context).pushReplacement(
                         MaterialPageRoute(
                           builder: (_) => const FarahGlassLoginScreen(),
@@ -74,15 +72,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       );
                     },
                     child: const Text('تخطي',
-                        style: TextStyle(
-                          color: primary,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 15,
-                        )),
+                        style: TextStyle(color: textLight, fontSize: 14)),
                   ),
                 ),
               ),
-              // الصفحات
               Expanded(
                 child: PageView.builder(
                   controller: _pageCtrl,
@@ -91,54 +84,46 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   itemBuilder: (context, i) {
                     final p = _pages[i];
                     return Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 30),
+                      padding: const EdgeInsets.symmetric(horizontal: 32),
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Container(
-                            width: 180,
-                            height: 180,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              gradient: const LinearGradient(
+                            width: 140,
+                            height: 140,
+                            decoration: const BoxDecoration(
+                              gradient: LinearGradient(
                                 colors: [primary, primaryDark],
                                 begin: Alignment.topLeft,
                                 end: Alignment.bottomRight,
                               ),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: primary.withValues(alpha: 0.4),
-                                  blurRadius: 45,
-                                  spreadRadius: 5,
-                                ),
-                              ],
+                              shape: BoxShape.circle,
+                              // ✅ تم حذف التوهج
                             ),
                             child: Icon(p['icon'] as IconData,
-                                size: 85, color: Colors.white),
+                                size: 70, color: Colors.white),
                           ),
-                          const SizedBox(height: 50),
+                          const SizedBox(height: 40),
                           Text(p['title'] as String,
                               textAlign: TextAlign.center,
                               style: const TextStyle(
-                                fontSize: 26,
-                                fontWeight: FontWeight.bold,
-                                color: textDark,
-                              )),
-                          const SizedBox(height: 14),
+                                  color: textDark,
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.bold)),
+                          const SizedBox(height: 16),
                           Text(p['desc'] as String,
                               textAlign: TextAlign.center,
                               style: const TextStyle(
-                                fontSize: 15,
-                                color: textLight,
-                                height: 1.7,
-                              )),
+                                  color: textLight,
+                                  fontSize: 14,
+                                  height: 1.6)),
                         ],
                       ),
                     );
                   },
                 ),
               ),
-              // مؤشرات
+              // ── مؤشر الصفحات ──
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: List.generate(_pages.length, (i) {
@@ -146,30 +131,26 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   return AnimatedContainer(
                     duration: const Duration(milliseconds: 300),
                     margin: const EdgeInsets.symmetric(horizontal: 4),
-                    width: active ? 30 : 10,
-                    height: 10,
+                    width: active ? 24 : 8,
+                    height: 8,
                     decoration: BoxDecoration(
-                      gradient: active
-                          ? const LinearGradient(colors: [primary, primaryDark])
-                          : null,
-                      color: active ? null : primary.withValues(alpha: 0.25),
-                      borderRadius: BorderRadius.circular(10),
+                      color: active ? primary : primary.withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(4),
                     ),
                   );
                 }),
               ),
-              const SizedBox(height: 26),
-              // زر متابعة
+              const SizedBox(height: 30),
+              // ── زر التالي ──
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 30),
+                padding: const EdgeInsets.symmetric(horizontal: 32),
                 child: SizedBox(
                   width: double.infinity,
                   height: 56,
                   child: ElevatedButton(
-                    onPressed: () async {
+                    onPressed: () {
                       if (_current == _pages.length - 1) {
                         widget.onFinish();
-                        if (!mounted) return;
                         Navigator.of(context).pushReplacement(
                           MaterialPageRoute(
                             builder: (_) => const FarahGlassLoginScreen(),
@@ -177,7 +158,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         );
                       } else {
                         _pageCtrl.nextPage(
-                          duration: const Duration(milliseconds: 400),
+                          duration: const Duration(milliseconds: 300),
                           curve: Curves.easeInOut,
                         );
                       }
@@ -185,18 +166,14 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     style: ElevatedButton.styleFrom(
                       backgroundColor: primary,
                       foregroundColor: Colors.white,
-                      elevation: 0,
+                      elevation: 0, // ✅ إزالة الظل
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(28),
-                      ),
-                      shadowColor: primary.withValues(alpha: 0.4),
+                          borderRadius: BorderRadius.circular(28)),
                     ),
                     child: Text(
-                      _current == _pages.length - 1 ? 'ابدأ الآن' : 'متابعة',
+                      _current == _pages.length - 1 ? 'ابدأ الآن' : 'التالي',
                       style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
+                          fontSize: 16, fontWeight: FontWeight.bold),
                     ),
                   ),
                 ),
