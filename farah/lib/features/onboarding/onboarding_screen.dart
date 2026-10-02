@@ -1,6 +1,7 @@
 import 'package:farah/core/constants/app_colors.dart';
 import 'package:flutter/material.dart';
-import '../../auth/presentation/screens/login_screen_farah.dart';
+// ⚠️ تأكد من مسار ملف شاشة الدخول الصحيح هنا (login_screen_farah.dart أو login_screen.dart)
+import '../../auth/presentation/screens/login_screen.dart'; 
 
 class OnboardingScreen extends StatefulWidget {
   final VoidCallback onFinish;
@@ -52,7 +53,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
-        // ✅ خلفية موحدة بدون تدرجات
         color: AppColors.softBackground,
         child: SafeArea(
           child: Column(
@@ -62,12 +62,12 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 child: Padding(
                   padding: const EdgeInsets.all(12),
                   child: TextButton(
-                    onPressed: () async {
+                    onPressed: () {
                       widget.onFinish();
-                      if (mounted) return;
                       Navigator.of(context).pushReplacement(
                         MaterialPageRoute(
-                          builder: (_) => const FarahGlassLoginScreen(),
+                          // ✅ تم إزالة const من هنا
+                          builder: (_) => FarahGlassLoginScreen(),
                         ),
                       );
                     },
@@ -98,7 +98,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                                 end: Alignment.bottomRight,
                               ),
                               shape: BoxShape.circle,
-                              // ✅ تم حذف التوهج
                             ),
                             child: Icon(p['icon'] as IconData,
                                 size: 70, color: Colors.white),
@@ -123,7 +122,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   },
                 ),
               ),
-              // ── مؤشر الصفحات ──
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: List.generate(_pages.length, (i) {
@@ -141,7 +139,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 }),
               ),
               const SizedBox(height: 30),
-              // ── زر التالي ──
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 32),
                 child: SizedBox(
@@ -153,7 +150,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         widget.onFinish();
                         Navigator.of(context).pushReplacement(
                           MaterialPageRoute(
-                            builder: (_) => const FarahGlassLoginScreen(),
+                            // ✅ تم إزالة const من هنا
+                            builder: (_) => FarahGlassLoginScreen(),
                           ),
                         );
                       } else {
@@ -166,7 +164,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     style: ElevatedButton.styleFrom(
                       backgroundColor: primary,
                       foregroundColor: Colors.white,
-                      elevation: 0, // ✅ إزالة الظل
+                      elevation: 0,
                       shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(28)),
                     ),
