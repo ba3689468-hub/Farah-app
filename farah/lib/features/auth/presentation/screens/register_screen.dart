@@ -461,10 +461,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         decoration: BoxDecoration(
           color: isSelected
               ? gold.withValues(alpha: 0.25)
-              : Colors.white.withValues(alpha: 0.3),
+              : Colors.white.withValues(alpha: 0.15),
           borderRadius: BorderRadius.circular(18),
           border: Border.all(
-            color: isSelected ? gold : Colors.white.withValues(alpha: 0.6),
+            color: isSelected ? gold : Colors.white.withValues(alpha: 0.25),
             width: isSelected ? 2 : 1,
           ),
           boxShadow: isSelected

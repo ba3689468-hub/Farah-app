@@ -116,7 +116,7 @@ class _FarahGlassLoginScreenState extends ConsumerState<FarahGlassLoginScreen> {
             colors: [
               AppColors.background,
               Color(0xFFF2EDE4),
-              Color(0xFFA93226),
+              Color(0xFFF8BBD0),
             ],
             stops: [0.0, 0.5, 1.0],
           ),
