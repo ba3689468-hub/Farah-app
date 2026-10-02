@@ -1,7 +1,7 @@
 import 'package:farah/core/constants/app_colors.dart';
 import 'package:flutter/material.dart';
 // ⚠️ تأكد من مسار ملف شاشة الدخول الصحيح هنا (login_screen_farah.dart أو login_screen.dart)
-import '../../auth/presentation/screens/login_screen.dart'; 
+ import '../auth/presentation/screens/login_screen_farah.dart';
 
 class OnboardingScreen extends StatefulWidget {
   final VoidCallback onFinish;
