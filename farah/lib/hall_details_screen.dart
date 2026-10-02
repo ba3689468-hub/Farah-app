@@ -44,6 +44,7 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
           SliverAppBar(
             expandedHeight: 280,
             pinned: true,
+            elevation: 0, // ✅ إزالة الظل من الشريط العلوي
             backgroundColor: primary,
             leading: IconButton(
               icon: Container(
@@ -51,6 +52,7 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
                 decoration: BoxDecoration(
                   color: Colors.white.withValues(alpha: 0.9),
                   shape: BoxShape.circle,
+                  // ✅ تم حذف التوهج
                 ),
                 child: const Icon(Icons.arrow_back, color: chocolate, size: 20),
               ),
@@ -63,6 +65,7 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
                   decoration: BoxDecoration(
                     color: Colors.white.withValues(alpha: 0.9),
                     shape: BoxShape.circle,
+                    // ✅ تم حذف التوهج
                   ),
                   child: const Icon(Icons.favorite_border,
                       color: chocolate, size: 20),
@@ -173,6 +176,7 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(14),
+              // ✅ تم حذف التوهج
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
@@ -260,12 +264,7 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(14),
-          boxShadow: [
-            BoxShadow(
-                color: AppColors.primaryDark.withValues(alpha: 0.05),
-                blurRadius: 10,
-                offset: const Offset(0, 4))
-          ],
+          boxShadow: [], // ✅ تم حذف التوهج تماماً
         ),
         child: Column(
           children: [
@@ -308,12 +307,7 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
       padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
       decoration: BoxDecoration(
         color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-              color: AppColors.primaryDark.withValues(alpha: 0.08),
-              blurRadius: 20,
-              offset: const Offset(0, -6))
-        ],
+        boxShadow: [], // ✅ تم حذف التوهج تماماً
       ),
       child: SafeArea(
         child: Row(
@@ -358,12 +352,7 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
                 decoration: BoxDecoration(
                   gradient: const LinearGradient(colors: [primary, darkRed]),
                   borderRadius: BorderRadius.circular(20),
-                  boxShadow: [
-                    BoxShadow(
-                        color: primary.withValues(alpha: 0.4),
-                        blurRadius: 15,
-                        offset: const Offset(0, 5))
-                  ],
+                  boxShadow: [], // ✅ تم حذف التوهج تماماً
                 ),
                 child: const Text('احجز الآن',
                     style: TextStyle(
