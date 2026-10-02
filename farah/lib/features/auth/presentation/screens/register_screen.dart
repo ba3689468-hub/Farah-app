@@ -98,14 +98,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [AppColors.background, AppColors.background, AppColors.primaryDark],
-            stops: [0.0, 0.5, 1.0],
-          ),
-        ),
+        // ✅ تم إزالة التدرج واستبداله بلون موحد
+        color: AppColors.background,
         child: SafeArea(
           child: Stack(
             children: [
@@ -144,33 +138,15 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       clipBehavior: Clip.none,
       alignment: Alignment.topCenter,
       children: [
-        Positioned(
-          bottom: -20,
-          left: 20,
-          right: 20,
-          child: Container(
-            height: 100,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(100),
-              boxShadow: [
-                BoxShadow(
-                    color: deepRose.withValues(alpha: 0.6),
-                    blurRadius: 60,
-                    spreadRadius: 10)
-              ],
-            ),
-          ),
-        ),
+        // ✅ تم حذف التوهج الوردي الموجود أسفل البطاقة بالكامل
+
         Padding(
           padding: const EdgeInsets.only(top: 45),
           child: Container(
             padding: const EdgeInsets.fromLTRB(28, 70, 28, 40),
             decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [cream.withValues(alpha: 0.85), rose.withValues(alpha: 0.75)],
-              ),
+              // ✅ تم استبدال التدرج بلون أبيض صريح وحذف التوهج
+              color: Colors.white,
               borderRadius: const BorderRadius.only(
                 topLeft: Radius.circular(80),
                 topRight: Radius.circular(120),
@@ -178,12 +154,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 bottomRight: Radius.circular(80),
               ),
               border: Border.all(color: Colors.transparent, width: 1.4),
-              boxShadow: [
-                BoxShadow(
-                    color: deepRose.withValues(alpha: 0.35),
-                    blurRadius: 40,
-                    offset: const Offset(0, 20))
-              ],
             ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -192,13 +162,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                     style: TextStyle(
                         color: chocolate,
                         fontSize: 28,
-                        fontWeight: FontWeight.bold,
-                        shadows: [
-                          Shadow(
-                              color: Colors.white54,
-                              blurRadius: 6,
-                              offset: Offset(0, 2))
-                        ])),
+                        fontWeight: FontWeight.bold)),
                 const SizedBox(height: 6),
                 Container(
                   width: 60,
@@ -346,12 +310,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                       end: Alignment.centerRight,
                     ),
                     borderRadius: BorderRadius.circular(30),
-                    boxShadow: [
-                      BoxShadow(
-                          color: gold.withValues(alpha: 0.55),
-                          blurRadius: 22,
-                          offset: const Offset(0, 8))
-                    ],
+                    // ✅ تم حذف التوهج الذهبي
                   ),
                   child: Material(
                     color: Colors.transparent,
@@ -417,12 +376,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
               shape: BoxShape.circle,
               color: Colors.white,
               border: Border.all(color: gold, width: 2),
-              boxShadow: [
-                BoxShadow(
-                    color: gold.withValues(alpha: 0.4),
-                    blurRadius: 22,
-                    offset: const Offset(0, 8))
-              ],
+              // ✅ تم حذف التوهج الذهبي
             ),
             child: Center(
               child: ShaderMask(
@@ -467,14 +421,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             color: isSelected ? gold : Colors.white.withValues(alpha: 0.25),
             width: isSelected ? 2 : 1,
           ),
-          boxShadow: isSelected
-              ? [
-                  BoxShadow(
-                      color: gold.withValues(alpha: 0.4),
-                      blurRadius: 12,
-                      offset: const Offset(0, 4))
-                ]
-              : [],
+          // ✅ تم حذف التوهج عند الاختيار
+          boxShadow: [],
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -510,15 +458,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   }) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.transparent,
+        color: Colors.white,
         borderRadius: BorderRadius.circular(30),
-        border: Border.all(color: const Color(0x33FFFFFF), width: 1),
-        boxShadow: [
-          BoxShadow(
-              color: deepRose.withValues(alpha: 0.08),
-              blurRadius: 10,
-              offset: const Offset(0, 4))
-        ],
+        border: Border.all(color: Colors.black.withValues(alpha: 0.05), width: 1),
+        // ✅ تم حذف التوهج الخفيف
       ),
       child: Row(children: [
         const SizedBox(width: 6),
@@ -532,12 +475,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
               end: Alignment.bottomRight,
             ),
             borderRadius: BorderRadius.circular(14),
-            boxShadow: [
-              BoxShadow(
-                  color: gold.withValues(alpha: 0.45),
-                  blurRadius: 8,
-                  offset: const Offset(0, 3))
-            ],
+            // ✅ تم حذف التوهج من أيقونة الحقل
           ),
           child: Icon(icon, color: Colors.white, size: 22),
         ),
