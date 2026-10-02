@@ -270,7 +270,7 @@ class _HallListScreenState extends State<HallListScreen> {
                       ]
                     : [
                         BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.04),
+                            color: AppColors.primaryDark.withValues(alpha: 0.04),
                             blurRadius: 8,
                             offset: const Offset(0, 2))
                       ],
@@ -567,7 +567,7 @@ class _HallListScreenState extends State<HallListScreen> {
           borderRadius: BorderRadius.circular(18),
           boxShadow: [
             BoxShadow(
-                color: Colors.black.withValues(alpha: 0.06),
+                color: AppColors.primaryDark.withValues(alpha: 0.06),
                 blurRadius: 15,
                 offset: const Offset(0, 5))
           ],
@@ -691,7 +691,7 @@ class _HallListScreenState extends State<HallListScreen> {
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-                color: Colors.black.withValues(alpha: 0.06),
+                color: AppColors.primaryDark.withValues(alpha: 0.06),
                 blurRadius: 12,
                 offset: const Offset(0, 5))
           ],
@@ -1213,7 +1213,7 @@ class _SimpleProfileScreenState extends State<SimpleProfileScreen> {
                     borderRadius: BorderRadius.circular(20),
                     boxShadow: [
                       BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.05),
+                          color: AppColors.primaryDark.withValues(alpha: 0.05),
                           blurRadius: 15,
                           offset: const Offset(0, 6))
                     ],
