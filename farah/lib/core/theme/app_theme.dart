@@ -68,7 +68,7 @@ class AppTheme {
       // ==========================================
       // 4. إزالة التوهج من البطاقات (Cards)
       // ==========================================
-      cardTheme: CardTheme(
+      cardTheme: CardThemeData(
         elevation: 0, // <--- إزالة الظل
         color: AppColors.card,
         shape: RoundedRectangleBorder(
