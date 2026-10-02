@@ -1,62 +1,50 @@
 import 'package:flutter/material.dart';
-import '../constants/app_colors.dart';
 
-/// مساعد Claymorphism ناعم
-class Clay {
-  Clay._();
+class ClayContainer extends StatelessWidget {
+  final Widget child;
+  final double height;
+  final double width;
+  final double borderRadius;
+  final Color color;
+  final EdgeInsetsGeometry? padding;
+  final EdgeInsetsGeometry? margin;
 
-  static List<BoxShadow> shadows({
-    double blur = 14,
-    double offset = 6,
-    double darkAlpha = 0.15,
-  }) {
-    return [
-      BoxShadow(
-        color: Colors.white.withValues(alpha: 0.55),
-        offset: Offset(-offset, -offset),
-        blurRadius: blur,
-        spreadRadius: 0,
-      ),
-      BoxShadow(
-        color: AppColors.primaryDark.withValues(alpha: darkAlpha),
-        offset: Offset(offset, offset),
-        blurRadius: blur,
-        spreadRadius: 0,
-      ),
-    ];
-  }
+  const ClayContainer({
+    super.key,
+    required this.child,
+    this.height = 100,
+    this.width = 100,
+    this.borderRadius = 20,
+    this.color = Colors.white,
+    this.padding,
+    this.margin,
+  });
 
-  static BoxDecoration box({Color? color, double radius = 28}) {
-    return BoxDecoration(
-      color: color ?? AppColors.card,
-      borderRadius: BorderRadius.circular(radius),
-      boxShadow: shadows(),
-    );
-  }
-
-  static BoxDecoration pressed({Color? color, double radius = 28}) {
-    return BoxDecoration(
-      color: color ?? AppColors.card,
-      borderRadius: BorderRadius.circular(radius),
-      boxShadow: [
-        BoxShadow(
-          color: AppColors.primaryDark.withValues(alpha: 0.10),
-          offset: const Offset(2, 2),
-          blurRadius: 5,
-        ),
-      ],
-    );
-  }
-
-  static Widget container({
-    Widget? child,
-    Color? color,
-    double radius = 28,
-    EdgeInsetsGeometry padding = const EdgeInsets.all(16),
-  }) {
+  @override
+  Widget build(BuildContext context) {
     return Container(
+      height: height,
+      width: width,
+      margin: margin,
       padding: padding,
-      decoration: box(color: color, radius: radius),
+      decoration: BoxDecoration(
+        color: color,
+        borderRadius: BorderRadius.circular(borderRadius),
+        
+        // ===================================================
+        // 🛑 هنا كان يوجد التوهج (الظلال). تم إزالته تماماً.
+        // ===================================================
+        boxShadow: [
+          BoxShadow(
+            color: Colors.transparent, // 1. اللون شفاف تماماً
+            blurRadius: 0,             // 2. التمويه صفر (لا يوجد توهج)
+            spreadRadius: 0,           // 3. الانتشار صفر
+            offset: const Offset(0, 0),// 4. الإزاحة صفر
+          ),
+        ],
+        // 💡 يمكنك حذف مصفوفة boxShadow بالكامل بدلاً من هذا الكود، 
+        // وستحصل على نفس النتيجة (إزالة التوهج).
+      ),
       child: child,
     );
   }
