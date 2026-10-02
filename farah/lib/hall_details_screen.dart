@@ -134,7 +134,7 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
                 gradient: LinearGradient(
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
-                  colors: [Colors.transparent, Colors.black.withValues(alpha: 0.5)],
+                  colors: [Colors.transparent, AppColors.primaryDark.withValues(alpha: 0.5)],
                   stops: const [0.6, 1.0],
                 ),
               ),
@@ -262,7 +262,7 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
           borderRadius: BorderRadius.circular(14),
           boxShadow: [
             BoxShadow(
-                color: Colors.black.withValues(alpha: 0.05),
+                color: AppColors.primaryDark.withValues(alpha: 0.05),
                 blurRadius: 10,
                 offset: const Offset(0, 4))
           ],
@@ -310,7 +310,7 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
         color: Colors.white,
         boxShadow: [
           BoxShadow(
-              color: Colors.black.withValues(alpha: 0.08),
+              color: AppColors.primaryDark.withValues(alpha: 0.08),
               blurRadius: 20,
               offset: const Offset(0, -6))
         ],
