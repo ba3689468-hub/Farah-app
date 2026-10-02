@@ -1,3 +1,4 @@
+import 'package:farah/core/constants/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'booking_screen.dart';
 
@@ -11,10 +12,10 @@ class HallDetailsScreen extends StatefulWidget {
 }
 
 class _HallDetailsScreenState extends State<HallDetailsScreen> {
-  static const Color primary = Color(0xFFF06292);
-  static const Color darkRed = Color(0xFFEC407A);
-  static const Color cream = Color(0xFFFFF5F7);
-  static const Color chocolate = Color(0xFF1A1A1A);
+  static const Color primary = AppColors.primary;
+  static const Color darkRed = AppColors.primaryDark;
+  static const Color cream = AppColors.background;
+  static const Color chocolate = AppColors.textPrimary;
 
   final _pageCtrl = PageController();
   int _currentImage = 0;

@@ -1,3 +1,4 @@
+import 'package:farah/core/constants/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -13,10 +14,10 @@ class BookingScreen extends StatefulWidget {
 }
 
 class _BookingScreenState extends State<BookingScreen> {
-  static const Color primary = Color(0xFFF06292);
-  static const Color darkRed = Color(0xFFEC407A);
-  static const Color cream = Color(0xFFFFF5F7);
-  static const Color chocolate = Color(0xFF1A1A1A);
+  static const Color primary = AppColors.primary;
+  static const Color darkRed = AppColors.primaryDark;
+  static const Color cream = AppColors.background;
+  static const Color chocolate = AppColors.textPrimary;
 
   DateTime? _selectedDate;
   int _guestsCount = 50;

@@ -12,7 +12,7 @@ class AppTheme {
       useMaterial3: true,
       brightness: Brightness.light,
       primaryColor: AppColors.goldPrimary,
-      scaffoldBackgroundColor: const Color(0xFFFFF5F7),
+      scaffoldBackgroundColor: AppColors.background,
       colorScheme: const ColorScheme.light(
         primary: AppColors.goldPrimary,
         secondary: AppColors.pinkAccent,
@@ -77,7 +77,7 @@ class AppTheme {
       useMaterial3: true,
       brightness: Brightness.dark,
       primaryColor: AppColors.goldPrimary,
-      scaffoldBackgroundColor: const Color(0xFFFFF5F7),
+      scaffoldBackgroundColor: AppColors.background,
       colorScheme: const ColorScheme.dark(
         primary: AppColors.goldPrimary,
         secondary: AppColors.pinkAccent,
