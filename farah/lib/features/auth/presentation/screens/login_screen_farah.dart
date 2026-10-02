@@ -109,8 +109,7 @@ class _FarahGlassLoginScreenState extends ConsumerState<FarahGlassLoginScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
-        // ✅ تم إزالة التدرج الوردي واستبداله بلون الخلفية الموحد
-        color: AppColors.background, 
+        color: AppColors.background,
         child: SafeArea(
           child: Center(
             child: SingleChildScrollView(
@@ -134,14 +133,11 @@ class _FarahGlassLoginScreenState extends ConsumerState<FarahGlassLoginScreen> {
       clipBehavior: Clip.none,
       alignment: Alignment.topCenter,
       children: [
-        // ✅ تم حذف التوهج الوردي الموجود أسفل البطاقة بالكامل
-
         Padding(
           padding: const EdgeInsets.only(top: 45),
           child: Container(
             padding: const EdgeInsets.fromLTRB(28, 70, 28, 40),
             decoration: BoxDecoration(
-              // ✅ تم استبدال التدرج بلون أبيض صريح، وحذف التوهج
               color: Colors.white,
               borderRadius: const BorderRadius.only(
                 topLeft: Radius.circular(80),
@@ -285,7 +281,6 @@ class _FarahGlassLoginScreenState extends ConsumerState<FarahGlassLoginScreen> {
                       end: Alignment.centerRight,
                     ),
                     borderRadius: BorderRadius.circular(30),
-                    // ✅ تم حذف التوهج الذهبي من زر الدخول
                   ),
                   child: Material(
                     color: Colors.transparent,
@@ -347,7 +342,6 @@ class _FarahGlassLoginScreenState extends ConsumerState<FarahGlassLoginScreen> {
               shape: BoxShape.circle,
               color: Colors.white,
               border: Border.all(color: gold, width: 2),
-              // ✅ تم حذف التوهج الذهبي من الأيقونة العلوية
             ),
             child: Center(
               child: ShaderMask(
@@ -383,7 +377,6 @@ class _FarahGlassLoginScreenState extends ConsumerState<FarahGlassLoginScreen> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(30),
-        // ✅ تم حذف التوهج الخفيف من حقول الإدخال
       ),
       child: Row(
         children: [
