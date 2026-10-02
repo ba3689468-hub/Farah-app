@@ -1,3 +1,4 @@
+import 'package:farah/core/constants/app_colors.dart';
 import 'package:flutter/material.dart';
 import '../auth/presentation/screens/login_screen_farah.dart';
 
@@ -9,10 +10,10 @@ class OnboardingScreen extends StatefulWidget {
 }
 
 class _OnboardingScreenState extends State<OnboardingScreen> {
-  static const Color primary = Color(0xFFF06292);
-  static const Color primaryDark = Color(0xFFEC407A);
-  static const Color textDark = Color(0xFF1A1A1A);
-  static const Color textLight = Color(0xFF999999);
+  static const Color primary = AppColors.primary;
+  static const Color primaryDark = AppColors.primaryDark;
+  static const Color textDark = AppColors.textPrimary;
+  static const Color textLight = AppColors.textSecondary;
 
   final _pageCtrl = PageController();
   int _current = 0;
@@ -52,7 +53,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     return Scaffold(
       body: Container(
         decoration: const BoxDecoration(
-          color: Color(0xFFFCE4EC),
+          color: AppColors.softBackground,
         ),
         child: SafeArea(
           child: Column(

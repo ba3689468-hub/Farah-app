@@ -1,3 +1,4 @@
+import 'package:farah/core/constants/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -13,8 +14,8 @@ class SplashScreen extends StatefulWidget {
 
 class _SplashScreenState extends State<SplashScreen>
     with SingleTickerProviderStateMixin {
-  static const Color primary = Color(0xFFF06292);
-  static const Color primaryDark = Color(0xFFEC407A);
+  static const Color primary = AppColors.primary;
+  static const Color primaryDark = AppColors.primaryDark;
 
   late AnimationController _ctrl;
   late Animation<double> _scale;
@@ -80,7 +81,7 @@ class _SplashScreenState extends State<SplashScreen>
     return Scaffold(
       body: Container(
         decoration: const BoxDecoration(
-          color: Color(0xFFFCE4EC),
+          color: AppColors.softBackground,
         ),
         child: Stack(
           children: [
@@ -175,7 +176,7 @@ class _SplashScreenState extends State<SplashScreen>
                         Text(
                           'لحظاتك تستحق الأفضل',
                           style: TextStyle(
-                            color: Color(0xFF999999),
+                            color: AppColors.textSecondary,
                             fontSize: 13,
                           ),
                         ),

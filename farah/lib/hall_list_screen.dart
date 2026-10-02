@@ -1,3 +1,4 @@
+import 'package:farah/core/constants/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -12,10 +13,10 @@ class HallListScreen extends StatefulWidget {
 }
 
 class _HallListScreenState extends State<HallListScreen> {
-  static const Color primary = Color(0xFFF06292);
-  static const Color primaryDark = Color(0xFFEC407A);
-  static const Color textDark = Color(0xFF1A1A1A);
-  static const Color textLight = Color(0xFF999999);
+  static const Color primary = AppColors.primary;
+  static const Color primaryDark = AppColors.primaryDark;
+  static const Color textDark = AppColors.textPrimary;
+  static const Color textLight = AppColors.textSecondary;
 
   int _currentIndex = 0;
   bool _isGrid = false;
@@ -30,13 +31,13 @@ class _HallListScreenState extends State<HallListScreen> {
 
   final List<Map<String, dynamic>> _categoriesList = const [
     {'name': 'فساتين', 'icon': Icons.checkroom, 'color': Color(0xFFF48FB1)},
-    {'name': 'تجميل', 'icon': Icons.spa, 'color': Color(0xFFF06292)},
+    {'name': 'تجميل', 'icon': Icons.spa, 'color': AppColors.primary},
     {
       'name': 'ضيافة',
       'icon': Icons.restaurant_menu,
       'color': Color(0xFFBA68C8)
     },
-    {'name': 'ديكور', 'icon': Icons.auto_awesome, 'color': Color(0xFFEC407A)},
+    {'name': 'ديكور', 'icon': Icons.auto_awesome, 'color': AppColors.primaryDark},
     {'name': 'متاجر', 'icon': Icons.storefront, 'color': Color(0xFFC2185B)},
   ];
 
@@ -66,7 +67,7 @@ class _HallListScreenState extends State<HallListScreen> {
     return Scaffold(
       body: Container(
         decoration: const BoxDecoration(
-          color: Color(0xFFFCE4EC),
+          color: AppColors.softBackground,
         ),
         child: SafeArea(
           child: IndexedStack(
@@ -1014,7 +1015,7 @@ class _HallListScreenState extends State<HallListScreen> {
                               ? const LinearGradient(
                                   colors: [primary, primaryDark])
                               : null,
-                          color: active ? null : const Color(0xFFFCE4EC),
+                          color: active ? null : AppColors.softBackground,
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: Text(t,
@@ -1088,10 +1089,10 @@ class SimpleProfileScreen extends StatefulWidget {
 }
 
 class _SimpleProfileScreenState extends State<SimpleProfileScreen> {
-  static const Color primary = Color(0xFFF06292);
-  static const Color primaryDark = Color(0xFFEC407A);
-  static const Color textDark = Color(0xFF1A1A1A);
-  static const Color textLight = Color(0xFF999999);
+  static const Color primary = AppColors.primary;
+  static const Color primaryDark = AppColors.primaryDark;
+  static const Color textDark = AppColors.textPrimary;
+  static const Color textLight = AppColors.textSecondary;
 
   late Future<DocumentSnapshot> _userFuture;
 

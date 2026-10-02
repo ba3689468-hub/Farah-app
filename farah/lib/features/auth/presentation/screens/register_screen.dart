@@ -1,3 +1,4 @@
+import 'package:farah/core/constants/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/auth_provider.dart';
@@ -23,12 +24,12 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   String? _error;
   String _selectedRole = 'user';
 
-  static const Color gold = Color(0xFFF06292);
-  static const Color lightGold = Color(0xFFFFF5F7);
-  static const Color rose = Color(0xFFFFF5F7);
-  static const Color deepRose = Color(0xFFF06292);
-  static const Color cream = Color(0xFFFFF5F7);
-  static const Color chocolate = Color(0xFFF06292);
+  static const Color gold = AppColors.primary;
+  static const Color lightGold = AppColors.background;
+  static const Color rose = AppColors.background;
+  static const Color deepRose = AppColors.primary;
+  static const Color cream = AppColors.background;
+  static const Color chocolate = AppColors.primary;
 
   @override
   void initState() {
@@ -101,7 +102,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [Color(0xFFFFF5F7), Color(0xFFFFF5F7), Color(0xFFEC407A)],
+            colors: [AppColors.background, AppColors.background, AppColors.primaryDark],
             stops: [0.0, 0.5, 1.0],
           ),
         ),
@@ -337,9 +338,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   decoration: BoxDecoration(
                     gradient: const LinearGradient(
                       colors: [
-                        Color(0xFFF06292),
-                        Color(0xFFEC407A),
-                        Color(0xFFFFF5F7)
+                        AppColors.primary,
+                        AppColors.primaryDark,
+                        AppColors.background
                       ],
                       begin: Alignment.centerLeft,
                       end: Alignment.centerRight,
@@ -429,9 +430,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                   colors: [
-                    Color(0xFFF06292),
-                    Color(0xFFF06292),
-                    Color(0xFFFFF5F7)
+                    AppColors.primary,
+                    AppColors.primary,
+                    AppColors.background
                   ],
                 ).createShader(bounds),
                 child:
@@ -526,7 +527,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           height: 46,
           decoration: BoxDecoration(
             gradient: const LinearGradient(
-              colors: [Color(0xFFF06292), Color(0xFFF06292), Color(0xFFFFF5F7)],
+              colors: [AppColors.primary, AppColors.primary, AppColors.background],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
