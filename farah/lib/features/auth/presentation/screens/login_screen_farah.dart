@@ -150,7 +150,7 @@ class _FarahGlassLoginScreenState extends ConsumerState<FarahGlassLoginScreen> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Text('تسجيل الدخول',
+                const Text('تم التحديث _ تسجيل الدخول',
                     style: TextStyle(
                         color: chocolate,
                         fontSize: 30,
