@@ -98,12 +98,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
-        // ✅ تم إزالة التدرج واستبداله بلون موحد
         color: AppColors.background,
         child: SafeArea(
           child: Stack(
             children: [
-              // زر الرجوع
               Positioned(
                 top: 10,
                 right: 20,
@@ -138,14 +136,11 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       clipBehavior: Clip.none,
       alignment: Alignment.topCenter,
       children: [
-        // ✅ تم حذف التوهج الوردي الموجود أسفل البطاقة بالكامل
-
         Padding(
           padding: const EdgeInsets.only(top: 45),
           child: Container(
             padding: const EdgeInsets.fromLTRB(28, 70, 28, 40),
             decoration: BoxDecoration(
-              // ✅ تم استبدال التدرج بلون أبيض صريح وحذف التوهج
               color: Colors.white,
               borderRadius: const BorderRadius.only(
                 topLeft: Radius.circular(80),
@@ -174,8 +169,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   ),
                 ),
                 const SizedBox(height: 24),
-
-                // ── الاسم ──
                 _glassField(
                   controller: _nameCtrl,
                   hint: 'الاسم الكامل',
@@ -187,8 +180,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   },
                 ),
                 const SizedBox(height: 14),
-
-                // ── البريد ──
                 _glassField(
                   controller: _emailCtrl,
                   hint: 'البريد الإلكتروني',
@@ -201,8 +192,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   },
                 ),
                 const SizedBox(height: 14),
-
-                // ── الهاتف ──
                 _glassField(
                   controller: _phoneCtrl,
                   hint: 'رقم الهاتف (مثال: 91xxxxxxx)',
@@ -215,8 +204,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   },
                 ),
                 const SizedBox(height: 14),
-
-                // ── كلمة المرور ──
                 _glassField(
                   controller: _passCtrl,
                   hint: '••••••••••••••',
@@ -239,8 +226,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   ),
                 ),
                 const SizedBox(height: 18),
-
-                // ── نوع الحساب ──
                 const Align(
                   alignment: Alignment.centerRight,
                   child: Text('نوع الحساب:',
@@ -269,8 +254,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                     ),
                   ),
                 ]),
-
-                // ── خطأ ──
                 if (_error != null) ...[
                   const SizedBox(height: 14),
                   Container(
@@ -294,8 +277,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   ),
                 ],
                 const SizedBox(height: 24),
-
-                // ── زر إنشاء حساب ──
                 Container(
                   width: 220,
                   height: 54,
@@ -310,7 +291,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                       end: Alignment.centerRight,
                     ),
                     borderRadius: BorderRadius.circular(30),
-                    // ✅ تم حذف التوهج الذهبي
                   ),
                   child: Material(
                     color: Colors.transparent,
@@ -344,8 +324,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   ),
                 ),
                 const SizedBox(height: 18),
-
-                // ── رابط تسجيل الدخول ──
                 Row(mainAxisAlignment: MainAxisAlignment.center, children: [
                   Text('لديك حساب بالفعل؟ ',
                       style: TextStyle(
@@ -365,8 +343,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             ),
           ),
         ),
-
-        // ── أيقونة الافتتاح في الأعلى ──
         Positioned(
           top: 0,
           child: Container(
@@ -376,7 +352,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
               shape: BoxShape.circle,
               color: Colors.white,
               border: Border.all(color: gold, width: 2),
-              // ✅ تم حذف التوهج الذهبي
             ),
             child: Center(
               child: ShaderMask(
@@ -399,7 +374,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     );
   }
 
-  // ── بطاقة اختيار الدور ──
   Widget _roleCard({
     required String value,
     required IconData icon,
@@ -421,7 +395,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             color: isSelected ? gold : Colors.white.withValues(alpha: 0.25),
             width: isSelected ? 2 : 1,
           ),
-          // ✅ تم حذف التوهج عند الاختيار
           boxShadow: [],
         ),
         child: Column(
@@ -446,7 +419,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     );
   }
 
-  // ── حقل زجاجي ──
   Widget _glassField({
     required TextEditingController controller,
     required String hint,
@@ -461,7 +433,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         color: Colors.white,
         borderRadius: BorderRadius.circular(30),
         border: Border.all(color: Colors.black.withValues(alpha: 0.05), width: 1),
-        // ✅ تم حذف التوهج الخفيف
       ),
       child: Row(children: [
         const SizedBox(width: 6),
@@ -475,7 +446,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
               end: Alignment.bottomRight,
             ),
             borderRadius: BorderRadius.circular(14),
-            // ✅ تم حذف التوهج من أيقونة الحقل
           ),
           child: Icon(icon, color: Colors.white, size: 22),
         ),
