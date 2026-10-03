@@ -146,6 +146,7 @@ class _FarahGlassLoginScreenState extends ConsumerState<FarahGlassLoginScreen> {
                 bottomRight: Radius.circular(80),
               ),
               border: Border.all(color: Colors.transparent, width: 1.4),
+              // ✅ تم حذف التوهج بالكامل
             ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -271,9 +272,14 @@ class _FarahGlassLoginScreenState extends ConsumerState<FarahGlassLoginScreen> {
                   width: 200,
                   height: 54,
                   decoration: BoxDecoration(
-                    // ✅ تم تغيير التدرج اللوني إلى لون وردي صريح (Solid)
-                    color: AppColors.primary,
+                    // ✅ إعادة التدرج اللوني للزر فقط ليعطي حيوية
+                    gradient: const LinearGradient(
+                      colors: [AppColors.primary, AppColors.primaryDark],
+                      begin: Alignment.centerLeft,
+                      end: Alignment.centerRight,
+                    ),
                     borderRadius: BorderRadius.circular(30),
+                    // ✅ بدون أي توهج
                   ),
                   child: Material(
                     color: Colors.transparent,
@@ -335,6 +341,7 @@ class _FarahGlassLoginScreenState extends ConsumerState<FarahGlassLoginScreen> {
               shape: BoxShape.circle,
               color: Colors.white,
               border: Border.all(color: gold, width: 2),
+              // ✅ بدون توهج
             ),
             child: Center(
               child: ShaderMask(
@@ -370,6 +377,8 @@ class _FarahGlassLoginScreenState extends ConsumerState<FarahGlassLoginScreen> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(30),
+        // ✅ بدون توهج، فقط حدود خفيفة جداً
+        border: Border.all(color: Colors.black.withValues(alpha: 0.05), width: 1),
       ),
       child: Row(
         children: [
@@ -378,11 +387,8 @@ class _FarahGlassLoginScreenState extends ConsumerState<FarahGlassLoginScreen> {
             width: 46,
             height: 46,
             decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [AppColors.primary, AppColors.primaryDark],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
+              // ✅ لون صريح للأيقونة
+              color: AppColors.primary,
               borderRadius: BorderRadius.circular(14),
             ),
             child: Icon(icon, color: Colors.white, size: 22),
