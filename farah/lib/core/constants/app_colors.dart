@@ -4,8 +4,8 @@ import 'package:flutter/material.dart';
 class AppColors {
   AppColors._();
 
-  static const Color primary = Color(0xFFF48FB1);
-  static const Color primaryDark = Color(0xFFE75480);
+  static const Color primary = Color(0xFFE91E63); // وردي مشبع وحيوي
+  static const Color primaryDark = Color(0xFFAD1457); // وردي غامق للعمق
   static const Color primaryLight = Color(0xFFF8BBD0);
 
   static const Color background = Color(0xFFF9F9F9); 
