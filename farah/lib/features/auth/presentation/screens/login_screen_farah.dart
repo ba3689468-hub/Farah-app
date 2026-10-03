@@ -150,7 +150,7 @@ class _FarahGlassLoginScreenState extends ConsumerState<FarahGlassLoginScreen> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Text('تم التحديث _ تسجيل الدخول',
+                const Text('تسجيل الدخول - تم التحديث',
                     style: TextStyle(
                         color: chocolate,
                         fontSize: 30,
@@ -271,15 +271,8 @@ class _FarahGlassLoginScreenState extends ConsumerState<FarahGlassLoginScreen> {
                   width: 200,
                   height: 54,
                   decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [
-                        AppColors.primary,
-                        AppColors.primaryDark,
-                        AppColors.background
-                      ],
-                      begin: Alignment.centerLeft,
-                      end: Alignment.centerRight,
-                    ),
+                    // ✅ تم تغيير التدرج اللوني إلى لون وردي صريح (Solid)
+                    color: AppColors.primary,
                     borderRadius: BorderRadius.circular(30),
                   ),
                   child: Material(
