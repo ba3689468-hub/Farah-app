@@ -46,7 +46,7 @@ class _BookingScreenState extends State<BookingScreen> {
       appBar: AppBar(
         backgroundColor: primary,
         foregroundColor: Colors.white,
-        elevation: 0,
+        elevation: 0, // ✅ إزالة الظل
         title: const Text('حجز القاعة',
             style: TextStyle(fontWeight: FontWeight.bold)),
         centerTitle: true,
@@ -74,12 +74,7 @@ class _BookingScreenState extends State<BookingScreen> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(18),
-        boxShadow: [
-          BoxShadow(
-              color: AppColors.primaryDark.withValues(alpha: 0.05),
-              blurRadius: 12,
-              offset: const Offset(0, 4))
-        ],
+        boxShadow: [], // ✅ تم حذف التوهج
       ),
       child: Row(
         children: [
@@ -145,12 +140,7 @@ class _BookingScreenState extends State<BookingScreen> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(18),
-        boxShadow: [
-          BoxShadow(
-              color: AppColors.primaryDark.withValues(alpha: 0.05),
-              blurRadius: 12,
-              offset: const Offset(0, 4))
-        ],
+        boxShadow: [], // ✅ تم حذف التوهج
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -263,12 +253,7 @@ class _BookingScreenState extends State<BookingScreen> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(18),
-        boxShadow: [
-          BoxShadow(
-              color: AppColors.primaryDark.withValues(alpha: 0.05),
-              blurRadius: 12,
-              offset: const Offset(0, 4))
-        ],
+        boxShadow: [], // ✅ تم حذف التوهج
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -359,12 +344,7 @@ class _BookingScreenState extends State<BookingScreen> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(18),
-        boxShadow: [
-          BoxShadow(
-              color: AppColors.primaryDark.withValues(alpha: 0.05),
-              blurRadius: 12,
-              offset: const Offset(0, 4))
-        ],
+        boxShadow: [], // ✅ تم حذف التوهج
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -477,12 +457,7 @@ class _BookingScreenState extends State<BookingScreen> {
       padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
       decoration: BoxDecoration(
         color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-              color: AppColors.primaryDark.withValues(alpha: 0.08),
-              blurRadius: 20,
-              offset: const Offset(0, -6))
-        ],
+        boxShadow: [], // ✅ تم حذف التوهج
       ),
       child: SafeArea(
         child: Column(
@@ -525,7 +500,7 @@ class _BookingScreenState extends State<BookingScreen> {
                   disabledBackgroundColor: primary.withValues(alpha: 0.5),
                   shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(20)),
-                  elevation: 0,
+                  elevation: 0, // ✅ إزالة الظل
                 ),
                 child: _loading
                     ? const SizedBox(
