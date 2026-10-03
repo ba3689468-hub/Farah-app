@@ -149,6 +149,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 bottomRight: Radius.circular(80),
               ),
               border: Border.all(color: Colors.transparent, width: 1.4),
+              // ✅ تم حذف أي توهج
             ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -281,15 +282,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   width: 220,
                   height: 54,
                   decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [
-                        AppColors.primary,
-                        AppColors.primaryDark,
-                        AppColors.background
-                      ],
-                      begin: Alignment.centerLeft,
-                      end: Alignment.centerRight,
-                    ),
+                    // ✅ تم تحويل التدرج اللوني إلى لون صريح
+                    color: AppColors.primary,
                     borderRadius: BorderRadius.circular(30),
                   ),
                   child: Material(
@@ -352,6 +346,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
               shape: BoxShape.circle,
               color: Colors.white,
               border: Border.all(color: gold, width: 2),
+              // ✅ تم حذف أي توهج
             ),
             child: Center(
               child: ShaderMask(
@@ -388,14 +383,14 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
         decoration: BoxDecoration(
           color: isSelected
-              ? gold.withValues(alpha: 0.25)
-              : Colors.white.withValues(alpha: 0.15),
+              ? gold.withValues(alpha: 0.15) // لون صريح بدون تدرج
+              : Colors.white,
           borderRadius: BorderRadius.circular(18),
           border: Border.all(
-            color: isSelected ? gold : Colors.white.withValues(alpha: 0.25),
+            color: isSelected ? gold : Colors.black.withValues(alpha: 0.1),
             width: isSelected ? 2 : 1,
           ),
-          boxShadow: [],
+          // ✅ تم حذف أي توهج
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -432,7 +427,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(30),
-        border: Border.all(color: Colors.black.withValues(alpha: 0.05), width: 1),
+        // ✅ حدود واضحة جداً بدلاً من التوهج
+        border: Border.all(color: Colors.black.withValues(alpha: 0.08), width: 1),
       ),
       child: Row(children: [
         const SizedBox(width: 6),
@@ -440,11 +436,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           width: 46,
           height: 46,
           decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              colors: [AppColors.primary, AppColors.primary, AppColors.background],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
+            // ✅ لون صريح بدلاً من التدرج
+            color: AppColors.primary,
             borderRadius: BorderRadius.circular(14),
           ),
           child: Icon(icon, color: Colors.white, size: 22),
