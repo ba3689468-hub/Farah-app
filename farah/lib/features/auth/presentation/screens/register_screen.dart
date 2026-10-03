@@ -149,7 +149,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 bottomRight: Radius.circular(80),
               ),
               border: Border.all(color: Colors.transparent, width: 1.4),
-              // ✅ تم حذف أي توهج
+              // ✅ تم حذف التوهج بالكامل
             ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -282,9 +282,14 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   width: 220,
                   height: 54,
                   decoration: BoxDecoration(
-                    // ✅ تم تحويل التدرج اللوني إلى لون صريح
-                    color: AppColors.primary,
+                    // ✅ إعادة التدرج اللوني للزر فقط ليعطي حيوية
+                    gradient: const LinearGradient(
+                      colors: [AppColors.primary, AppColors.primaryDark],
+                      begin: Alignment.centerLeft,
+                      end: Alignment.centerRight,
+                    ),
                     borderRadius: BorderRadius.circular(30),
+                    // ✅ بدون أي توهج
                   ),
                   child: Material(
                     color: Colors.transparent,
@@ -346,7 +351,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
               shape: BoxShape.circle,
               color: Colors.white,
               border: Border.all(color: gold, width: 2),
-              // ✅ تم حذف أي توهج
+              // ✅ بدون توهج
             ),
             child: Center(
               child: ShaderMask(
@@ -436,7 +441,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           width: 46,
           height: 46,
           decoration: BoxDecoration(
-            // ✅ لون صريح بدلاً من التدرج
+            // ✅ لون صريح للأيقونة
             color: AppColors.primary,
             borderRadius: BorderRadius.circular(14),
           ),
