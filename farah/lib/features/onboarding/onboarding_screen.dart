@@ -66,19 +66,18 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       backgroundColor: Colors.white,
       body: Stack(
         children: [
-          // ── الجزء العلوي: الخلفية الوردية المتدرجة ──
+          // ── الجزء العلوي: الخلفية الوردية المشبعة (موحدة مع باقي الصفحات) ──
           Container(
-            height: size.height * 0.70, // زيادة الارتفاع قليلاً
-            decoration: BoxDecoration(
+            height: size.height * 0.70,
+            decoration: const BoxDecoration(
+              // ✅ استخدام نفس تدرج الأزرار (وردي مشبع -> وردي غامق)
               gradient: LinearGradient(
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
                 colors: [
-                  AppColors.primaryLight.withValues(alpha: 0.8),
-                  AppColors.primary.withValues(alpha: 0.4),
-                  Colors.white,
+                  AppColors.primary,      // لون مشبع
+                  AppColors.primaryDark,  // لون غامق
                 ],
-                stops: const [0.0, 0.6, 1.0],
               ),
             ),
           ),
@@ -107,12 +106,12 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             ),
           ),
 
-          // ── عرض الصفحات (PageView) - تم تكبيرها ──
+          // ── عرض الصفحات (PageView) ──
           Positioned(
-            top: size.height * 0.08, // رفع القوس للأعلى
+            top: size.height * 0.08,
             left: 0,
             right: 0,
-            height: size.height * 0.62, // زيادة الارتفاع
+            height: size.height * 0.62,
             child: PageView.builder(
               controller: _pageController,
               onPageChanged: (index) {
@@ -142,7 +141,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  // ── نقاط التقدم (Dots) ──
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: List.generate(
@@ -150,9 +148,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       (index) => _buildDot(index == _currentIndex),
                     ),
                   ),
-                  const SizedBox(height: 20), // تقليل المسافة
-
-                  // ── النصوص المتغيرة مع الانيميشن ──
+                  const SizedBox(height: 20),
                   AnimatedSwitcher(
                     duration: const Duration(milliseconds: 300),
                     transitionBuilder: (child, animation) {
@@ -174,7 +170,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           _pages[_currentIndex]['title']!,
                           style: const TextStyle(
                             color: AppColors.primaryDark,
-                            fontSize: 24, // تصغير الخط قليلاً للتناسق
+                            fontSize: 24,
                             fontWeight: FontWeight.bold,
                           ),
                           textAlign: TextAlign.center,
@@ -185,16 +181,14 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           textAlign: TextAlign.center,
                           style: const TextStyle(
                             color: AppColors.textSecondary,
-                            fontSize: 13, // تصغير الخط قليلاً
+                            fontSize: 13,
                             height: 1.5,
                           ),
                         ),
                       ],
                     ),
                   ),
-                  const SizedBox(height: 25), // تقليل المسافة
-
-                  // ── زر التالي / ابدأ الآن ──
+                  const SizedBox(height: 25),
                   GestureDetector(
                     onTap: _nextPage,
                     child: AnimatedContainer(
@@ -202,19 +196,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       width: _currentIndex == _pages.length - 1 ? 160 : 120,
                       height: 50,
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: AppColors.primary, // ✅ زر بلون مشبع
                         borderRadius: BorderRadius.circular(25),
-                        border: Border.all(
-                          color: AppColors.primary.withValues(alpha: 0.3),
-                          width: 1,
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: AppColors.primary.withValues(alpha: 0.1),
-                            blurRadius: 15,
-                            offset: const Offset(0, 5),
-                          ),
-                        ],
+                        // ✅ إزالة التوهج
                       ),
                       child: Center(
                         child: Text(
@@ -222,7 +206,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                               ? 'ابدأ الآن'
                               : 'التالي',
                           style: const TextStyle(
-                            color: AppColors.primary,
+                            color: Colors.white,
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
                           ),
@@ -230,7 +214,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       ),
                     ),
                   ),
-                  const SizedBox(height: 10), // مسافة أخيرة
+                  const SizedBox(height: 10),
                 ],
               ),
             ),
@@ -240,7 +224,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     );
   }
 
-  // ── دالة لبناء القوس مع الصورة والانيميشن (تم تكبير الأبعاد) ──
   Widget _buildArchPage(Map<String, String> page, int index) {
     return AnimatedBuilder(
       animation: _pageController,
@@ -254,17 +237,16 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           child: Transform.scale(
             scale: Curves.easeOutCubic.transform(value),
             child: Container(
-              // ✅ زيادة العرض والارتفاع لجعل الصورة أكبر
               width: MediaQuery.of(context).size.width * 0.85,
               height: MediaQuery.of(context).size.height * 0.55,
               decoration: BoxDecoration(
                 border: Border.all(
-                  color: AppColors.primary.withValues(alpha: 0.3),
-                  width: 3, // إطار أسمك قليلاً
+                  color: Colors.white.withValues(alpha: 0.5), // إطار أبيض ليتناسق مع الخلفية الوردية
+                  width: 3,
                 ),
                 borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(250), // قوس أكبر
-                  topRight: Radius.circular(250), // قوس أكبر
+                  topLeft: Radius.circular(250),
+                  topRight: Radius.circular(250),
                 ),
               ),
               child: ClipRRect(
@@ -281,7 +263,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       color: AppColors.primaryLight.withValues(alpha: 0.3),
                       child: const Center(
                         child: CircularProgressIndicator(
-                          color: AppColors.primary,
+                          color: Colors.white,
                         ),
                       ),
                     );
@@ -293,7 +275,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         child: Icon(
                           Icons.celebration,
                           size: 80,
-                          color: AppColors.primary,
+                          color: Colors.white,
                         ),
                       ),
                     );
