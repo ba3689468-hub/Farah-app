@@ -1,7 +1,8 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:farah/core/constants/app_colors.dart';
-import 'features/onboarding/presentation/screens/onboarding_screen.dart';
+// ✅ تم تصحيح مسار الاستيراد (الملف موجود مباشرة في مجلد onboarding)
+import 'features/onboarding/onboarding_screen.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -14,12 +15,11 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   void initState() {
     super.initState();
-    // الانتقال إلى شاشة الترحيب بعد 3 ثوانٍ
     Timer(const Duration(seconds: 3), () {
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
-          // ✅ استدعاء الشاشة بدون أي معاملات (onFinish)
+          // ✅ تم حذف onFinish وإزالة const
           builder: (_) => const OnboardingScreen(),
         ),
       );
