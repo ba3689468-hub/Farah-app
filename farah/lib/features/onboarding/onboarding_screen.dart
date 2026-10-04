@@ -1,185 +1,320 @@
 import 'package:farah/core/constants/app_colors.dart';
 import 'package:flutter/material.dart';
-// ⚠️ تأكد من مسار ملف شاشة الدخول الصحيح هنا (login_screen_farah.dart أو login_screen.dart)
- import '../auth/presentation/screens/login_screen_farah.dart';
+import '../../auth/presentation/screens/login_screen_farah.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 
 class OnboardingScreen extends StatefulWidget {
-  final VoidCallback onFinish;
-  const OnboardingScreen({super.key, required this.onFinish});
+  const OnboardingScreen({super.key});
 
   @override
   State<OnboardingScreen> createState() => _OnboardingScreenState();
 }
 
 class _OnboardingScreenState extends State<OnboardingScreen> {
-  static const Color primary = AppColors.primary;
-  static const Color primaryDark = AppColors.primaryDark;
-  static const Color textDark = AppColors.textPrimary;
-  static const Color textLight = AppColors.textSecondary;
+  final PageController _pageController = PageController();
+  int _currentIndex = 0;
 
-  final _pageCtrl = PageController();
-  int _current = 0;
-
-  final List<Map<String, dynamic>> _pages = const [
+  // ── بيانات الصفحات الأربعة ──
+  final List<Map<String, String>> _pages = [
     {
-      'icon': Icons.celebration,
-      'title': 'مرحباً بك في فرح',
-      'desc': 'وجهتك الأولى لحجز صالات الأفراح والمناسبات في جميع المدن الليبية.',
+      'image': 'https://images.unsplash.com/photo-1519225421980-715cb0215aed?q=80&w=1000&auto=format&fit=crop',
+      'title': 'مرحباً بك في تطبيق فرح',
+      'desc': 'أكبر دليل لحجز قاعات الأفراح في ليبيا - تصفح القاعات، قارن الأسعار، واحجز بكل سهولة',
     },
     {
-      'icon': Icons.storefront,
-      'title': 'اكتشف وأقارن',
-      'desc': 'اكتشف أفضل القاعات والمزودين حسب المدينة والسعر والتقييم.',
+      'image': 'https://images.unsplash.com/photo-1511795409834-ef04bbd61622?q=80&w=1000&auto=format&fit=crop',
+      'title': 'تصفح القاعات',
+      'desc': 'اكتشف أفضل القاعات والمزودين حسب المدينة والسعر والتقييم',
     },
     {
-      'icon': Icons.event_available,
+      'image': 'https://images.unsplash.com/photo-1464366400600-7168b8af9bc3?q=80&w=1000&auto=format&fit=crop',
+      'title': 'قارن الأسعار',
+      'desc': 'شاهد الصور، التقييمات، والأسعار لاتخاذ القرار الأفضل لقاعتك',
+    },
+    {
+      'image': 'https://images.unsplash.com/photo-1527529482837-4698179dc6ce?q=80&w=1000&auto=format&fit=crop',
       'title': 'احجز بسهولة',
-      'desc': 'اختر تاريخك وحدد الضيوف وأتمم حجزك في دقائق.',
-    },
-    {
-      'icon': Icons.verified_user,
-      'title': 'ادفع بآمان',
-      'desc': 'ادفع إلكترونياً أو عند الحضور — بكل سهولة وأمان.',
+      'desc': 'اختر تاريخك، حدد عدد الضيوف، وأتمم حجزك في دقائق معدودة',
     },
   ];
 
   @override
   void dispose() {
-    _pageCtrl.dispose();
+    _pageController.dispose();
     super.dispose();
+  }
+
+  void _nextPage() {
+    if (_currentIndex < _pages.length - 1) {
+      _pageController.nextPage(
+        duration: const Duration(milliseconds: 400),
+        curve: Curves.easeInOut,
+      );
+    } else {
+      // الانتقال إلى شاشة تسجيل الدخول
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => const FarahGlassLoginScreen()),
+      );
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    final size = MediaQuery.of(context).size;
+
     return Scaffold(
-      body: Container(
-        color: AppColors.softBackground,
-        child: SafeArea(
-          child: Column(
-            children: [
-              Align(
-                alignment: Alignment.topLeft,
-                child: Padding(
-                  padding: const EdgeInsets.all(12),
-                  child: TextButton(
-                    onPressed: () {
-                      widget.onFinish();
-                      Navigator.of(context).pushReplacement(
-                        MaterialPageRoute(
-                          // ✅ تم إزالة const من هنا
-                          builder: (_) => FarahGlassLoginScreen(),
+      backgroundColor: Colors.white,
+      body: Stack(
+        children: [
+          // ── الجزء العلوي: الخلفية الوردية المتدرجة ──
+          Container(
+            height: size.height * 0.65,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  AppColors.primaryLight.withValues(alpha: 0.8),
+                  AppColors.primary.withValues(alpha: 0.4),
+                  Colors.white,
+                ],
+                stops: const [0.0, 0.6, 1.0],
+              ),
+            ),
+          ),
+
+          // ── زر تخطي (أعلى اليسار) ──
+          Positioned(
+            top: 40,
+            left: 20,
+            child: TextButton(
+              onPressed: () {
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const FarahGlassLoginScreen(),
+                  ),
+                );
+              },
+              child: const Text(
+                'تخطي',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ),
+
+          // ── عرض الصفحات الأربعة (PageView) ──
+          Positioned(
+            top: size.height * 0.15,
+            left: 0,
+            right: 0,
+            height: size.height * 0.45,
+            child: PageView.builder(
+              controller: _pageController,
+              onPageChanged: (index) {
+                setState(() => _currentIndex = index);
+              },
+              itemCount: _pages.length,
+              itemBuilder: (context, index) {
+                return _buildArchPage(_pages[index], index);
+              },
+            ),
+          ),
+
+          // ── الجزء السفلي: النصوص والأزرار ──
+          Positioned(
+            bottom: 0,
+            left: 0,
+            right: 0,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 30),
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(30),
+                  topRight: Radius.circular(30),
+                ),
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // ── نقاط التقدم (Dots) ──
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: List.generate(
+                      _pages.length,
+                      (index) => _buildDot(index == _currentIndex),
+                    ),
+                  ),
+                  const SizedBox(height: 30),
+
+                  // ── النصوص المتغيرة مع الانيميشن ──
+                  AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 300),
+                    transitionBuilder: (child, animation) {
+                      return FadeTransition(
+                        opacity: animation,
+                        child: SlideTransition(
+                          position: Tween<Offset>(
+                            begin: const Offset(0, 0.1),
+                            end: Offset.zero,
+                          ).animate(animation),
+                          child: child,
                         ),
                       );
                     },
-                    child: const Text('تخطي',
-                        style: TextStyle(color: textLight, fontSize: 14)),
+                    child: Column(
+                      key: ValueKey<int>(_currentIndex),
+                      children: [
+                        Text(
+                          _pages[_currentIndex]['title']!,
+                          style: const TextStyle(
+                            color: AppColors.primaryDark,
+                            fontSize: 26,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          _pages[_currentIndex]['desc']!,
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            color: AppColors.textSecondary,
+                            fontSize: 14,
+                            height: 1.6,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
+                  const SizedBox(height: 40),
+
+                  // ── زر التالي / ابدأ الآن ──
+                  GestureDetector(
+                    onTap: _nextPage,
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 300),
+                      width: _currentIndex == _pages.length - 1 ? 160 : 120,
+                      height: 50,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(25),
+                        border: Border.all(
+                          color: AppColors.primary.withValues(alpha: 0.3),
+                          width: 1,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: AppColors.primary.withValues(alpha: 0.1),
+                            blurRadius: 15,
+                            offset: const Offset(0, 5),
+                          ),
+                        ],
+                      ),
+                      child: Center(
+                        child: Text(
+                          _currentIndex == _pages.length - 1 ? 'ابدأ الآن' : 'التالي',
+                          style: const TextStyle(
+                            color: AppColors.primary,
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ── دالة لبناء القوس مع الصورة والانيميشن ──
+  Widget _buildArchPage(Map<String, String> page, int index) {
+    return AnimatedBuilder(
+      animation: _pageController,
+      builder: (context, child) {
+        double value = 1.0;
+        if (_pageController.position.haveDimensions) {
+          value = _pageController.page! - index;
+          value = (1 - (value.abs() * 0.3)).clamp(0.0, 1.0);
+        }
+        return Center(
+          child: Transform.scale(
+            scale: Curves.easeOutCubic.transform(value),
+            child: Container(
+              width: MediaQuery.of(context).size.width * 0.75,
+              height: MediaQuery.of(context).size.height * 0.45,
+              decoration: BoxDecoration(
+                border: Border.all(
+                  color: AppColors.primary.withValues(alpha: 0.3),
+                  width: 2,
+                ),
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(200),
+                  topRight: Radius.circular(200),
                 ),
               ),
-              Expanded(
-                child: PageView.builder(
-                  controller: _pageCtrl,
-                  onPageChanged: (i) => setState(() => _current = i),
-                  itemCount: _pages.length,
-                  itemBuilder: (context, i) {
-                    final p = _pages[i];
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 32),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Container(
-                            width: 140,
-                            height: 140,
-                            decoration: const BoxDecoration(
-                              gradient: LinearGradient(
-                                colors: [primary, primaryDark],
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                              ),
-                              shape: BoxShape.circle,
-                            ),
-                            child: Icon(p['icon'] as IconData,
-                                size: 70, color: Colors.white),
-                          ),
-                          const SizedBox(height: 40),
-                          Text(p['title'] as String,
-                              textAlign: TextAlign.center,
-                              style: const TextStyle(
-                                  color: textDark,
-                                  fontSize: 24,
-                                  fontWeight: FontWeight.bold)),
-                          const SizedBox(height: 16),
-                          Text(p['desc'] as String,
-                              textAlign: TextAlign.center,
-                              style: const TextStyle(
-                                  color: textLight,
-                                  fontSize: 14,
-                                  height: 1.6)),
-                        ],
+              child: ClipRRect(
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(200),
+                  topRight: Radius.circular(200),
+                ),
+                child: Image.network(
+                  page['image']!,
+                  fit: BoxFit.cover,
+                  loadingBuilder: (context, child, loadingProgress) {
+                    if (loadingProgress == null) return child;
+                    return Container(
+                      color: AppColors.primaryLight.withValues(alpha: 0.3),
+                      child: const Center(
+                        child: CircularProgressIndicator(
+                          color: AppColors.primary,
+                        ),
+                      ),
+                    );
+                  },
+                  errorBuilder: (context, error, stackTrace) {
+                    return Container(
+                      color: AppColors.primaryLight.withValues(alpha: 0.3),
+                      child: const Center(
+                        child: Icon(
+                          Icons.celebration,
+                          size: 80,
+                          color: AppColors.primary,
+                        ),
                       ),
                     );
                   },
                 ),
               ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: List.generate(_pages.length, (i) {
-                  final active = i == _current;
-                  return AnimatedContainer(
-                    duration: const Duration(milliseconds: 300),
-                    margin: const EdgeInsets.symmetric(horizontal: 4),
-                    width: active ? 24 : 8,
-                    height: 8,
-                    decoration: BoxDecoration(
-                      color: active ? primary : primary.withValues(alpha: 0.2),
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                  );
-                }),
-              ),
-              const SizedBox(height: 30),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 32),
-                child: SizedBox(
-                  width: double.infinity,
-                  height: 56,
-                  child: ElevatedButton(
-                    onPressed: () {
-                      if (_current == _pages.length - 1) {
-                        widget.onFinish();
-                        Navigator.of(context).pushReplacement(
-                          MaterialPageRoute(
-                            // ✅ تم إزالة const من هنا
-                            builder: (_) => FarahGlassLoginScreen(),
-                          ),
-                        );
-                      } else {
-                        _pageCtrl.nextPage(
-                          duration: const Duration(milliseconds: 300),
-                          curve: Curves.easeInOut,
-                        );
-                      }
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: primary,
-                      foregroundColor: Colors.white,
-                      elevation: 0,
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(28)),
-                    ),
-                    child: Text(
-                      _current == _pages.length - 1 ? 'ابدأ الآن' : 'التالي',
-                      style: const TextStyle(
-                          fontSize: 16, fontWeight: FontWeight.bold),
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 30),
-            ],
+            ),
           ),
-        ),
+        );
+      },
+    );
+  }
+
+  // ── دالة لرسم النقاط ──
+  Widget _buildDot(bool isActive) {
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 300),
+      margin: const EdgeInsets.symmetric(horizontal: 4),
+      width: isActive ? 24 : 8,
+      height: 8,
+      decoration: BoxDecoration(
+        color: isActive ? AppColors.primary : Colors.grey.withValues(alpha: 0.3),
+        borderRadius: BorderRadius.circular(4),
       ),
     );
   }
