@@ -4,7 +4,8 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'core/constants/app_strings.dart';
 import 'core/theme/app_theme.dart';
-import 'splash_screen.dart';
+// ✅ تم استبدال splash_screen بـ onboarding_screen
+import 'features/onboarding/onboarding_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -12,8 +13,7 @@ void main() async {
     await Firebase.initializeApp();
   } catch (e) {
     runApp(MaterialApp(
-      home: Scaffold(body: Center(child: Text('خطأ Firebase: $e'))),
-    ));
+        home: Scaffold(body: Center(child: Text('فشل Firebase: $e')))));
     return;
   }
   runApp(const ProviderScope(child: FarahApp()));
@@ -36,7 +36,8 @@ class FarahApp extends StatelessWidget {
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
       ],
-      home: const SplashScreen(),
+      // ✅ تم تغيير الصفحة الرئيسية لتكون شاشة الترحيب مباشرة
+      home: const OnboardingScreen(),
     );
   }
 }
