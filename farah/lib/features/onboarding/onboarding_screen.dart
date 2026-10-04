@@ -1,9 +1,11 @@
 import 'package:farah/core/constants/app_colors.dart';
 import 'package:flutter/material.dart';
-import '../../auth/presentation/screens/login_screen_farah.dart';
+// ✅ تم تصحيح مسار الاستيراد (إضافة ../ إضافية للخروج من مجلد onboarding)
+import '../../../auth/presentation/screens/login_screen_farah.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
 class OnboardingScreen extends StatefulWidget {
+  // ✅ تم إزالة onFinish من هنا لأن الشاشة تدير التنقل بنفسها
   const OnboardingScreen({super.key});
 
   @override
@@ -54,7 +56,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       // الانتقال إلى شاشة تسجيل الدخول
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (_) => const FarahGlassLoginScreen()),
+        MaterialPageRoute(
+          // ✅ تم إزالة const من هنا
+          builder: (_) => FarahGlassLoginScreen(),
+        ),
       );
     }
   }
@@ -93,7 +98,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 Navigator.pushReplacement(
                   context,
                   MaterialPageRoute(
-                    builder: (_) => const FarahGlassLoginScreen(),
+                    // ✅ تم إزالة const من هنا
+                    builder: (_) => FarahGlassLoginScreen(),
                   ),
                 );
               },
@@ -219,7 +225,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       ),
                       child: Center(
                         child: Text(
-                          _currentIndex == _pages.length - 1 ? 'ابدأ الآن' : 'التالي',
+                          _currentIndex == _pages.length - 1
+                              ? 'ابدأ الآن'
+                              : 'التالي',
                           style: const TextStyle(
                             color: AppColors.primary,
                             fontSize: 16,
@@ -313,7 +321,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       width: isActive ? 24 : 8,
       height: 8,
       decoration: BoxDecoration(
-        color: isActive ? AppColors.primary : Colors.grey.withValues(alpha: 0.3),
+        color: isActive
+            ? AppColors.primary
+            : Colors.grey.withValues(alpha: 0.3),
         borderRadius: BorderRadius.circular(4),
       ),
     );
