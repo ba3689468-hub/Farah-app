@@ -1,11 +1,9 @@
 import 'package:farah/core/constants/app_colors.dart';
 import 'package:flutter/material.dart';
-// ✅ تم تصحيح مسار الاستيراد (إضافة ../ إضافية للخروج من مجلد onboarding)
-import '../../../auth/presentation/screens/login_screen_farah.dart';
-import 'package:flutter_animate/flutter_animate.dart';
+// ✅ تم تصحيح مسار الاستيراد (الخروج من onboarding إلى features ثم الدخول إلى auth)
+import '../auth/presentation/screens/login_screen_farah.dart';
 
 class OnboardingScreen extends StatefulWidget {
-  // ✅ تم إزالة onFinish من هنا لأن الشاشة تدير التنقل بنفسها
   const OnboardingScreen({super.key});
 
   @override
@@ -16,7 +14,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   final PageController _pageController = PageController();
   int _currentIndex = 0;
 
-  // ── بيانات الصفحات الأربعة ──
   final List<Map<String, String>> _pages = [
     {
       'image': 'https://images.unsplash.com/photo-1519225421980-715cb0215aed?q=80&w=1000&auto=format&fit=crop',
@@ -53,7 +50,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         curve: Curves.easeInOut,
       );
     } else {
-      // الانتقال إلى شاشة تسجيل الدخول
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
@@ -72,7 +68,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       backgroundColor: Colors.white,
       body: Stack(
         children: [
-          // ── الجزء العلوي: الخلفية الوردية المتدرجة ──
           Container(
             height: size.height * 0.65,
             decoration: BoxDecoration(
@@ -88,8 +83,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               ),
             ),
           ),
-
-          // ── زر تخطي (أعلى اليسار) ──
           Positioned(
             top: 40,
             left: 20,
@@ -98,7 +91,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 Navigator.pushReplacement(
                   context,
                   MaterialPageRoute(
-                    // ✅ تم إزالة const من هنا
                     builder: (_) => FarahGlassLoginScreen(),
                   ),
                 );
@@ -113,8 +105,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               ),
             ),
           ),
-
-          // ── عرض الصفحات الأربعة (PageView) ──
           Positioned(
             top: size.height * 0.15,
             left: 0,
@@ -131,8 +121,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               },
             ),
           ),
-
-          // ── الجزء السفلي: النصوص والأزرار ──
           Positioned(
             bottom: 0,
             left: 0,
@@ -149,7 +137,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  // ── نقاط التقدم (Dots) ──
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: List.generate(
@@ -158,8 +145,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     ),
                   ),
                   const SizedBox(height: 30),
-
-                  // ── النصوص المتغيرة مع الانيميشن ──
                   AnimatedSwitcher(
                     duration: const Duration(milliseconds: 300),
                     transitionBuilder: (child, animation) {
@@ -200,8 +185,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     ),
                   ),
                   const SizedBox(height: 40),
-
-                  // ── زر التالي / ابدأ الآن ──
                   GestureDetector(
                     onTap: _nextPage,
                     child: AnimatedContainer(
@@ -247,7 +230,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     );
   }
 
-  // ── دالة لبناء القوس مع الصورة والانيميشن ──
   Widget _buildArchPage(Map<String, String> page, int index) {
     return AnimatedBuilder(
       animation: _pageController,
@@ -313,7 +295,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     );
   }
 
-  // ── دالة لرسم النقاط ──
   Widget _buildDot(bool isActive) {
     return AnimatedContainer(
       duration: const Duration(milliseconds: 300),
