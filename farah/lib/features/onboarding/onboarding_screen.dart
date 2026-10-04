@@ -1,10 +1,20 @@
-import 'package:farah/core/constants/app_colors.dart';
 import 'package:flutter/material.dart';
-import '../auth/presentation/screens/login_screen_farah.dart';
+
+void main() => runApp(const MyApp());
+
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      home: const OnboardingScreen(),
+    );
+  }
+}
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
-
   @override
   State<OnboardingScreen> createState() => _OnboardingScreenState();
 }
@@ -12,6 +22,10 @@ class OnboardingScreen extends StatefulWidget {
 class _OnboardingScreenState extends State<OnboardingScreen> {
   final PageController _pageController = PageController();
   int _currentIndex = 0;
+
+  static const Color primary = Color(0xFFE91E63);
+  static const Color primaryDark = Color(0xFFAD1457);
+  static const Color primaryLight = Color(0xFFF8BBD0);
 
   final List<Map<String, String>> _pages = [
     {
@@ -48,13 +62,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         duration: const Duration(milliseconds: 400),
         curve: Curves.easeInOut,
       );
-    } else {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (_) => FarahGlassLoginScreen(),
-        ),
-      );
     }
   }
 
@@ -66,52 +73,76 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       backgroundColor: Colors.white,
       body: Stack(
         children: [
-          // ── الجزء العلوي: الخلفية الوردية المشبعة (موحدة مع باقي الصفحات) ──
+          // ── الخلفية الوردية ──
           Container(
-            height: size.height * 0.70,
+            height: size.height * 0.72,
             decoration: const BoxDecoration(
-              // ✅ استخدام نفس تدرج الأزرار (وردي مشبع -> وردي غامق)
               gradient: LinearGradient(
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
-                colors: [
-                  AppColors.primary,      // لون مشبع
-                  AppColors.primaryDark,  // لون غامق
-                ],
+                colors: [primaryDark, primary, primary],
+                stops: [0.0, 0.5, 1.0],
               ),
             ),
           ),
 
-          // ── زر تخطي (أعلى اليسار) ──
+          // ── دوائر زخرفية ──
+          Positioned(
+            top: -80,
+            right: -60,
+            child: Container(
+              width: 220,
+              height: 220,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: Colors.white.withOpacity(0.08),
+              ),
+            ),
+          ),
+          Positioned(
+            top: 100,
+            left: -80,
+            child: Container(
+              width: 180,
+              height: 180,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: Colors.white.withOpacity(0.06),
+              ),
+            ),
+          ),
+
+          // ── زر تخطي ──
           Positioned(
             top: 40,
             left: 20,
-            child: TextButton(
-              onPressed: () {
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => FarahGlassLoginScreen(),
-                  ),
-                );
-              },
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.2),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                  color: Colors.white.withOpacity(0.3),
+                  width: 1,
+                ),
+              ),
               child: const Text(
                 'تخطي',
                 style: TextStyle(
                   color: Colors.white,
-                  fontSize: 16,
+                  fontSize: 14,
                   fontWeight: FontWeight.bold,
                 ),
               ),
             ),
           ),
 
-          // ── عرض الصفحات (PageView) ──
+          // ── الصورة (تم تكبير القوس من الأعلى) ──
           Positioned(
-            top: size.height * 0.08,
+            top: size.height * 0.06,     // ✅ الأعلى: رفعناه للأعلى أكثر
             left: 0,
             right: 0,
-            height: size.height * 0.62,
+            height: size.height * 0.68,  // ✅ الارتفاع: زدناه ليصبح أطول
             child: PageView.builder(
               controller: _pageController,
               onPageChanged: (index) {
@@ -124,19 +155,26 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             ),
           ),
 
-          // ── الجزء السفلي: النصوص والأزرار ──
+          // ── البطاقة السفلية ──
           Positioned(
             bottom: 0,
             left: 0,
             right: 0,
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 color: Colors.white,
-                borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(30),
-                  topRight: Radius.circular(30),
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(35),
+                  topRight: Radius.circular(35),
                 ),
+                boxShadow: [
+                  BoxShadow(
+                    color: primaryDark.withOpacity(0.10),
+                    blurRadius: 25,
+                    offset: const Offset(0, -8),
+                  ),
+                ],
               ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -148,7 +186,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       (index) => _buildDot(index == _currentIndex),
                     ),
                   ),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 18),
+
                   AnimatedSwitcher(
                     duration: const Duration(milliseconds: 300),
                     transitionBuilder: (child, animation) {
@@ -169,47 +208,76 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         Text(
                           _pages[_currentIndex]['title']!,
                           style: const TextStyle(
-                            color: AppColors.primaryDark,
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
+                            color: primaryDark,
+                            fontSize: 23,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: -0.5,
                           ),
                           textAlign: TextAlign.center,
                         ),
                         const SizedBox(height: 12),
-                        Text(
-                          _pages[_currentIndex]['desc']!,
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(
-                            color: AppColors.textSecondary,
-                            fontSize: 13,
-                            height: 1.5,
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 8),
+                          child: Text(
+                            _pages[_currentIndex]['desc']!,
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(
+                              color: Color(0xFF888888),
+                              fontSize: 13,
+                              height: 1.6,
+                            ),
                           ),
                         ),
                       ],
                     ),
                   ),
                   const SizedBox(height: 25),
+
                   GestureDetector(
                     onTap: _nextPage,
                     child: AnimatedContainer(
                       duration: const Duration(milliseconds: 300),
-                      width: _currentIndex == _pages.length - 1 ? 160 : 120,
-                      height: 50,
+                      width: _currentIndex == _pages.length - 1
+                          ? double.infinity
+                          : 140,
+                      height: 54,
                       decoration: BoxDecoration(
-                        color: AppColors.primary, // ✅ زر بلون مشبع
-                        borderRadius: BorderRadius.circular(25),
-                        // ✅ إزالة التوهج
+                        gradient: const LinearGradient(
+                          colors: [primary, primaryDark],
+                          begin: Alignment.centerLeft,
+                          end: Alignment.centerRight,
+                        ),
+                        borderRadius: BorderRadius.circular(27),
+                        boxShadow: [
+                          BoxShadow(
+                            color: primary.withOpacity(0.35),
+                            blurRadius: 20,
+                            offset: const Offset(0, 8),
+                          ),
+                        ],
                       ),
                       child: Center(
-                        child: Text(
-                          _currentIndex == _pages.length - 1
-                              ? 'ابدأ الآن'
-                              : 'التالي',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              _currentIndex == _pages.length - 1
+                                  ? 'ابدأ الآن'
+                                  : 'التالي',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 15,
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: 0.5,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            const Icon(
+                              Icons.arrow_forward_ios,
+                              color: Colors.white,
+                              size: 13,
+                            ),
+                          ],
                         ),
                       ),
                     ),
@@ -229,7 +297,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       animation: _pageController,
       builder: (context, child) {
         double value = 1.0;
-        if (_pageController.position.haveDimensions) {
+        if (_pageController.hasClients &&
+            _pageController.position.haveDimensions) {
           value = _pageController.page! - index;
           value = (1 - (value.abs() * 0.3)).clamp(0.0, 1.0);
         }
@@ -237,22 +306,30 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           child: Transform.scale(
             scale: Curves.easeOutCubic.transform(value),
             child: Container(
-              width: MediaQuery.of(context).size.width * 0.85,
-              height: MediaQuery.of(context).size.height * 0.55,
+              // ✅ تم تكبير القوس: عرض أعرض + ارتفاع أعلى
+              width: MediaQuery.of(context).size.width * 0.88,
+              height: MediaQuery.of(context).size.height * 0.60, // ✅ ارتفاع أكبر
               decoration: BoxDecoration(
                 border: Border.all(
-                  color: Colors.white.withValues(alpha: 0.5), // إطار أبيض ليتناسق مع الخلفية الوردية
-                  width: 3,
+                  color: Colors.white.withOpacity(0.6),
+                  width: 4,
                 ),
                 borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(250),
-                  topRight: Radius.circular(250),
+                  topLeft: Radius.circular(300), // ✅ نصف قطر أكبر
+                  topRight: Radius.circular(300), // ✅ نصف قطر أكبر
                 ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.18),
+                    blurRadius: 25,
+                    offset: const Offset(0, 10),
+                  ),
+                ],
               ),
               child: ClipRRect(
                 borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(250),
-                  topRight: Radius.circular(250),
+                  topLeft: Radius.circular(300),
+                  topRight: Radius.circular(300),
                 ),
                 child: Image.network(
                   page['image']!,
@@ -260,17 +337,15 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   loadingBuilder: (context, child, loadingProgress) {
                     if (loadingProgress == null) return child;
                     return Container(
-                      color: AppColors.primaryLight.withValues(alpha: 0.3),
+                      color: primaryLight.withOpacity(0.3),
                       child: const Center(
-                        child: CircularProgressIndicator(
-                          color: Colors.white,
-                        ),
+                        child: CircularProgressIndicator(color: Colors.white),
                       ),
                     );
                   },
                   errorBuilder: (context, error, stackTrace) {
                     return Container(
-                      color: AppColors.primaryLight.withValues(alpha: 0.3),
+                      color: primaryLight.withOpacity(0.3),
                       child: const Center(
                         child: Icon(
                           Icons.celebration,
@@ -293,12 +368,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     return AnimatedContainer(
       duration: const Duration(milliseconds: 300),
       margin: const EdgeInsets.symmetric(horizontal: 4),
-      width: isActive ? 24 : 8,
+      width: isActive ? 28 : 8,
       height: 8,
       decoration: BoxDecoration(
-        color: isActive
-            ? AppColors.primary
-            : Colors.grey.withValues(alpha: 0.3),
+        color: isActive ? primary : Colors.grey.withOpacity(0.25),
         borderRadius: BorderRadius.circular(4),
       ),
     );
