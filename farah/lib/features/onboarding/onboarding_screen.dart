@@ -1,6 +1,5 @@
 import 'package:farah/core/constants/app_colors.dart';
 import 'package:flutter/material.dart';
-// ✅ تم تصحيح مسار الاستيراد (الخروج من onboarding إلى features ثم الدخول إلى auth)
 import '../auth/presentation/screens/login_screen_farah.dart';
 
 class OnboardingScreen extends StatefulWidget {
@@ -53,7 +52,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
-          // ✅ تم إزالة const من هنا
           builder: (_) => FarahGlassLoginScreen(),
         ),
       );
@@ -68,8 +66,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       backgroundColor: Colors.white,
       body: Stack(
         children: [
+          // ── الجزء العلوي: الخلفية الوردية المتدرجة ──
           Container(
-            height: size.height * 0.65,
+            height: size.height * 0.70, // زيادة الارتفاع قليلاً
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 begin: Alignment.topCenter,
@@ -83,6 +82,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               ),
             ),
           ),
+
+          // ── زر تخطي (أعلى اليسار) ──
           Positioned(
             top: 40,
             left: 20,
@@ -105,11 +106,13 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               ),
             ),
           ),
+
+          // ── عرض الصفحات (PageView) - تم تكبيرها ──
           Positioned(
-            top: size.height * 0.15,
+            top: size.height * 0.08, // رفع القوس للأعلى
             left: 0,
             right: 0,
-            height: size.height * 0.45,
+            height: size.height * 0.62, // زيادة الارتفاع
             child: PageView.builder(
               controller: _pageController,
               onPageChanged: (index) {
@@ -121,12 +124,14 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               },
             ),
           ),
+
+          // ── الجزء السفلي: النصوص والأزرار ──
           Positioned(
             bottom: 0,
             left: 0,
             right: 0,
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 30),
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
               decoration: const BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.only(
@@ -137,6 +142,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
+                  // ── نقاط التقدم (Dots) ──
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: List.generate(
@@ -144,7 +150,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       (index) => _buildDot(index == _currentIndex),
                     ),
                   ),
-                  const SizedBox(height: 30),
+                  const SizedBox(height: 20), // تقليل المسافة
+
+                  // ── النصوص المتغيرة مع الانيميشن ──
                   AnimatedSwitcher(
                     duration: const Duration(milliseconds: 300),
                     transitionBuilder: (child, animation) {
@@ -166,25 +174,27 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           _pages[_currentIndex]['title']!,
                           style: const TextStyle(
                             color: AppColors.primaryDark,
-                            fontSize: 26,
+                            fontSize: 24, // تصغير الخط قليلاً للتناسق
                             fontWeight: FontWeight.bold,
                           ),
                           textAlign: TextAlign.center,
                         ),
-                        const SizedBox(height: 16),
+                        const SizedBox(height: 12),
                         Text(
                           _pages[_currentIndex]['desc']!,
                           textAlign: TextAlign.center,
                           style: const TextStyle(
                             color: AppColors.textSecondary,
-                            fontSize: 14,
-                            height: 1.6,
+                            fontSize: 13, // تصغير الخط قليلاً
+                            height: 1.5,
                           ),
                         ),
                       ],
                     ),
                   ),
-                  const SizedBox(height: 40),
+                  const SizedBox(height: 25), // تقليل المسافة
+
+                  // ── زر التالي / ابدأ الآن ──
                   GestureDetector(
                     onTap: _nextPage,
                     child: AnimatedContainer(
@@ -220,7 +230,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       ),
                     ),
                   ),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 10), // مسافة أخيرة
                 ],
               ),
             ),
@@ -230,6 +240,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     );
   }
 
+  // ── دالة لبناء القوس مع الصورة والانيميشن (تم تكبير الأبعاد) ──
   Widget _buildArchPage(Map<String, String> page, int index) {
     return AnimatedBuilder(
       animation: _pageController,
@@ -243,22 +254,23 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           child: Transform.scale(
             scale: Curves.easeOutCubic.transform(value),
             child: Container(
-              width: MediaQuery.of(context).size.width * 0.75,
-              height: MediaQuery.of(context).size.height * 0.45,
+              // ✅ زيادة العرض والارتفاع لجعل الصورة أكبر
+              width: MediaQuery.of(context).size.width * 0.85,
+              height: MediaQuery.of(context).size.height * 0.55,
               decoration: BoxDecoration(
                 border: Border.all(
                   color: AppColors.primary.withValues(alpha: 0.3),
-                  width: 2,
+                  width: 3, // إطار أسمك قليلاً
                 ),
                 borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(200),
-                  topRight: Radius.circular(200),
+                  topLeft: Radius.circular(250), // قوس أكبر
+                  topRight: Radius.circular(250), // قوس أكبر
                 ),
               ),
               child: ClipRRect(
                 borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(200),
-                  topRight: Radius.circular(200),
+                  topLeft: Radius.circular(250),
+                  topRight: Radius.circular(250),
                 ),
                 child: Image.network(
                   page['image']!,
