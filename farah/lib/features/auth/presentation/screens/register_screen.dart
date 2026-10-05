@@ -1,5 +1,6 @@
 import 'package:farah/core/constants/app_colors.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/auth_provider.dart';
 import '../../data/models/user_model.dart';
@@ -15,20 +16,19 @@ class RegisterScreen extends ConsumerStatefulWidget {
 class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   final _formKey = GlobalKey<FormState>();
   final _nameCtrl = TextEditingController();
-  final _emailCtrl = TextEditingController();
   final _phoneCtrl = TextEditingController();
   final _passCtrl = TextEditingController();
+  final _confirmPassCtrl = TextEditingController();
 
   bool _obscure = true;
+  bool _obscureConfirm = true;
   bool _loading = false;
   String? _error;
   String _selectedRole = 'user';
 
   static const Color gold = AppColors.primary;
   static const Color lightGold = AppColors.background;
-  static const Color rose = AppColors.background;
   static const Color deepRose = AppColors.primary;
-  static const Color cream = AppColors.background;
   static const Color chocolate = AppColors.primary;
 
   @override
@@ -40,9 +40,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   @override
   void dispose() {
     _nameCtrl.dispose();
-    _emailCtrl.dispose();
     _phoneCtrl.dispose();
     _passCtrl.dispose();
+    _confirmPassCtrl.dispose();
     super.dispose();
   }
 
@@ -55,17 +55,21 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     });
 
     try {
+      // ✅ تحويل رقم الهاتف إلى بريد وهمي ليعمل مع Firebase
+      final phone = _phoneCtrl.text.trim();
+      final fakeEmail = '$phone@farah.app';
+
       final repo = ref.read(authRepositoryProvider);
       final cred = await repo.signUp(
-        _emailCtrl.text.trim(),
+        fakeEmail,
         _passCtrl.text.trim(),
       );
 
       await repo.saveUserData(UserModel(
         uid: cred.user!.uid,
         fullName: _nameCtrl.text.trim(),
-        email: _emailCtrl.text.trim(),
-        phone: '+218${_phoneCtrl.text.trim()}',
+        email: fakeEmail,
+        phone: '+218$phone',
         role: _selectedRole,
       ));
 
@@ -77,6 +81,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             duration: Duration(seconds: 3),
           ),
         );
+        // ✅ العودة إلى شاشة تسجيل الدخول
         Navigator.pop(context);
       }
     } catch (e) {
@@ -87,8 +92,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   }
 
   String _translateError(String msg) {
-    if (msg.contains('email-already-in-use')) return 'هذا البريد مسجّل مسبقاً';
-    if (msg.contains('invalid-email')) return 'البريد الإلكتروني غير صالح';
+    if (msg.contains('email-already-in-use')) return 'هذا الرقم مسجّل مسبقاً';
+    if (msg.contains('invalid-email')) return 'رقم الهاتف غير صالح';
     if (msg.contains('weak-password')) return 'كلمة المرور ضعيفة جداً';
     if (msg.contains('network-request-failed')) return 'تحقق من اتصال الإنترنت';
     return 'حدث خطأ، حاول مرة أخرى';
@@ -97,35 +102,55 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        color: AppColors.background,
-        child: SafeArea(
-          child: Stack(
-            children: [
-              Positioned(
-                top: 10,
-                right: 20,
-                child: Material(
-                  color: Colors.transparent,
-                  shape: const CircleBorder(),
-                  child: IconButton(
-                    icon: const Icon(Icons.arrow_back, color: chocolate),
-                    onPressed: () => Navigator.pop(context),
+      backgroundColor: Colors.white,
+      body: SafeArea(
+        child: Stack(
+          children: [
+            // ── زر الرجوع ──
+            Positioned(
+              top: 10,
+              right: 20,
+              child: Material(
+                color: Colors.transparent,
+                shape: const CircleBorder(),
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(30),
+                  onTap: () => Navigator.pop(context),
+                  child: Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppColors.primaryDark
+                              .withValues(alpha: 0.1),
+                          blurRadius: 10,
+                          offset: const Offset(0, 3),
+                        ),
+                      ],
+                    ),
+                    child: const Icon(
+                      Icons.arrow_forward,
+                      color: AppColors.primary,
+                      size: 22,
+                    ),
                   ),
                 ),
               ),
-              Center(
-                child: SingleChildScrollView(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
-                  child: Form(
-                    key: _formKey,
-                    child: _buildGlassCard(context),
-                  ),
+            ),
+
+            Center(
+              child: SingleChildScrollView(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
+                child: Form(
+                  key: _formKey,
+                  child: _buildGlassCard(context),
                 ),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
@@ -149,28 +174,43 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 bottomRight: Radius.circular(80),
               ),
               border: Border.all(color: Colors.transparent, width: 1.4),
-              // ✅ تم حذف التوهج بالكامل
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.05),
+                  blurRadius: 20,
+                  offset: const Offset(0, 8),
+                ),
+              ],
             ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Text('إنشاء حساب',
-                    style: TextStyle(
-                        color: chocolate,
-                        fontSize: 28,
-                        fontWeight: FontWeight.bold)),
+                // ── العنوان ──
+                const Text(
+                  'إنشاء حساب',
+                  style: TextStyle(
+                    color: chocolate,
+                    fontSize: 28,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
                 const SizedBox(height: 6),
+
+                // ── الخط الفاصل ──
                 Container(
                   width: 60,
                   height: 2,
                   decoration: BoxDecoration(
-                    gradient:
-                        const LinearGradient(colors: [gold, lightGold, gold]),
+                    gradient: const LinearGradient(
+                      colors: [gold, lightGold, gold],
+                    ),
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
                 const SizedBox(height: 24),
-                _glassField(
+
+                // ── حقل الاسم ──
+                _buildField(
                   controller: _nameCtrl,
                   hint: 'الاسم الكامل',
                   icon: Icons.person_outline,
@@ -181,31 +221,25 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   },
                 ),
                 const SizedBox(height: 14),
-                _glassField(
-                  controller: _emailCtrl,
-                  hint: 'البريد الإلكتروني',
-                  icon: Icons.email_outlined,
-                  keyboardType: TextInputType.emailAddress,
-                  validator: (v) {
-                    if (v == null || v.isEmpty) return 'البريد مطلوب';
-                    if (!v.contains('@')) return 'بريد غير صالح';
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 14),
-                _glassField(
+
+                // ── حقل رقم الهاتف ──
+                _buildField(
                   controller: _phoneCtrl,
-                  hint: 'رقم الهاتف (مثال: 91xxxxxxx)',
+                  hint: '9X XXXXXXX',
                   icon: Icons.phone_outlined,
                   keyboardType: TextInputType.phone,
+                  digitsOnly: true,
+                  maxLength: 10,
                   validator: (v) {
-                    if (v == null || v.isEmpty) return 'الهاتف مطلوب';
-                    if (v.length < 9) return 'رقم غير صالح';
+                    if (v == null || v.isEmpty) return 'رقم الهاتف مطلوب';
+                    if (v.length < 10) return 'رقم الهاتف يجب أن يكون 10 أرقام';
                     return null;
                   },
                 ),
                 const SizedBox(height: 14),
-                _glassField(
+
+                // ── حقل كلمة المرور ──
+                _buildField(
                   controller: _passCtrl,
                   hint: '••••••••••••••',
                   icon: Icons.lock_outline,
@@ -215,7 +249,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                     if (v.length < 6) return 'كلمة المرور قصيرة (6+)';
                     return null;
                   },
-                  suffix: IconButton(
+                  toggle: IconButton(
                     icon: Icon(
                       _obscure
                           ? Icons.visibility_outlined
@@ -226,35 +260,73 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                     onPressed: () => setState(() => _obscure = !_obscure),
                   ),
                 ),
+                const SizedBox(height: 14),
+
+                // ── حقل تأكيد كلمة المرور ──
+                _buildField(
+                  controller: _confirmPassCtrl,
+                  hint: 'تأكيد كلمة المرور',
+                  icon: Icons.lock_reset_outlined,
+                  obscure: _obscureConfirm,
+                  validator: (v) {
+                    if (v == null || v.isEmpty) {
+                      return 'تأكيد كلمة المرور مطلوب';
+                    }
+                    if (v != _passCtrl.text) {
+                      return 'كلمة المرور غير متطابقة';
+                    }
+                    return null;
+                  },
+                  toggle: IconButton(
+                    icon: Icon(
+                      _obscureConfirm
+                          ? Icons.visibility_outlined
+                          : Icons.visibility_off_outlined,
+                      color: chocolate,
+                      size: 20,
+                    ),
+                    onPressed: () => setState(
+                        () => _obscureConfirm = !_obscureConfirm),
+                  ),
+                ),
                 const SizedBox(height: 18),
+
+                // ── نوع الحساب ──
                 const Align(
                   alignment: Alignment.centerRight,
-                  child: Text('نوع الحساب:',
-                      style: TextStyle(
-                          color: chocolate,
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold)),
+                  child: Text(
+                    'نوع الحساب:',
+                    style: TextStyle(
+                      color: chocolate,
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                 ),
                 const SizedBox(height: 10),
-                Row(children: [
-                  Expanded(
-                    child: _roleCard(
-                      value: 'user',
-                      icon: Icons.person,
-                      title: 'زبون',
-                      subtitle: 'أبحث عن خدمة',
+                Row(
+                  children: [
+                    Expanded(
+                      child: _roleCard(
+                        value: 'user',
+                        icon: Icons.person,
+                        title: 'زبون',
+                        subtitle: 'أبحث عن خدمة',
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: _roleCard(
-                      value: 'provider',
-                      icon: Icons.storefront,
-                      title: 'مزوّد خدمة',
-                      subtitle: 'صالة / متجر',
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: _roleCard(
+                        value: 'provider',
+                        icon: Icons.storefront,
+                        title: 'مزوّد خدمة',
+                        subtitle: 'صالة / متجر',
+                      ),
                     ),
-                  ),
-                ]),
+                  ],
+                ),
+
+                // ── رسالة الخطأ ──
                 if (_error != null) ...[
                   const SizedBox(height: 14),
                   Container(
@@ -263,33 +335,38 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                     decoration: BoxDecoration(
                       color: Colors.red.withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.red.withValues(alpha: 0.4)),
+                      border: Border.all(
+                          color: Colors.red.withValues(alpha: 0.4)),
                     ),
-                    child: Row(children: [
-                      const Icon(Icons.error_outline,
-                          color: Colors.red, size: 20),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(_error!,
+                    child: Row(
+                      children: [
+                        const Icon(Icons.error_outline,
+                            color: Colors.red, size: 20),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            _error!,
                             style: const TextStyle(
-                                color: Colors.red, fontSize: 13)),
-                      ),
-                    ]),
+                                color: Colors.red, fontSize: 13),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ],
                 const SizedBox(height: 24),
+
+                // ── زر إنشاء حساب ──
                 Container(
                   width: 220,
                   height: 54,
                   decoration: BoxDecoration(
-                    // ✅ إعادة التدرج اللوني للزر فقط ليعطي حيوية
                     gradient: const LinearGradient(
                       colors: [AppColors.primary, AppColors.primaryDark],
                       begin: Alignment.centerLeft,
                       end: Alignment.centerRight,
                     ),
                     borderRadius: BorderRadius.circular(30),
-                    // ✅ بدون أي توهج
                   ),
                   child: Material(
                     color: Colors.transparent,
@@ -302,7 +379,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                                 height: 24,
                                 width: 24,
                                 child: CircularProgressIndicator(
-                                    color: Colors.white, strokeWidth: 2.5),
+                                  color: Colors.white,
+                                  strokeWidth: 2.5,
+                                ),
                               )
                             : const Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
@@ -310,12 +389,15 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                                   Icon(Icons.person_add_alt_1,
                                       color: Colors.white, size: 20),
                                   SizedBox(width: 10),
-                                  Text('إنشاء حساب',
-                                      style: TextStyle(
-                                          color: Colors.white,
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 16,
-                                          letterSpacing: 1)),
+                                  Text(
+                                    'إنشاء حساب',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 16,
+                                      letterSpacing: 1,
+                                    ),
+                                  ),
                                 ],
                               ),
                       ),
@@ -323,25 +405,39 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   ),
                 ),
                 const SizedBox(height: 18),
-                Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-                  Text('لديك حساب بالفعل؟ ',
+
+                // ── رابط تسجيل الدخول ──
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      'لديك حساب بالفعل؟ ',
                       style: TextStyle(
-                          color: chocolate.withValues(alpha: 0.75), fontSize: 13)),
-                  GestureDetector(
-                    onTap: _loading ? null : () => Navigator.pop(context),
-                    child: const Text('سجّل دخول',
+                        color: chocolate.withValues(alpha: 0.75),
+                        fontSize: 13,
+                      ),
+                    ),
+                    GestureDetector(
+                      onTap: _loading ? null : () => Navigator.pop(context),
+                      child: const Text(
+                        'سجّل دخول',
                         style: TextStyle(
-                            color: deepRose,
-                            fontSize: 13,
-                            fontWeight: FontWeight.bold,
-                            decoration: TextDecoration.underline,
-                            decorationColor: deepRose)),
-                  ),
-                ]),
+                          color: deepRose,
+                          fontSize: 13,
+                          fontWeight: FontWeight.bold,
+                          decoration: TextDecoration.underline,
+                          decorationColor: deepRose,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ],
             ),
           ),
         ),
+
+        // ── الأيقونة العلوية ──
         Positioned(
           top: 0,
           child: Container(
@@ -351,21 +447,19 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
               shape: BoxShape.circle,
               color: Colors.white,
               border: Border.all(color: gold, width: 2),
-              // ✅ بدون توهج
+              boxShadow: [
+                BoxShadow(
+                  color: gold.withValues(alpha: 0.15),
+                  blurRadius: 20,
+                  offset: const Offset(0, 8),
+                ),
+              ],
             ),
-            child: Center(
-              child: ShaderMask(
-                shaderCallback: (bounds) => const LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    AppColors.primary,
-                    AppColors.primary,
-                    AppColors.background
-                  ],
-                ).createShader(bounds),
-                child:
-                    const Icon(Icons.person_add, size: 55, color: Colors.white),
+            child: const Center(
+              child: Icon(
+                Icons.person_add,
+                size: 55,
+                color: AppColors.primary,
               ),
             ),
           ),
@@ -374,6 +468,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     );
   }
 
+  // ── بطاقة اختيار الدور ──
   Widget _roleCard({
     required String value,
     required IconData icon,
@@ -388,93 +483,132 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
         decoration: BoxDecoration(
           color: isSelected
-              ? gold.withValues(alpha: 0.15) // لون صريح بدون تدرج
+              ? gold.withValues(alpha: 0.15)
               : Colors.white,
           borderRadius: BorderRadius.circular(18),
           border: Border.all(
-            color: isSelected ? gold : Colors.black.withValues(alpha: 0.1),
+            color: isSelected
+                ? gold
+                : Colors.black.withValues(alpha: 0.1),
             width: isSelected ? 2 : 1,
           ),
-          // ✅ تم حذف أي توهج
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon,
-                color: isSelected ? deepRose : chocolate.withValues(alpha: 0.6),
-                size: 28),
+            Icon(
+              icon,
+              color: isSelected
+                  ? deepRose
+                  : chocolate.withValues(alpha: 0.6),
+              size: 28,
+            ),
             const SizedBox(height: 6),
-            Text(title,
-                style: TextStyle(
-                    color: isSelected ? chocolate : chocolate.withValues(alpha: 0.7),
-                    fontSize: 13,
-                    fontWeight: FontWeight.bold)),
+            Text(
+              title,
+              style: TextStyle(
+                color: isSelected
+                    ? chocolate
+                    : chocolate.withValues(alpha: 0.7),
+                fontSize: 13,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
             const SizedBox(height: 2),
-            Text(subtitle,
-                style: TextStyle(
-                    color: chocolate.withValues(alpha: 0.55), fontSize: 10)),
+            Text(
+              subtitle,
+              style: TextStyle(
+                color: chocolate.withValues(alpha: 0.55),
+                fontSize: 10,
+              ),
+            ),
           ],
         ),
       ),
     );
   }
 
-  Widget _glassField({
+  // ── حقل إدخال موحد ──
+  Widget _buildField({
     required TextEditingController controller,
     required String hint,
     required IconData icon,
     bool obscure = false,
-    Widget? suffix,
+    Widget? toggle,
     TextInputType? keyboardType,
+    bool digitsOnly = false,
+    int? maxLength,
     String? Function(String?)? validator,
   }) {
     return Container(
+      height: 58,
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(30),
-        // ✅ حدود واضحة جداً بدلاً من التوهج
-        border: Border.all(color: Colors.black.withValues(alpha: 0.08), width: 1),
-      ),
-      child: Row(children: [
-        const SizedBox(width: 6),
-        Container(
-          width: 46,
-          height: 46,
-          decoration: BoxDecoration(
-            // ✅ لون صريح للأيقونة
-            color: AppColors.primary,
-            borderRadius: BorderRadius.circular(14),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.primaryDark.withValues(alpha: 0.06),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
           ),
-          child: Icon(icon, color: Colors.white, size: 22),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: TextFormField(
-            controller: controller,
-            obscureText: obscure,
-            keyboardType: keyboardType,
-            validator: validator,
-            enabled: !_loading,
-            textAlign: TextAlign.right,
-            style: const TextStyle(
-                color: chocolate, fontSize: 15, fontWeight: FontWeight.w500),
-            decoration: InputDecoration(
-              hintText: hint,
-              hintStyle:
-                  TextStyle(color: chocolate.withValues(alpha: 0.55), fontSize: 13),
-              errorStyle:
-                  const TextStyle(color: Colors.red, fontSize: 11, height: 0.8),
-              border: InputBorder.none,
-              enabledBorder: InputBorder.none,
-              focusedBorder: InputBorder.none,
-              isDense: true,
-              contentPadding: const EdgeInsets.symmetric(vertical: 14),
+        ],
+      ),
+      child: Row(
+        children: [
+          const SizedBox(width: 6),
+          Container(
+            width: 46,
+            height: 46,
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [AppColors.primary, AppColors.primaryDark],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: Icon(icon, color: Colors.white, size: 22),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: TextFormField(
+              controller: controller,
+              obscureText: obscure,
+              keyboardType: keyboardType,
+              validator: validator,
+              enabled: !_loading,
+              textAlign: TextAlign.right,
+              textDirection: TextDirection.rtl,
+              maxLength: maxLength,
+              inputFormatters: digitsOnly
+                  ? [FilteringTextInputFormatter.digitsOnly]
+                  : null,
+              style: const TextStyle(
+                color: chocolate,
+                fontSize: 15,
+                fontWeight: FontWeight.w500,
+              ),
+              decoration: InputDecoration(
+                hintText: hint,
+                hintStyle: TextStyle(
+                  color: chocolate.withValues(alpha: 0.5),
+                  fontSize: 14,
+                ),
+                counterText: '',
+                errorStyle: const TextStyle(
+                    color: Colors.red, fontSize: 11, height: 0.8),
+                border: InputBorder.none,
+                enabledBorder: InputBorder.none,
+                focusedBorder: InputBorder.none,
+                isDense: true,
+                contentPadding: const EdgeInsets.symmetric(vertical: 14),
+              ),
             ),
           ),
-        ),
-        if (suffix != null) suffix,
-        const SizedBox(width: 10),
-      ]),
+          if (toggle != null) toggle,
+          const SizedBox(width: 6),
+        ],
+      ),
     );
   }
 }
