@@ -19,7 +19,7 @@ class _HallListScreenState extends State<HallListScreen> {
   static const Color textLight = AppColors.textSecondary;
 
   int _currentIndex = 0;
-  bool _isGrid = false; // ✅ التعديل 1: العرض الافتراضي عمودي
+  bool _isGrid = false;
   RangeValues _priceRange = const RangeValues(0, 50000);
   double _minRating = 0;
   String _selectedType = 'الكل';
@@ -37,9 +37,7 @@ class _HallListScreenState extends State<HallListScreen> {
     {'name': 'متاجر', 'image': 'assets/icons/shop.png', 'color': Color(0xFFC2185B)},
   ];
 
-  final List<String> _cities = const [
-    'الكل', 'طرابلس', 'بنغازي', 'مصراتة', 'الزاوية', 'سبها',
-  ];
+  final List<String> _cities = const ['الكل', 'طرابلس', 'بنغازي', 'مصراتة', 'الزاوية', 'سبها'];
 
   @override
   void initState() {
@@ -48,7 +46,6 @@ class _HallListScreenState extends State<HallListScreen> {
     _loadUserName();
   }
 
-  // ✅ التعديل 3: اسم الزبون
   Future<void> _loadUserName() async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
@@ -103,7 +100,6 @@ class _HallListScreenState extends State<HallListScreen> {
     );
   }
 
-  // ✅ التعديل 2 + 3 + 4: زر المحفظة + التنبيهات + الشعار + الترحيب
   Widget _buildHeader() {
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 12, 20, 8),
@@ -112,15 +108,11 @@ class _HallListScreenState extends State<HallListScreen> {
           Row(
             children: [
               _iconButton(Icons.account_balance_wallet_outlined, () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('المحفظة - قريباً')),
-                );
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('المحفظة - قريباً')));
               }),
               const SizedBox(width: 10),
               _iconButton(Icons.notifications_outlined, () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('الإشعارات - قريباً')),
-                );
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('الإشعارات - قريباً')));
               }, hasBadge: true),
               const Spacer(),
               Container(
@@ -129,9 +121,7 @@ class _HallListScreenState extends State<HallListScreen> {
                   gradient: LinearGradient(colors: [primary, primaryDark], begin: Alignment.topLeft, end: Alignment.bottomRight),
                   shape: BoxShape.circle,
                 ),
-                child: const Center(
-                  child: Text('ف', style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold)),
-                ),
+                child: const Center(child: Text('ف', style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold))),
               ),
             ],
           ),
@@ -169,10 +159,7 @@ class _HallListScreenState extends State<HallListScreen> {
           if (hasBadge)
             Positioned(
               top: 8, right: 8,
-              child: Container(
-                width: 8, height: 8,
-                decoration: const BoxDecoration(color: Colors.red, shape: BoxShape.circle),
-              ),
+              child: Container(width: 8, height: 8, decoration: const BoxDecoration(color: Colors.red, shape: BoxShape.circle)),
             ),
         ],
       ),
@@ -233,10 +220,7 @@ class _HallListScreenState extends State<HallListScreen> {
                   if (_minRating > 0 || _priceRange.start > 0 || _priceRange.end < 50000 || _onlyAvailable || _selectedType != 'الكل' || _selectedCity != 'الكل')
                     Positioned(
                       top: 10, right: 10,
-                      child: Container(
-                        width: 10, height: 10,
-                        decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
-                      ),
+                      child: Container(width: 10, height: 10, decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle)),
                     ),
                 ],
               ),
@@ -292,7 +276,6 @@ class _HallListScreenState extends State<HallListScreen> {
     );
   }
 
-  // ✅ التعديل 6: بانرين إضافيين
   Widget _buildExtraBanners() {
     return Column(
       children: [
@@ -816,9 +799,7 @@ class _SimpleProfileScreenState extends State<SimpleProfileScreen> {
   void initState() {
     super.initState();
     final uid = FirebaseAuth.instance.currentUser?.uid;
-    _userFuture = uid == null
-        ? Future.error('no user')
-        : FirebaseFirestore.instance.collection('users').doc(uid).get();
+    _userFuture = uid == null ? Future.error('no user') : FirebaseFirestore.instance.collection('users').doc(uid).get();
   }
 
   Future<void> _logout() async {
@@ -857,4 +838,242 @@ class _SimpleProfileScreenState extends State<SimpleProfileScreen> {
         if (snap.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator(color: primary));
         }
-        if (!snap.hasData || !snap.data!.exists)
+        if (!snap.hasData || !snap.data!.exists) {
+          return const Center(child: Text('تعذر تحميل البيانات'));
+        }
+        final user = snap.data!.data() as Map<String, dynamic>;
+        final name = user['fullName'] ?? 'مستخدم';
+        final phone = user['phone'] ?? '';
+        final role = user['role'] ?? 'user';
+        final isProvider = role == 'provider';
+
+                return SingleChildScrollView(
+          child: Column(
+            children: [
+              const SizedBox(height: 20),
+              Container(
+                width: 110,
+                height: 110,
+                decoration: const BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: LinearGradient(colors: [primary, primaryDark]),
+                ),
+                child: Icon(
+                  isProvider ? Icons.storefront : Icons.person,
+                  size: 55,
+                  color: Colors.white,
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                name,
+                style: const TextStyle(
+                  color: textDark,
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 10),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 6),
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(colors: [primary, primaryDark]),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  isProvider ? 'مزوّد خدمة' : 'زبون',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 24),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Container(
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Column(
+                    children: [
+                      _infoRow(Icons.phone_outlined, 'رقم الهاتف',
+                          phone.isEmpty ? 'غير محدد' : phone),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 18),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Column(
+                  children: [
+                    _menuItem(Icons.calendar_month, 'حجوزاتي',
+                        'سجل حجوزاتك السابقة والقادمة', () {
+                      Navigator.pop(context);
+                    }),
+                    const SizedBox(height: 10),
+                    _menuItem(Icons.favorite_border, 'المفضلة',
+                        'القاعات المحفوظة', () {}),
+                    const SizedBox(height: 10),
+                    _menuItem(Icons.account_balance_wallet, 'محفظتي',
+                        'رصيدك وطرق الدفع', () {}),
+                    const SizedBox(height: 10),
+                    _menuItem(Icons.notifications_outlined, 'الإشعارات',
+                        'تخصيص التنبيهات', () {}),
+                    const SizedBox(height: 10),
+                    _menuItem(Icons.settings_outlined, 'الإعدادات',
+                        'اللغة والمظهر والخصوصية', () {}),
+                    const SizedBox(height: 10),
+                    _menuItem(Icons.help_outline, 'المساعدة والدعم',
+                        'تواصل معنا', () {}),
+                    const SizedBox(height: 10),
+                    _menuItem(Icons.info_outline, 'عن التطبيق',
+                        'فرح — الإصدار 1.0.0', () {}),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 22),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: GestureDetector(
+                  onTap: _logout,
+                  child: Container(
+                    width: double.infinity,
+                    height: 54,
+                    decoration: BoxDecoration(
+                      color: Colors.red.withValues(alpha: 0.08),
+                      borderRadius: BorderRadius.circular(28),
+                      border: Border.all(
+                        color: Colors.redAccent.withValues(alpha: 0.4),
+                        width: 1.2,
+                      ),
+                    ),
+                    child: const Center(
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.logout,
+                              color: Colors.redAccent, size: 20),
+                          SizedBox(width: 10),
+                          Text(
+                            'تسجيل الخروج',
+                            style: TextStyle(
+                              color: Colors.redAccent,
+                              fontSize: 15,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 24),
+              const Text(
+                'فرح — الإصدار 1.0.0',
+                style: TextStyle(color: textLight, fontSize: 11),
+              ),
+              const SizedBox(height: 30),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _infoRow(IconData icon, String label, String value) {
+    return Row(
+      children: [
+        Container(
+          width: 42,
+          height: 42,
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(colors: [primary, primaryDark]),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Icon(icon, color: Colors.white, size: 20),
+        ),
+        const SizedBox(width: 14),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(label,
+                  style: const TextStyle(color: textLight, fontSize: 12)),
+              const SizedBox(height: 2),
+              Text(
+                value,
+                style: const TextStyle(
+                  color: textDark,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                ),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _menuItem(
+      IconData icon, String title, String subtitle, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(18),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 46,
+              height: 46,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [primary.withValues(alpha: 0.9), primaryDark],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: Icon(icon, color: Colors.white, size: 22),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      color: textDark,
+                      fontSize: 15,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 3),
+                  Text(
+                    subtitle,
+                    style: const TextStyle(color: textLight, fontSize: 11),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+            ),
+            const Icon(Icons.arrow_back_ios, color: textLight, size: 14),
+          ],
+        ),
+      ),
+    );
+  }
+}
