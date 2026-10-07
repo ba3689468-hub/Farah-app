@@ -20,7 +20,6 @@ class _HallListScreenState extends State<HallListScreen> {
 
   int _currentIndex = 0;
   bool _isGrid = false;
-  // ═══ الفلترة ═══
   RangeValues _priceRange = const RangeValues(0, 50000);
   double _minRating = 0;
   String _selectedType = 'الكل';
@@ -29,16 +28,33 @@ class _HallListScreenState extends State<HallListScreen> {
   String _selectedCity = 'الكل';
   late Future<QuerySnapshot> _hallsFuture;
 
+  // ✅ التصنيفات الجديدة باستخدام الصور المخصصة
   final List<Map<String, dynamic>> _categoriesList = const [
-    {'name': 'فساتين', 'icon': Icons.checkroom, 'color': Color(0xFFF48FB1)},
-    {'name': 'تجميل', 'icon': Icons.spa, 'color': AppColors.primary},
+    {
+      'name': 'فساتين',
+      'image': 'assets/icons/dress.png',
+      'color': Color(0xFFF48FB1),
+    },
+    {
+      'name': 'تجميل',
+      'image': 'assets/icons/cosmetic-factory.png',
+      'color': Color(0xFFEC407A),
+    },
     {
       'name': 'ضيافة',
-      'icon': Icons.restaurant_menu,
-      'color': Color(0xFFBA68C8)
+      'image': 'assets/icons/food-tray.png',
+      'color': Color(0xFFBA68C8),
     },
-    {'name': 'ديكور', 'icon': Icons.auto_awesome, 'color': AppColors.primaryDark},
-    {'name': 'متاجر', 'icon': Icons.storefront, 'color': Color(0xFFC2185B)},
+    {
+      'name': 'ديكور',
+      'image': 'assets/icons/wedding-arch.png',
+      'color': Color(0xFF9C27B0),
+    },
+    {
+      'name': 'متاجر',
+      'image': 'assets/icons/shop.png',
+      'color': Color(0xFFC2185B),
+    },
   ];
 
   final List<String> _cities = const [
@@ -65,22 +81,19 @@ class _HallListScreenState extends State<HallListScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        decoration: const BoxDecoration(
-          color: AppColors.softBackground,
-        ),
-        child: SafeArea(
-          child: IndexedStack(
-            index: _currentIndex,
-            children: [
-              _buildHome(),
-              const Center(
-                  child: Text('استكشف',
-                      style: TextStyle(fontSize: 18, color: textDark))),
-              const MyBookingsScreen(),
-              const SimpleProfileScreen(),
-            ],
-          ),
+      backgroundColor: AppColors.background,
+      body: SafeArea(
+        child: IndexedStack(
+          index: _currentIndex,
+          children: [
+            _buildHome(),
+            const Center(
+              child: Text('استكشف',
+                  style: TextStyle(fontSize: 18, color: textDark)),
+            ),
+            const MyBookingsScreen(),
+            const SimpleProfileScreen(),
+          ],
         ),
       ),
       bottomNavigationBar: _buildBottomNav(),
@@ -102,39 +115,53 @@ class _HallListScreenState extends State<HallListScreen> {
     );
   }
 
+  // ── الهيدر ──
   Widget _buildHeader() {
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
       child: Row(
         children: [
           Container(
-            width: 44,
-            height: 44,
+            width: 46,
+            height: 46,
             decoration: const BoxDecoration(
-              gradient: LinearGradient(colors: [primary, primaryDark]),
+              gradient: LinearGradient(
+                colors: [primary, primaryDark],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
               shape: BoxShape.circle,
-              // ✅ تم حذف التوهج
             ),
             child: const Center(
-              child: Text('ف',
-                  style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold)),
+              child: Text(
+                'ف',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
             ),
           ),
           const Spacer(),
           Column(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              const Text('مساء الخير',
-                  style: TextStyle(color: textLight, fontSize: 12)),
-              const SizedBox(height: 2),
+              const Text(
+                'مساء الخير 👋',
+                style: TextStyle(color: textLight, fontSize: 12),
+              ),
+              const SizedBox(height: 3),
               Text(
-                FirebaseAuth.instance.currentUser?.email?.split('@').first ??
+                FirebaseAuth.instance.currentUser?.email
+                        ?.split('@')
+                        .first ??
                     'فرح',
                 style: const TextStyle(
-                    color: primary, fontSize: 16, fontWeight: FontWeight.bold),
+                  color: primary,
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ],
           ),
@@ -143,24 +170,28 @@ class _HallListScreenState extends State<HallListScreen> {
     );
   }
 
+  // ── شريط البحث ──
   Widget _buildSearchBar() {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 8, 20, 12),
+      padding: const EdgeInsets.fromLTRB(20, 12, 20, 12),
       child: Row(
         children: [
           Expanded(
             child: Container(
-              height: 48,
+              height: 50,
               decoration: BoxDecoration(
                 color: Colors.white,
-                borderRadius: BorderRadius.circular(24),
-                // ✅ تم حذف التوهج
+                borderRadius: BorderRadius.circular(25),
+                border: Border.all(
+                  color: primary.withValues(alpha: 0.1),
+                  width: 1,
+                ),
               ),
               child: Row(
                 children: [
-                  const SizedBox(width: 14),
-                  const Icon(Icons.search, color: primary, size: 20),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: 16),
+                  const Icon(Icons.search, color: primary, size: 22),
+                  const SizedBox(width: 10),
                   Expanded(
                     child: TextField(
                       controller: _searchCtrl,
@@ -168,7 +199,8 @@ class _HallListScreenState extends State<HallListScreen> {
                       onChanged: (v) => setState(() {}),
                       decoration: const InputDecoration(
                         hintText: 'ابحث عن قاعة في ليبيا...',
-                        hintStyle: TextStyle(color: textLight, fontSize: 13),
+                        hintStyle:
+                            TextStyle(color: textLight, fontSize: 13),
                         border: InputBorder.none,
                         enabledBorder: InputBorder.none,
                         focusedBorder: InputBorder.none,
@@ -177,7 +209,7 @@ class _HallListScreenState extends State<HallListScreen> {
                       ),
                     ),
                   ),
-                  const SizedBox(width: 14),
+                  const SizedBox(width: 16),
                 ],
               ),
             ),
@@ -186,12 +218,15 @@ class _HallListScreenState extends State<HallListScreen> {
           GestureDetector(
             onTap: _showFilterSheet,
             child: Container(
-              width: 48,
-              height: 48,
+              width: 50,
+              height: 50,
               decoration: BoxDecoration(
-                gradient: const LinearGradient(colors: [primary, primaryDark]),
+                gradient: const LinearGradient(
+                  colors: [primary, primaryDark],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
                 borderRadius: BorderRadius.circular(16),
-                // ✅ تم حذف التوهج
               ),
               child: Stack(
                 children: [
@@ -204,8 +239,8 @@ class _HallListScreenState extends State<HallListScreen> {
                       _onlyAvailable ||
                       _selectedType != 'الكل')
                     Positioned(
-                      top: 8,
-                      right: 8,
+                      top: 10,
+                      right: 10,
                       child: Container(
                         width: 10,
                         height: 10,
@@ -224,6 +259,7 @@ class _HallListScreenState extends State<HallListScreen> {
     );
   }
 
+  // ── شرائح المدن ──
   Widget _buildCityChips() {
     return SizedBox(
       height: 42,
@@ -239,21 +275,28 @@ class _HallListScreenState extends State<HallListScreen> {
             onTap: () => setState(() => _selectedCity = city),
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 200),
-              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
               decoration: BoxDecoration(
                 gradient: active
                     ? const LinearGradient(colors: [primary, primaryDark])
                     : null,
                 color: active ? null : Colors.white,
                 borderRadius: BorderRadius.circular(20),
-                // ✅ تم حذف التوهج
+                border: Border.all(
+                  color: active
+                      ? Colors.transparent
+                      : primary.withValues(alpha: 0.15),
+                  width: 1,
+                ),
               ),
-              child: Text(city,
-                  style: TextStyle(
-                    color: active ? Colors.white : textDark,
-                    fontSize: 13,
-                    fontWeight: active ? FontWeight.bold : FontWeight.w500,
-                  )),
+              child: Text(
+                city,
+                style: TextStyle(
+                  color: active ? Colors.white : textDark,
+                  fontSize: 13,
+                  fontWeight: active ? FontWeight.bold : FontWeight.w500,
+                ),
+              ),
             ),
           );
         },
@@ -261,10 +304,11 @@ class _HallListScreenState extends State<HallListScreen> {
     );
   }
 
+  // ── البانر الرئيسي ──
   Widget _buildHeroBanner() {
     return Container(
       margin: const EdgeInsets.fromLTRB(20, 20, 20, 20),
-      height: 180,
+      height: 175,
       decoration: BoxDecoration(
         gradient: const LinearGradient(
           begin: Alignment.topRight,
@@ -272,7 +316,6 @@ class _HallListScreenState extends State<HallListScreen> {
           colors: [primary, primaryDark],
         ),
         borderRadius: BorderRadius.circular(24),
-        // ✅ تم حذف التوهج
       ),
       child: Stack(
         children: [
@@ -283,8 +326,9 @@ class _HallListScreenState extends State<HallListScreen> {
               width: 160,
               height: 160,
               decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Colors.white.withValues(alpha: 0.08)),
+                shape: BoxShape.circle,
+                color: Colors.white.withValues(alpha: 0.08),
+              ),
             ),
           ),
           Positioned(
@@ -294,8 +338,9 @@ class _HallListScreenState extends State<HallListScreen> {
               width: 180,
               height: 180,
               decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Colors.white.withValues(alpha: 0.06)),
+                shape: BoxShape.circle,
+                color: Colors.white.withValues(alpha: 0.06),
+              ),
             ),
           ),
           Padding(
@@ -304,19 +349,25 @@ class _HallListScreenState extends State<HallListScreen> {
               crossAxisAlignment: CrossAxisAlignment.end,
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Text('ليلة العمر تبدأ من هنا',
-                    textAlign: TextAlign.right,
-                    style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold)),
+                const Text(
+                  'ليلة العمر تبدأ من هنا',
+                  textAlign: TextAlign.right,
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
                 const SizedBox(height: 10),
-                Text('اكتشف أرقى قاعات الأفراح في ليبيا واحجزها بضغطة واحدة.',
-                    textAlign: TextAlign.right,
-                    style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.9),
-                        fontSize: 12,
-                        height: 1.5)),
+                Text(
+                  'اكتشف أرقى قاعات الأفراح في ليبيا واحجزها بضغطة واحدة.',
+                  textAlign: TextAlign.right,
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.9),
+                    fontSize: 12,
+                    height: 1.5,
+                  ),
+                ),
                 const SizedBox(height: 18),
                 GestureDetector(
                   onTap: () {},
@@ -330,11 +381,14 @@ class _HallListScreenState extends State<HallListScreen> {
                     child: const Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Text('تصفّح القاعات',
-                            style: TextStyle(
-                                color: primary,
-                                fontSize: 12,
-                                fontWeight: FontWeight.bold)),
+                        Text(
+                          'تصفّح القاعات',
+                          style: TextStyle(
+                            color: primary,
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                         SizedBox(width: 6),
                         Icon(Icons.arrow_back_ios, color: primary, size: 12),
                       ],
@@ -349,6 +403,7 @@ class _HallListScreenState extends State<HallListScreen> {
     );
   }
 
+  // ── أيقونات التصنيفات (بالصور المخصصة) ──
   Widget _buildCategoryIcons() {
     return SizedBox(
       height: 110,
@@ -365,24 +420,34 @@ class _HallListScreenState extends State<HallListScreen> {
               Container(
                 width: 66,
                 height: 66,
+                padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [color, color.withValues(alpha: 0.7)],
-                  ),
+                  color: Colors.white,
                   borderRadius: BorderRadius.circular(22),
-                  // ✅ تم حذف التوهج
+                  border: Border.all(
+                    color: color.withValues(alpha: 0.25),
+                    width: 1.5,
+                  ),
                 ),
-                child: Icon(cat['icon'] as IconData,
-                    color: Colors.white, size: 28),
+                child: Image.asset(
+                  cat['image'] as String,
+                  fit: BoxFit.contain,
+                  errorBuilder: (_, __, ___) => Icon(
+                    Icons.image_not_supported,
+                    color: color,
+                    size: 28,
+                  ),
+                ),
               ),
               const SizedBox(height: 8),
-              Text(cat['name'] as String,
-                  style: const TextStyle(
-                      color: textDark,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600)),
+              Text(
+                cat['name'] as String,
+                style: const TextStyle(
+                  color: textDark,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
             ],
           );
         },
@@ -390,9 +455,10 @@ class _HallListScreenState extends State<HallListScreen> {
     );
   }
 
+  // ── عنوان القاعات المميزة ──
   Widget _buildFeaturedTitle() {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 0, 20, 14),
+      padding: const EdgeInsets.fromLTRB(20, 10, 20, 14),
       child: Row(
         children: [
           GestureDetector(
@@ -402,7 +468,10 @@ class _HallListScreenState extends State<HallListScreen> {
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(10),
-                // ✅ تم حذف التوهج
+                border: Border.all(
+                  color: primary.withValues(alpha: 0.15),
+                  width: 1,
+                ),
               ),
               child: Icon(
                 _isGrid ? Icons.view_list : Icons.grid_view,
@@ -412,14 +481,20 @@ class _HallListScreenState extends State<HallListScreen> {
             ),
           ),
           const Spacer(),
-          const Text('قاعات مميزة',
-              style: TextStyle(
-                  color: textDark, fontSize: 18, fontWeight: FontWeight.bold)),
+          const Text(
+            'قاعات مميزة',
+            style: TextStyle(
+              color: textDark,
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
         ],
       ),
     );
   }
 
+  // ── قسم القاعات ──
   Widget _buildHallsSection() {
     return FutureBuilder<QuerySnapshot>(
       future: _hallsFuture,
@@ -479,7 +554,7 @@ class _HallListScreenState extends State<HallListScreen> {
           );
         }
         return SizedBox(
-          height: 230,
+          height: 240,
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -495,6 +570,7 @@ class _HallListScreenState extends State<HallListScreen> {
     );
   }
 
+  // ── بطاقة القاعة الأفقية ──
   Widget _buildHallMiniCard(Map<String, dynamic> hall) {
     final name = hall['name'] ?? 'قاعة';
     final city = hall['city'] ?? 'غير محدد';
@@ -508,34 +584,37 @@ class _HallListScreenState extends State<HallListScreen> {
         MaterialPageRoute(builder: (_) => HallDetailsScreen(hallData: hall)),
       ),
       child: Container(
-        width: 170,
+        width: 180,
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(18),
-          // ✅ تم حذف التوهج
+          borderRadius: BorderRadius.circular(20),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             ClipRRect(
               borderRadius:
-                  const BorderRadius.vertical(top: Radius.circular(18)),
+                  const BorderRadius.vertical(top: Radius.circular(20)),
               child: Stack(
                 children: [
                   SizedBox(
-                    height: 120,
-                    width: 170,
+                    height: 130,
+                    width: 180,
                     child: image != null
-                        ? Image.network(image,
+                        ? Image.network(
+                            image,
                             fit: BoxFit.cover,
                             errorBuilder: (_, __, ___) => Container(
-                                color: primary.withValues(alpha: 0.2),
-                                child: const Icon(Icons.celebration,
-                                    color: Colors.white, size: 40)))
+                              color: primary.withValues(alpha: 0.2),
+                              child: const Icon(Icons.celebration,
+                                  color: Colors.white, size: 40),
+                            ),
+                          )
                         : Container(
                             color: primary.withValues(alpha: 0.2),
                             child: const Icon(Icons.celebration,
-                                color: Colors.white, size: 40)),
+                                color: Colors.white, size: 40),
+                          ),
                   ),
                   Positioned(
                     top: 8,
@@ -547,61 +626,75 @@ class _HallListScreenState extends State<HallListScreen> {
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(10),
                       ),
-                      child: const Text('مميزة',
-                          style: TextStyle(
-                              color: primary,
-                              fontSize: 9,
-                              fontWeight: FontWeight.bold)),
+                      child: const Text(
+                        'مميزة',
+                        style: TextStyle(
+                          color: primary,
+                          fontSize: 9,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     ),
                   ),
                 ],
               ),
             ),
             Padding(
-              padding: const EdgeInsets.all(10),
+              padding: const EdgeInsets.all(12),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(name,
-                      style: const TextStyle(
-                          color: textDark,
-                          fontSize: 13,
-                          fontWeight: FontWeight.bold),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis),
-                  const SizedBox(height: 4),
-                  Row(
-                    children: [
-                      const Icon(Icons.location_on_outlined,
-                          color: textLight, size: 11),
-                      const SizedBox(width: 2),
-                      Expanded(
-                        child: Text(city,
-                            style:
-                                const TextStyle(color: textLight, fontSize: 10),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis),
-                      ),
-                    ],
+                  Text(
+                    name,
+                    style: const TextStyle(
+                      color: textDark,
+                      fontSize: 13,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: 6),
                   Row(
+                    children: [
+                      const Icon(Icons.location_on_outlined,
+                          color: textLight, size: 12),
+                      const SizedBox(width: 3),
+                      Expanded(
+                        child: Text(
+                          city,
+                          style: const TextStyle(
+                              color: textLight, fontSize: 10),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text('$price د.ل',
-                          style: const TextStyle(
-                              color: primary,
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold)),
+                      Text(
+                        '$price د.ل',
+                        style: const TextStyle(
+                          color: primary,
+                          fontSize: 13,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                       Row(
                         children: [
                           const Icon(Icons.star, color: Colors.amber, size: 12),
                           const SizedBox(width: 2),
-                          Text(rating.toStringAsFixed(1),
-                              style: const TextStyle(
-                                  color: textDark,
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.bold)),
+                          Text(
+                            rating.toStringAsFixed(1),
+                            style: const TextStyle(
+                              color: textDark,
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
                         ],
                       ),
                     ],
@@ -615,6 +708,7 @@ class _HallListScreenState extends State<HallListScreen> {
     );
   }
 
+  // ── بطاقة القاعة الشبكية ──
   Widget _buildHallGridCard(Map<String, dynamic> hall) {
     final name = hall['name'] ?? 'قاعة';
     final city = hall['city'] ?? 'غير محدد';
@@ -631,7 +725,6 @@ class _HallListScreenState extends State<HallListScreen> {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(16),
-          // ✅ تم حذف التوهج
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -643,13 +736,15 @@ class _HallListScreenState extends State<HallListScreen> {
                 height: 100,
                 width: double.infinity,
                 child: image != null
-                    ? Image.network(image,
+                    ? Image.network(
+                        image,
                         fit: BoxFit.cover,
                         errorBuilder: (_, __, ___) => Container(
-                              color: primary.withValues(alpha: 0.2),
-                              child: const Icon(Icons.celebration,
-                                  color: Colors.white, size: 40),
-                            ))
+                          color: primary.withValues(alpha: 0.2),
+                          child: const Icon(Icons.celebration,
+                              color: Colors.white, size: 40),
+                        ),
+                      )
                     : Container(
                         color: primary.withValues(alpha: 0.2),
                         child: const Icon(Icons.celebration,
@@ -662,43 +757,58 @@ class _HallListScreenState extends State<HallListScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(name,
-                      style: const TextStyle(
-                          color: textDark,
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis),
-                  const SizedBox(height: 4),
-                  Row(children: [
-                    const Icon(Icons.location_on_outlined,
-                        color: textLight, size: 11),
-                    const SizedBox(width: 2),
-                    Expanded(
-                      child: Text(city,
-                          style:
-                              const TextStyle(color: textLight, fontSize: 10),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis),
+                  Text(
+                    name,
+                    style: const TextStyle(
+                      color: textDark,
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
                     ),
-                  ]),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      const Icon(Icons.location_on_outlined,
+                          color: textLight, size: 11),
+                      const SizedBox(width: 2),
+                      Expanded(
+                        child: Text(
+                          city,
+                          style: const TextStyle(
+                              color: textLight, fontSize: 10),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
                   const SizedBox(height: 6),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text('$price',
-                          style: const TextStyle(
-                              color: primary,
-                              fontSize: 13,
-                              fontWeight: FontWeight.bold)),
-                      Row(children: [
-                        const Icon(Icons.star, color: Colors.amber, size: 11),
-                        Text(rating.toStringAsFixed(1),
+                      Text(
+                        '$price',
+                        style: const TextStyle(
+                          color: primary,
+                          fontSize: 13,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      Row(
+                        children: [
+                          const Icon(Icons.star, color: Colors.amber, size: 11),
+                          Text(
+                            rating.toStringAsFixed(1),
                             style: const TextStyle(
-                                color: textDark,
-                                fontSize: 10,
-                                fontWeight: FontWeight.bold)),
-                      ]),
+                              color: textDark,
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
                     ],
                   ),
                 ],
@@ -710,30 +820,36 @@ class _HallListScreenState extends State<HallListScreen> {
     );
   }
 
+  // ── رسالة "لا توجد قاعات" ──
   Widget _buildEmpty() {
     return Padding(
       padding: const EdgeInsets.all(40),
       child: Column(
         children: [
-          Icon(Icons.storefront_outlined,
-              size: 70, color: primary.withValues(alpha: 0.3)),
+          Icon(
+            Icons.storefront_outlined,
+            size: 70,
+            color: primary.withValues(alpha: 0.3),
+          ),
           const SizedBox(height: 14),
-          const Text('لا توجد قاعات',
-              style: TextStyle(
-                  color: textDark, fontSize: 15, fontWeight: FontWeight.bold)),
+          const Text(
+            'لا توجد قاعات',
+            style: TextStyle(
+              color: textDark,
+              fontSize: 15,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
         ],
       ),
     );
   }
 
+  // ── شريط التنقل السفلي ──
   Widget _buildBottomNav() {
     final items = [
       {'icon': Icons.home_outlined, 'active': Icons.home, 'label': 'الرئيسية'},
-      {
-        'icon': Icons.explore_outlined,
-        'active': Icons.explore,
-        'label': 'استكشف'
-      },
+      {'icon': Icons.explore_outlined, 'active': Icons.explore, 'label': 'استكشف'},
       {
         'icon': Icons.event_note_outlined,
         'active': Icons.event_note,
@@ -747,7 +863,13 @@ class _HallListScreenState extends State<HallListScreen> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(28),
-        // ✅ تم حذف التوهج
+        boxShadow: [
+          BoxShadow(
+            color: primary.withValues(alpha: 0.12),
+            blurRadius: 25,
+            offset: const Offset(0, 8),
+          ),
+        ],
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -764,7 +886,6 @@ class _HallListScreenState extends State<HallListScreen> {
                     ? const LinearGradient(colors: [primary, primaryDark])
                     : null,
                 borderRadius: BorderRadius.circular(20),
-                // ✅ تم حذف التوهج
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
@@ -778,11 +899,14 @@ class _HallListScreenState extends State<HallListScreen> {
                   ),
                   if (active) ...[
                     const SizedBox(width: 6),
-                    Text(items[i]['label'] as String,
-                        style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 11,
-                            fontWeight: FontWeight.bold)),
+                    Text(
+                      items[i]['label'] as String,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 11,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ],
                 ],
               ),
@@ -793,6 +917,7 @@ class _HallListScreenState extends State<HallListScreen> {
     );
   }
 
+  // ── نافذة الفلترة ──
   void _showFilterSheet() {
     showModalBottomSheet(
       context: context,
@@ -828,11 +953,14 @@ class _HallListScreenState extends State<HallListScreen> {
                 const SizedBox(height: 18),
                 Row(
                   children: [
-                    const Text('الفلترة',
-                        style: TextStyle(
-                            color: textDark,
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold)),
+                    const Text(
+                      'الفلترة',
+                      style: TextStyle(
+                        color: textDark,
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                     const Spacer(),
                     GestureDetector(
                       onTap: () {
@@ -843,34 +971,46 @@ class _HallListScreenState extends State<HallListScreen> {
                           tempAvail = false;
                         });
                       },
-                      child: const Text('إعادة تعيين',
-                          style: TextStyle(
-                              color: primary,
-                              fontSize: 13,
-                              fontWeight: FontWeight.bold)),
+                      child: const Text(
+                        'إعادة تعيين',
+                        style: TextStyle(
+                          color: primary,
+                          fontSize: 13,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     ),
                   ],
                 ),
                 const SizedBox(height: 22),
-                const Text('نطاق السعر (د.ل)',
-                    style: TextStyle(
-                        color: textDark,
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold)),
+                const Text(
+                  'نطاق السعر (د.ل)',
+                  style: TextStyle(
+                    color: textDark,
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
                 const SizedBox(height: 8),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text('${tempRange.start.round()}',
-                        style: const TextStyle(
-                            color: primary,
-                            fontSize: 12,
-                            fontWeight: FontWeight.bold)),
-                    Text('${tempRange.end.round()}',
-                        style: const TextStyle(
-                            color: primary,
-                            fontSize: 12,
-                            fontWeight: FontWeight.bold)),
+                    Text(
+                      '${tempRange.start.round()}',
+                      style: const TextStyle(
+                        color: primary,
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    Text(
+                      '${tempRange.end.round()}',
+                      style: const TextStyle(
+                        color: primary,
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ],
                 ),
                 RangeSlider(
@@ -887,11 +1027,14 @@ class _HallListScreenState extends State<HallListScreen> {
                   onChanged: (v) => setSheet(() => tempRange = v),
                 ),
                 const SizedBox(height: 12),
-                const Text('التقييم',
-                    style: TextStyle(
-                        color: textDark,
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold)),
+                const Text(
+                  'التقييم',
+                  style: TextStyle(
+                    color: textDark,
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
                 const SizedBox(height: 8),
                 Row(
                   children: List.generate(5, (i) {
@@ -911,11 +1054,14 @@ class _HallListScreenState extends State<HallListScreen> {
                   }),
                 ),
                 const SizedBox(height: 18),
-                const Text('نوع القاعة',
-                    style: TextStyle(
-                        color: textDark,
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold)),
+                const Text(
+                  'نوع القاعة',
+                  style: TextStyle(
+                    color: textDark,
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
                 const SizedBox(height: 10),
                 Wrap(
                   spacing: 8,
@@ -937,11 +1083,14 @@ class _HallListScreenState extends State<HallListScreen> {
                           color: active ? null : AppColors.softBackground,
                           borderRadius: BorderRadius.circular(20),
                         ),
-                        child: Text(t,
-                            style: TextStyle(
-                                color: active ? Colors.white : textDark,
-                                fontSize: 12,
-                                fontWeight: FontWeight.w600)),
+                        child: Text(
+                          t,
+                          style: TextStyle(
+                            color: active ? Colors.white : textDark,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
                       ),
                     );
                   }).toList(),
@@ -951,15 +1100,18 @@ class _HallListScreenState extends State<HallListScreen> {
                   children: [
                     Switch(
                       value: tempAvail,
-                      activeThumbColor: primary,
+                      activeColor: primary,
                       onChanged: (v) => setSheet(() => tempAvail = v),
                     ),
                     const SizedBox(width: 8),
-                    const Text('متاح الآن فقط',
-                        style: TextStyle(
-                            color: textDark,
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600)),
+                    const Text(
+                      'متاح الآن فقط',
+                      style: TextStyle(
+                        color: textDark,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
                   ],
                 ),
                 const SizedBox(height: 20),
@@ -983,9 +1135,11 @@ class _HallListScreenState extends State<HallListScreen> {
                       shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(24)),
                     ),
-                    child: const Text('تطبيق الفلترة',
-                        style: TextStyle(
-                            fontSize: 15, fontWeight: FontWeight.bold)),
+                    child: const Text(
+                      'تطبيق الفلترة',
+                      style: TextStyle(
+                          fontSize: 15, fontWeight: FontWeight.bold),
+                    ),
                   ),
                 ),
               ],
@@ -997,6 +1151,9 @@ class _HallListScreenState extends State<HallListScreen> {
   }
 }
 
+// ═══════════════════════════════════════════════
+// شاشة الملف الشخصي المبسطة
+// ═══════════════════════════════════════════════
 class SimpleProfileScreen extends StatefulWidget {
   const SimpleProfileScreen({super.key});
   @override
@@ -1024,18 +1181,25 @@ class _SimpleProfileScreenState extends State<SimpleProfileScreen> {
     final ok = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        shape:
+            RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
         backgroundColor: Colors.white,
-        title: const Text('تسجيل الخروج',
-            textAlign: TextAlign.right, style: TextStyle(color: textDark)),
+        title: const Text(
+          'تسجيل الخروج',
+          textAlign: TextAlign.right,
+          style: TextStyle(color: textDark),
+        ),
         content: const Text('هل أنت متأكد؟', textAlign: TextAlign.right),
         actions: [
           TextButton(
-              onPressed: () => Navigator.pop(context, false),
-              child: const Text('إلغاء')),
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('إلغاء'),
+          ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
-                backgroundColor: primary, foregroundColor: Colors.white),
+              backgroundColor: primary,
+              foregroundColor: Colors.white,
+            ),
             onPressed: () => Navigator.pop(context, true),
             child: const Text('خروج'),
           ),
@@ -1058,14 +1222,14 @@ class _SimpleProfileScreenState extends State<SimpleProfileScreen> {
       future: _userFuture,
       builder: (context, snap) {
         if (snap.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator(color: primary));
+          return const Center(
+              child: CircularProgressIndicator(color: primary));
         }
         if (!snap.hasData || !snap.data!.exists) {
           return const Center(child: Text('تعذر تحميل البيانات'));
         }
         final user = snap.data!.data() as Map<String, dynamic>;
         final name = user['fullName'] ?? 'مستخدم';
-        final email = user['email'] ?? '';
         final phone = user['phone'] ?? '';
         final role = user['role'] ?? 'user';
         final isProvider = role == 'provider';
@@ -1081,17 +1245,22 @@ class _SimpleProfileScreenState extends State<SimpleProfileScreen> {
                   shape: BoxShape.circle,
                   gradient:
                       LinearGradient(colors: [primary, primaryDark]),
-                  // ✅ تم حذف التوهج
                 ),
-                child: Icon(isProvider ? Icons.storefront : Icons.person,
-                    size: 55, color: Colors.white),
+                child: Icon(
+                  isProvider ? Icons.storefront : Icons.person,
+                  size: 55,
+                  color: Colors.white,
+                ),
               ),
               const SizedBox(height: 16),
-              Text(name,
-                  style: const TextStyle(
-                      color: textDark,
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold)),
+              Text(
+                name,
+                style: const TextStyle(
+                  color: textDark,
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
               const SizedBox(height: 10),
               Container(
                 padding:
@@ -1100,13 +1269,15 @@ class _SimpleProfileScreenState extends State<SimpleProfileScreen> {
                   gradient:
                       const LinearGradient(colors: [primary, primaryDark]),
                   borderRadius: BorderRadius.circular(20),
-                  // ✅ تم حذف التوهج
                 ),
-                child: Text(isProvider ? 'مزوّد خدمة' : 'زبون',
-                    style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold)),
+                child: Text(
+                  isProvider ? 'مزوّد خدمة' : 'زبون',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
               ),
               const SizedBox(height: 24),
               Padding(
@@ -1116,13 +1287,9 @@ class _SimpleProfileScreenState extends State<SimpleProfileScreen> {
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(20),
-                    // ✅ تم حذف التوهج
                   ),
                   child: Column(
                     children: [
-                      _infoRow(Icons.email_outlined, 'البريد الإلكتروني',
-                          email.isEmpty ? 'غير محدد' : email),
-                      const Divider(height: 26, color: Colors.black12),
                       _infoRow(Icons.phone_outlined, 'رقم الهاتف',
                           phone.isEmpty ? 'غير محدد' : phone),
                     ],
@@ -1171,19 +1338,25 @@ class _SimpleProfileScreenState extends State<SimpleProfileScreen> {
                       color: Colors.red.withValues(alpha: 0.08),
                       borderRadius: BorderRadius.circular(28),
                       border: Border.all(
-                          color: Colors.redAccent.withValues(alpha: 0.4), width: 1.2),
+                        color: Colors.redAccent.withValues(alpha: 0.4),
+                        width: 1.2,
+                      ),
                     ),
                     child: const Center(
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(Icons.logout, color: Colors.redAccent, size: 20),
+                          Icon(Icons.logout,
+                              color: Colors.redAccent, size: 20),
                           SizedBox(width: 10),
-                          Text('تسجيل الخروج',
-                              style: TextStyle(
-                                  color: Colors.redAccent,
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.bold)),
+                          Text(
+                            'تسجيل الخروج',
+                            style: TextStyle(
+                              color: Colors.redAccent,
+                              fontSize: 15,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
                         ],
                       ),
                     ),
@@ -1191,8 +1364,10 @@ class _SimpleProfileScreenState extends State<SimpleProfileScreen> {
                 ),
               ),
               const SizedBox(height: 24),
-              const Text('فرح — الإصدار 1.0.0',
-                  style: TextStyle(color: textLight, fontSize: 11)),
+              const Text(
+                'فرح — الإصدار 1.0.0',
+                style: TextStyle(color: textLight, fontSize: 11),
+              ),
               const SizedBox(height: 30),
             ],
           ),
@@ -1219,14 +1394,18 @@ class _SimpleProfileScreenState extends State<SimpleProfileScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(label,
-                  style: const TextStyle(color: textLight, fontSize: 12)),
+                  style:
+                      const TextStyle(color: textLight, fontSize: 12)),
               const SizedBox(height: 2),
-              Text(value,
-                  style: const TextStyle(
-                      color: textDark,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600),
-                  overflow: TextOverflow.ellipsis),
+              Text(
+                value,
+                style: const TextStyle(
+                  color: textDark,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                ),
+                overflow: TextOverflow.ellipsis,
+              ),
             ],
           ),
         ),
@@ -1243,7 +1422,6 @@ class _SimpleProfileScreenState extends State<SimpleProfileScreen> {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(18),
-          // ✅ تم حذف التوهج
         ),
         child: Row(
           children: [
@@ -1257,7 +1435,6 @@ class _SimpleProfileScreenState extends State<SimpleProfileScreen> {
                   end: Alignment.bottomRight,
                 ),
                 borderRadius: BorderRadius.circular(14),
-                // ✅ تم حذف التوهج
               ),
               child: Icon(icon, color: Colors.white, size: 22),
             ),
@@ -1266,16 +1443,22 @@ class _SimpleProfileScreenState extends State<SimpleProfileScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(title,
-                      style: const TextStyle(
-                          color: textDark,
-                          fontSize: 15,
-                          fontWeight: FontWeight.bold)),
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      color: textDark,
+                      fontSize: 15,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                   const SizedBox(height: 3),
-                  Text(subtitle,
-                      style: const TextStyle(color: textLight, fontSize: 11),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis),
+                  Text(
+                    subtitle,
+                    style:
+                        const TextStyle(color: textLight, fontSize: 11),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ],
               ),
             ),
