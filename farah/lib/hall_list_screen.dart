@@ -5,6 +5,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'features/auth/presentation/screens/login_screen_farah.dart';
 import 'features/favorites_screen.dart';
+import 'features/edit_profile_screen.dart';
 import 'hall_details_screen.dart';
 import 'my_bookings_screen.dart';
 
@@ -460,7 +461,6 @@ class _HallListScreenState extends State<HallListScreen> {
     );
   }
 
-  // ✅ زر القلب
   Widget _favoriteButton(Map<String, dynamic> hall) {
     final id = hall['_id'] as String? ?? hall['id'] as String? ?? '';
     return StreamBuilder<DocumentSnapshot>(
@@ -981,6 +981,21 @@ class _SimpleProfileScreenState extends State<SimpleProfileScreen> {
                     _menuItem(Icons.account_balance_wallet, 'محفظتي', 'رصيدك وطرق الدفع', () {}),
                     const SizedBox(height: 10),
                     _menuItem(Icons.notifications_outlined, 'الإشعارات', 'تخصيص التنبيهات', () {}),
+                    const SizedBox(height: 10),
+                    _menuItem(Icons.edit_outlined, 'تعديل الملف الشخصي', 'الاسم وكلمة المرور', () async {
+                      final result = await Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const EditProfileScreen()),
+                      );
+                      if (result == true && mounted) {
+                        setState(() {
+                          _userFuture = FirebaseFirestore.instance
+                              .collection('users')
+                              .doc(FirebaseAuth.instance.currentUser?.uid)
+                              .get();
+                        });
+                      }
+                    }),
                     const SizedBox(height: 10),
                     _menuItem(Icons.settings_outlined, 'الإعدادات', 'اللغة والمظهر والخصوصية', () {}),
                     const SizedBox(height: 10),
