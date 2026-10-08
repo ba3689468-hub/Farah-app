@@ -8,8 +8,8 @@ plugins {
 android {
     namespace = "com.farah.farah"
     compileSdk = flutter.compileSdkVersion
-    // ✅ استخدام نسخة NDK مستقرة بدلاً من flutter.ndkVersion
-    ndkVersion = "26.1.10909125"
+    // ✅ تم تعطيل تحديد نسخة NDK يدوياً لتجنب تحميل نسخة تالفة
+    // ndkVersion = "26.1.10909125"
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
