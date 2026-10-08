@@ -27,10 +27,10 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
 
   void _loadBookings() {
     final uid = FirebaseAuth.instance.currentUser?.uid;
+    // ✅ إزالة orderBy لتجنب الحاجة إلى Composite Index
     _future = FirebaseFirestore.instance
         .collection('bookings')
         .where('userId', isEqualTo: uid)
-        .orderBy('createdAt', descending: true)
         .get();
   }
 
@@ -50,7 +50,19 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
               return _buildError();
             }
 
-            final docs = snap.data?.docs ?? [];
+            // ✅ ترتيب محلي حسب createdAt (تنازلياً)
+            final docs = List<QueryDocumentSnapshot>.from(snap.data?.docs ?? []);
+            docs.sort((a, b) {
+              final aData = a.data() as Map<String, dynamic>;
+              final bData = b.data() as Map<String, dynamic>;
+              final aTime = aData['createdAt'] as Timestamp?;
+              final bTime = bData['createdAt'] as Timestamp?;
+              if (aTime == null && bTime == null) return 0;
+              if (aTime == null) return 1;
+              if (bTime == null) return -1;
+              return bTime.compareTo(aTime);
+            });
+
             final filtered = _filter == 'all'
                 ? docs
                 : docs.where((d) {
