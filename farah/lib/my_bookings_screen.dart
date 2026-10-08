@@ -331,7 +331,6 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
             padding: const EdgeInsets.all(14),
             child: Row(
               children: [
-                // صورة القاعة
                 ClipRRect(
                   borderRadius: BorderRadius.circular(14),
                   child: SizedBox(
@@ -355,7 +354,6 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
                   ),
                 ),
                 const SizedBox(width: 12),
-                // اسم القاعة + الحالة
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.end,
@@ -422,8 +420,9 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
                     Expanded(
                       child: _infoItem(Icons.people_outline, 'الضيوف',
                           '$guests ضيف'),
+                    ),
                   ],
-                  ),
+                ),
                 const SizedBox(height: 14),
                 Row(
                   children: [
@@ -644,4 +643,4 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
       );
     }
   }
-          }
+}
