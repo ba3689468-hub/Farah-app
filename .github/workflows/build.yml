@@ -5,7 +5,7 @@ on:
   push:
     branches: [main]
 
-# ✅ إضافة الصلاحيات اللازمة لإنشاء الإصدار (Release)
+# إضافة الصلاحيات اللازمة لإنشاء الإصدار (Release)
 permissions:
   contents: write
 
@@ -19,6 +19,15 @@ jobs:
       - uses: subosito/flutter-action@v2
         with:
           channel: 'stable'
+
+      # ✅ خطوة تنظيف المساحة (تحل مشكلة No space left on device)
+      - name: Free up disk space
+        run: |
+          sudo rm -rf /usr/share/dotnet
+          sudo rm -rf /opt/ghc
+          sudo rm -rf "/usr/local/share/boost"
+          sudo rm -rf "$AGENT_TOOLSDIRECTORY"
+          df -h
 
       - name: Clean project
         run: cd farah && flutter clean
