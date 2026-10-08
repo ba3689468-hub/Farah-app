@@ -20,13 +20,21 @@ jobs:
         with:
           channel: 'stable'
 
-      # ✅ خطوة تنظيف المساحة (بدون حذف SDK)
+      # ✅ خطوة تنظيف المساحة
       - name: Free up disk space
         run: |
           sudo rm -rf /usr/share/dotnet
           sudo rm -rf /opt/ghc
           sudo rm -rf "/usr/local/share/boost"
           df -h
+
+      # ✅ خطوة تنظيف NDK التالف
+      - name: Clean NDK cache
+        run: |
+          rm -rf $ANDROID_HOME/ndk
+          rm -rf $ANDROID_HOME/.downloadIntermediates
+          rm -rf $ANDROID_HOME/cmdline-tools/latest
+          echo "NDK cache cleaned"
 
       - name: Clean project
         run: cd farah && flutter clean
