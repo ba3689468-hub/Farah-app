@@ -7,6 +7,8 @@ import 'features/auth/presentation/screens/login_screen_farah.dart';
 import 'features/favorites_screen.dart';
 import 'features/explore_screen.dart';
 import 'features/edit_profile_screen.dart';
+import 'features/wallet_screen.dart';
+import 'features/notifications_screen.dart';
 import 'hall_details_screen.dart';
 import 'my_bookings_screen.dart';
 
@@ -128,16 +130,18 @@ class _HallListScreenState extends State<HallListScreen> {
       child: Row(
         children: [
           _iconButton(Icons.account_balance_wallet_outlined, () {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('المحفظة - قريباً')),
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const WalletScreen()),
             );
           }),
           const SizedBox(width: 8),
           _iconButton(Icons.notifications_outlined, () {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('الإشعارات - قريباً')),
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const NotificationsScreen()),
             );
-          }, hasBadge: true),
+          }, hasBadge: false),
           const Spacer(),
           Container(
             width: 50, height: 50,
@@ -981,9 +985,19 @@ class _SimpleProfileScreenState extends State<SimpleProfileScreen> {
                     const SizedBox(height: 10),
                     _menuItem(Icons.favorite_border, 'المفضلة', 'القاعات المحفوظة', () {}),
                     const SizedBox(height: 10),
-                    _menuItem(Icons.account_balance_wallet, 'محفظتي', 'رصيدك وطرق الدفع', () {}),
+                    _menuItem(Icons.account_balance_wallet, 'محفظتي', 'رصيدك وطرق الدفع', () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const WalletScreen()),
+                      );
+                    }),
                     const SizedBox(height: 10),
-                    _menuItem(Icons.notifications_outlined, 'الإشعارات', 'تخصيص التنبيهات', () {}),
+                    _menuItem(Icons.notifications_outlined, 'الإشعارات', 'تخصيص التنبيهات', () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const NotificationsScreen()),
+                      );
+                    }),
                     const SizedBox(height: 10),
                     _menuItem(Icons.edit_outlined, 'تعديل الملف الشخصي', 'الاسم وكلمة المرور', () async {
                       final result = await Navigator.push(
