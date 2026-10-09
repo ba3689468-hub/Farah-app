@@ -5,6 +5,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'features/auth/presentation/screens/login_screen_farah.dart';
 import 'features/favorites_screen.dart';
+import 'features/explore_screen.dart';
 import 'features/edit_profile_screen.dart';
 import 'hall_details_screen.dart';
 import 'my_bookings_screen.dart';
@@ -96,6 +97,7 @@ class _HallListScreenState extends State<HallListScreen> {
           index: _currentIndex,
           children: [
             _buildHome(),
+            const ExploreScreen(),
             const FavoritesScreen(),
             const MyBookingsScreen(),
             const SimpleProfileScreen(),
@@ -672,13 +674,14 @@ class _HallListScreenState extends State<HallListScreen> {
   Widget _buildBottomNav() {
     final items = [
       {'icon': Icons.home_outlined, 'active': Icons.home, 'label': 'الرئيسية'},
+      {'icon': Icons.explore_outlined, 'active': Icons.explore, 'label': 'استكشف'},
       {'icon': Icons.favorite_border, 'active': Icons.favorite, 'label': 'المفضلة'},
       {'icon': Icons.event_note_outlined, 'active': Icons.event_note, 'label': 'حجوزاتي'},
       {'icon': Icons.person_outline, 'active': Icons.person, 'label': 'حسابي'},
     ];
     return Container(
-      margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
+      margin: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(28),
@@ -692,7 +695,7 @@ class _HallListScreenState extends State<HallListScreen> {
             onTap: () => setState(() => _currentIndex = i),
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 250),
-              padding: EdgeInsets.symmetric(horizontal: active ? 14 : 10, vertical: 8),
+              padding: EdgeInsets.symmetric(horizontal: active ? 12 : 8, vertical: 8),
               decoration: BoxDecoration(
                 gradient: active ? const LinearGradient(colors: [primary, primaryDark]) : null,
                 borderRadius: BorderRadius.circular(20),
@@ -702,8 +705,8 @@ class _HallListScreenState extends State<HallListScreen> {
                 children: [
                   Icon(active ? items[i]['active'] as IconData : items[i]['icon'] as IconData, color: active ? Colors.white : textLight, size: 20),
                   if (active) ...[
-                    const SizedBox(width: 6),
-                    Text(items[i]['label'] as String, style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold)),
+                    const SizedBox(width: 5),
+                    Text(items[i]['label'] as String, style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
                   ],
                 ],
               ),
@@ -974,7 +977,7 @@ class _SimpleProfileScreenState extends State<SimpleProfileScreen> {
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: Column(
                   children: [
-                    _menuItem(Icons.calendar_month, 'حجوزاتي', 'سجل حجوزاتك السابقة والقادمة', () { Navigator.pop(context); }),
+                    _menuItem(Icons.calendar_month, 'حجوزاتي', 'سجل حجوزاتك السابقة والقادمة', () {}),
                     const SizedBox(height: 10),
                     _menuItem(Icons.favorite_border, 'المفضلة', 'القاعات المحفوظة', () {}),
                     const SizedBox(height: 10),
