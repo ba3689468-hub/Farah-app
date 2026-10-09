@@ -8,6 +8,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/auth_provider.dart';
 import 'register_screen.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:farah/features/provider_dashboard_screen.dart';
 
 class FarahGlassLoginScreen extends ConsumerStatefulWidget {
   const FarahGlassLoginScreen({super.key});
@@ -60,6 +61,8 @@ class _FarahGlassLoginScreenState extends ConsumerState<FarahGlassLoginScreen> {
         final docRef =
             FirebaseFirestore.instance.collection('users').doc(fbUser.uid);
         final doc = await docRef.get();
+
+        // ── إذا كان المستخدم جديداً (لم يسجل بياناته سابقاً) ──
         if (!doc.exists) {
           await docRef.set({
             'uid': fbUser.uid,
@@ -74,12 +77,31 @@ class _FarahGlassLoginScreenState extends ConsumerState<FarahGlassLoginScreen> {
             'createdAt': FieldValue.serverTimestamp(),
           });
         }
+
         if (mounted) {
-          Navigator.pushAndRemoveUntil(
-            context,
-            MaterialPageRoute(builder: (_) => HallListScreen()),
-            (route) => false,
-          );
+          // ✅ التحقق من دور المستخدم لتوجيهه للصفحة المناسبة
+          String role = 'user';
+          if (doc.exists) {
+            final userData = doc.data() as Map<String, dynamic>?;
+            role = userData?['role'] ?? 'user';
+          }
+
+          if (role == 'provider') {
+            // ── مزود خدمة → لوحة المزود ──
+            Navigator.pushAndRemoveUntil(
+              context,
+              MaterialPageRoute(
+                  builder: (_) => const ProviderDashboardScreen()),
+              (route) => false,
+            );
+          } else {
+            // ── زبون → الصفحة الرئيسية ──
+            Navigator.pushAndRemoveUntil(
+              context,
+              MaterialPageRoute(builder: (_) => HallListScreen()),
+              (route) => false,
+            );
+          }
         }
       }
     } catch (e) {
