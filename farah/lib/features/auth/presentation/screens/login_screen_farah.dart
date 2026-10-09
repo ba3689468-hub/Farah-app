@@ -77,7 +77,7 @@ class _FarahGlassLoginScreenState extends ConsumerState<FarahGlassLoginScreen> {
         if (mounted) {
           Navigator.pushAndRemoveUntil(
             context,
-            MaterialPageRoute(builder: (_) => const HallListScreen()),
+            MaterialPageRoute(builder: (_) => HallListScreen()),
             (route) => false,
           );
         }
