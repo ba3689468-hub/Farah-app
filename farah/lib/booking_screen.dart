@@ -15,15 +15,49 @@ class BookingScreen extends StatefulWidget {
 
 class _BookingScreenState extends State<BookingScreen> {
   static const Color primary = AppColors.primary;
-  static const Color darkRed = AppColors.primaryDark;
-  static const Color cream = AppColors.background;
-  static const Color chocolate = AppColors.textPrimary;
+  static const Color primaryDark = AppColors.primaryDark;
+  static const Color textDark = AppColors.textPrimary;
+  static const Color textLight = AppColors.textSecondary;
 
   DateTime? _selectedDate;
+  String? _selectedTimeSlot;
+  String? _selectedEventType;
   int _guestsCount = 50;
   final List<String> _selectedServices = [];
   bool _loading = false;
 
+  // ── أنواع المناسبات (ليبية) ──
+  final List<Map<String, dynamic>> _eventTypes = const [
+    {'name': 'حفل زفاف', 'icon': Icons.favorite, 'color': Color(0xFFE91E63)},
+    {'name': 'محضر', 'icon': Icons.description_outlined, 'color': Color(0xFF9C27B0)},
+    {'name': 'فاتحة', 'icon': Icons.menu_book_outlined, 'color': Color(0xFF3F51B5)},
+    {'name': 'أسبوع', 'icon': Icons.calendar_view_week_outlined, 'color': Color(0xFFFF9800)},
+    {'name': 'حفل تخرج', 'icon': Icons.school_outlined, 'color': Color(0xFF4CAF50)},
+  ];
+
+  // ── الفترات الزمنية ──
+  final List<Map<String, dynamic>> _timeSlots = const [
+    {
+      'name': 'الفترة الصباحية',
+      'time': '10 ص - 2 م',
+      'icon': Icons.wb_sunny_outlined,
+      'color': Color(0xFFFFA726),
+    },
+    {
+      'name': 'الفترة العصرية',
+      'time': '2 م - 7 م',
+      'icon': Icons.wb_twilight_outlined,
+      'color': Color(0xFFFF7043),
+    },
+    {
+      'name': 'الفترة المسائية',
+      'time': '7 م - 12 ص',
+      'icon': Icons.nightlight_round_outlined,
+      'color': Color(0xFF5C6BC0),
+    },
+  ];
+
+  // ── الخدمات الإضافية ──
   final List<Map<String, dynamic>> _availableServices = const [
     {'name': 'خدمة الضيافة الكاملة', 'price': 500, 'icon': Icons.restaurant},
     {'name': 'تصوير احترافي', 'price': 800, 'icon': Icons.camera_alt},
@@ -42,11 +76,11 @@ class _BookingScreenState extends State<BookingScreen> {
         : int.tryParse(hall['price'].toString()) ?? 0;
 
     return Scaffold(
-      backgroundColor: cream,
+      backgroundColor: AppColors.background,
       appBar: AppBar(
         backgroundColor: primary,
         foregroundColor: Colors.white,
-        elevation: 0, // ✅ إزالة الظل
+        elevation: 0,
         title: const Text('حجز القاعة',
             style: TextStyle(fontWeight: FontWeight.bold)),
         centerTitle: true,
@@ -56,7 +90,9 @@ class _BookingScreenState extends State<BookingScreen> {
           children: [
             _buildHallSummary(name, basePrice),
             const SizedBox(height: 8),
-            _buildDateSection(),
+            _buildEventTypeSection(),
+            _buildCalendarSection(),
+            _buildTimeSlotSection(),
             _buildGuestsSection(),
             _buildServicesSection(),
             const SizedBox(height: 100),
@@ -67,6 +103,7 @@ class _BookingScreenState extends State<BookingScreen> {
     );
   }
 
+  // ── ملخص القاعة ──
   Widget _buildHallSummary(String name, int basePrice) {
     return Container(
       margin: const EdgeInsets.all(16),
@@ -74,7 +111,13 @@ class _BookingScreenState extends State<BookingScreen> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(18),
-        boxShadow: [], // ✅ تم حذف التوهج
+        boxShadow: [
+          BoxShadow(
+            color: primary.withValues(alpha: 0.06),
+            blurRadius: 15,
+            offset: const Offset(0, 5),
+          ),
+        ],
       ),
       child: Row(
         children: [
@@ -82,7 +125,7 @@ class _BookingScreenState extends State<BookingScreen> {
             width: 60,
             height: 60,
             decoration: BoxDecoration(
-              gradient: const LinearGradient(colors: [primary, darkRed]),
+              gradient: const LinearGradient(colors: [primary, primaryDark]),
               borderRadius: BorderRadius.circular(14),
             ),
             child: const Icon(Icons.celebration, color: Colors.white, size: 30),
@@ -93,13 +136,15 @@ class _BookingScreenState extends State<BookingScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const Text('أنت تحجز في',
-                    style: TextStyle(color: Colors.black45, fontSize: 11)),
+                    style: TextStyle(color: textLight, fontSize: 11)),
                 const SizedBox(height: 3),
                 Text(name,
                     style: const TextStyle(
-                        color: chocolate,
+                        color: textDark,
                         fontSize: 17,
-                        fontWeight: FontWeight.bold)),
+                        fontWeight: FontWeight.bold),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis),
               ],
             ),
           ),
@@ -113,7 +158,7 @@ class _BookingScreenState extends State<BookingScreen> {
                       fontWeight: FontWeight.bold)),
               const TextSpan(
                   text: 'د.ل',
-                  style: TextStyle(color: chocolate, fontSize: 11)),
+                  style: TextStyle(color: textDark, fontSize: 11)),
             ]),
           ),
         ],
@@ -121,121 +166,104 @@ class _BookingScreenState extends State<BookingScreen> {
     );
   }
 
-  Widget _buildDateSection() {
-    final now = DateTime.now();
-    final days = List.generate(14, (i) => now.add(Duration(days: i + 1)));
-    final dayNames = [
-      'الأحد',
-      'الاثنين',
-      'الثلاثاء',
-      'الأربعاء',
-      'الخميس',
-      'الجمعة',
-      'السبت'
-    ];
-
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
-        boxShadow: [], // ✅ تم حذف التوهج
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: primary.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(10),
+  // ── قسم أنواع المناسبات ──
+  Widget _buildEventTypeSection() {
+    return _buildSection(
+      title: 'نوع المناسبة',
+      icon: Icons.celebration_outlined,
+      child: Wrap(
+        spacing: 10,
+        runSpacing: 10,
+        children: _eventTypes.map((type) {
+          final selected = _selectedEventType == type['name'];
+          final color = type['color'] as Color;
+          return GestureDetector(
+            onTap: () => setState(() => _selectedEventType = type['name']),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+              decoration: BoxDecoration(
+                color: selected ? color.withValues(alpha: 0.15) : Colors.white,
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(
+                  color: selected
+                      ? color
+                      : Colors.black.withValues(alpha: 0.08),
+                  width: selected ? 2 : 1,
                 ),
-                child:
-                    const Icon(Icons.calendar_today, color: primary, size: 18),
               ),
-              const SizedBox(width: 10),
-              const Text('اختر التاريخ',
-                  style: TextStyle(
-                      color: chocolate,
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold)),
-            ],
-          ),
-          const SizedBox(height: 14),
-          SizedBox(
-            height: 84,
-            child: ListView.separated(
-              scrollDirection: Axis.horizontal,
-              itemCount: days.length,
-              separatorBuilder: (_, __) => const SizedBox(width: 8),
-              itemBuilder: (context, i) {
-                final d = days[i];
-                final selected = _selectedDate != null &&
-                    _selectedDate!.day == d.day &&
-                    _selectedDate!.month == d.month;
-                return GestureDetector(
-                  onTap: () => setState(() => _selectedDate = d),
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 220),
-                    width: 62,
-                    decoration: BoxDecoration(
-                      gradient: selected
-                          ? const LinearGradient(colors: [primary, darkRed])
-                          : null,
-                      color: selected ? null : cream,
-                      borderRadius: BorderRadius.circular(14),
-                      border: Border.all(
-                          color: selected
-                              ? Colors.transparent
-                              : primary.withValues(alpha: 0.2)),
-                    ),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(dayNames[d.weekday % 7],
-                            style: TextStyle(
-                                color:
-                                    selected ? Colors.white70 : Colors.black45,
-                                fontSize: 10)),
-                        const SizedBox(height: 4),
-                        Text('${d.day}',
-                            style: TextStyle(
-                                color: selected ? Colors.white : chocolate,
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold)),
-                        Text(DateFormat('MMM', 'en').format(d),
-                            style: TextStyle(
-                                color:
-                                    selected ? Colors.white70 : Colors.black45,
-                                fontSize: 10)),
-                      ],
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(type['icon'] as IconData,
+                      color: selected ? color : textLight, size: 18),
+                  const SizedBox(width: 6),
+                  Text(
+                    type['name'] as String,
+                    style: TextStyle(
+                      color: selected ? color : textDark,
+                      fontSize: 13,
+                      fontWeight:
+                          selected ? FontWeight.bold : FontWeight.w500,
                     ),
                   ),
-                );
+                ],
+              ),
+            ),
+          );
+        }).toList(),
+      ),
+    );
+  }
+
+  // ── قسم التقويم ──
+  Widget _buildCalendarSection() {
+    final now = DateTime.now();
+    final firstDate = DateTime(now.year, now.month, now.day);
+    final lastDate = DateTime(now.year + 1, now.month, now.day);
+
+    return _buildSection(
+      title: 'تاريخ المناسبة',
+      icon: Icons.calendar_month_outlined,
+      child: Column(
+        children: [
+          Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: primary.withValues(alpha: 0.15),
+                width: 1,
+              ),
+            ),
+            child: CalendarDatePicker(
+              initialDate: _selectedDate ?? now,
+              firstDate: firstDate,
+              lastDate: lastDate,
+              onDateChanged: (date) {
+                setState(() => _selectedDate = date);
               },
             ),
           ),
           if (_selectedDate != null) ...[
             const SizedBox(height: 12),
             Container(
-              padding: const EdgeInsets.all(10),
+              padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
                 color: primary.withValues(alpha: 0.08),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.check_circle, color: primary, size: 16),
+                  const Icon(Icons.check_circle, color: primary, size: 18),
                   const SizedBox(width: 8),
                   Text(
-                    'التاريخ المختار: ${DateFormat('yyyy/MM/dd').format(_selectedDate!)}',
+                    'التاريخ المختار: ${DateFormat('EEEE، d MMMM yyyy', 'ar').format(_selectedDate!)}',
                     style: const TextStyle(
-                        color: chocolate,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600),
+                      color: textDark,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ],
               ),
@@ -246,76 +274,147 @@ class _BookingScreenState extends State<BookingScreen> {
     );
   }
 
-  Widget _buildGuestsSection() {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
-        boxShadow: [], // ✅ تم حذف التوهج
-      ),
+  // ── قسم الفترات الزمنية ──
+  Widget _buildTimeSlotSection() {
+    return _buildSection(
+      title: 'الفترة الزمنية',
+      icon: Icons.access_time,
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(8),
+        children: _timeSlots.map((slot) {
+          final selected = _selectedTimeSlot == slot['name'];
+          final color = slot['color'] as Color;
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 10),
+            child: GestureDetector(
+              onTap: () => setState(() => _selectedTimeSlot = slot['name']),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                padding: const EdgeInsets.all(14),
                 decoration: BoxDecoration(
-                  color: primary.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(10),
+                  color: selected ? color.withValues(alpha: 0.12) : Colors.white,
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(
+                    color: selected
+                        ? color
+                        : Colors.black.withValues(alpha: 0.08),
+                    width: selected ? 2 : 1,
+                  ),
                 ),
-                child:
-                    const Icon(Icons.people_outline, color: primary, size: 18),
-              ),
-              const SizedBox(width: 10),
-              const Text('عدد الضيوف',
-                  style: TextStyle(
-                      color: chocolate,
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold)),
-            ],
-          ),
-          const SizedBox(height: 14),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              _counterBtn(
-                icon: Icons.remove,
-                onTap: _guestsCount > 10
-                    ? () => setState(() => _guestsCount -= 10)
-                    : null,
-              ),
-              Container(
-                margin: const EdgeInsets.symmetric(horizontal: 20),
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 30, vertical: 14),
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(colors: [primary, darkRed]),
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Column(
+                child: Row(
                   children: [
-                    Text('$_guestsCount',
-                        style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 28,
-                            fontWeight: FontWeight.bold)),
-                    const Text('ضيف',
-                        style: TextStyle(color: Colors.white70, fontSize: 11)),
+                    Container(
+                      width: 44,
+                      height: 44,
+                      decoration: BoxDecoration(
+                        color: selected ? color : color.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Icon(
+                        slot['icon'] as IconData,
+                        color: selected ? Colors.white : color,
+                        size: 22,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            slot['name'] as String,
+                            style: TextStyle(
+                              color: selected ? color : textDark,
+                              fontSize: 15,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            slot['time'] as String,
+                            style: const TextStyle(
+                                color: textLight, fontSize: 12),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Container(
+                      width: 24,
+                      height: 24,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: selected
+                              ? color
+                              : Colors.black.withValues(alpha: 0.2),
+                          width: 2,
+                        ),
+                        color: selected ? color : Colors.transparent,
+                      ),
+                      child: selected
+                          ? const Icon(Icons.check,
+                              color: Colors.white, size: 16)
+                          : null,
+                    ),
                   ],
                 ),
               ),
-              _counterBtn(
-                icon: Icons.add,
-                onTap: _guestsCount < 1000
-                    ? () => setState(() => _guestsCount += 10)
-                    : null,
+            ),
+          );
+        }).toList(),
+      ),
+    );
+  }
+
+  // ── قسم عدد الضيوف ──
+  Widget _buildGuestsSection() {
+    return _buildSection(
+      title: 'عدد الضيوف',
+      icon: Icons.people_outline,
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+              color: Colors.black.withValues(alpha: 0.08), width: 1),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            _counterBtn(
+              icon: Icons.remove,
+              onTap: _guestsCount > 10
+                  ? () => setState(() => _guestsCount -= 10)
+                  : null,
+            ),
+            Container(
+              margin: const EdgeInsets.symmetric(horizontal: 20),
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 30, vertical: 14),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(colors: [primary, primaryDark]),
+                borderRadius: BorderRadius.circular(16),
               ),
-            ],
-          ),
-        ],
+              child: Column(
+                children: [
+                  Text('$_guestsCount',
+                      style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 28,
+                          fontWeight: FontWeight.bold)),
+                  const Text('ضيف',
+                      style: TextStyle(color: Colors.white70, fontSize: 11)),
+                ],
+              ),
+            ),
+            _counterBtn(
+              icon: Icons.add,
+              onTap: _guestsCount < 1000
+                  ? () => setState(() => _guestsCount += 10)
+                  : null,
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -328,23 +427,120 @@ class _BookingScreenState extends State<BookingScreen> {
         width: 50,
         height: 50,
         decoration: BoxDecoration(
-          color:
-              enabled ? primary.withValues(alpha: 0.1) : Colors.grey.withValues(alpha: 0.1),
+          color: enabled
+              ? primary.withValues(alpha: 0.1)
+              : Colors.grey.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(14),
         ),
-        child: Icon(icon, color: enabled ? primary : Colors.black26, size: 24),
+        child:
+            Icon(icon, color: enabled ? primary : Colors.black26, size: 24),
       ),
     );
   }
 
+  // ── قسم الخدمات ──
   Widget _buildServicesSection() {
+    return _buildSection(
+      title: 'خدمات إضافية',
+      icon: Icons.add_circle_outline,
+      subtitle: '(اختياري)',
+      child: Column(
+        children: _availableServices.map((service) {
+          final selected = _selectedServices.contains(service['name']);
+          return GestureDetector(
+            onTap: () => setState(() {
+              if (selected) {
+                _selectedServices.remove(service['name']);
+              } else {
+                _selectedServices.add(service['name'] as String);
+              }
+            }),
+            child: Container(
+              margin: const EdgeInsets.only(bottom: 8),
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: selected
+                    ? primary.withValues(alpha: 0.08)
+                    : Colors.white,
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(
+                  color: selected
+                      ? primary
+                      : Colors.black.withValues(alpha: 0.08),
+                  width: 1.5,
+                ),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: selected ? primary : Colors.white,
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(
+                          color: primary.withValues(alpha: 0.2), width: 1),
+                    ),
+                    child: Icon(service['icon'] as IconData,
+                        color: selected ? Colors.white : primary, size: 20),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      service['name'] as String,
+                      style: TextStyle(
+                        color: textDark,
+                        fontSize: 13,
+                        fontWeight:
+                            selected ? FontWeight.bold : FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                  Text(
+                    '${service['price']} د.ل',
+                    style: TextStyle(
+                      color: selected ? primary : textDark,
+                      fontSize: 13,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Icon(
+                    selected
+                        ? Icons.check_circle
+                        : Icons.radio_button_unchecked,
+                    color: selected ? primary : Colors.black26,
+                    size: 20,
+                  ),
+                ],
+              ),
+            ),
+          );
+        }).toList(),
+      ),
+    );
+  }
+
+  // ── قسم عام (Helper) ──
+  Widget _buildSection({
+    required String title,
+    required IconData icon,
+    required Widget child,
+    String? subtitle,
+  }) {
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16),
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(18),
-        boxShadow: [], // ✅ تم حذف التوهج
+        boxShadow: [
+          BoxShadow(
+            color: primary.withValues(alpha: 0.06),
+            blurRadius: 15,
+            offset: const Offset(0, 5),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -357,83 +553,27 @@ class _BookingScreenState extends State<BookingScreen> {
                   color: primary.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: const Icon(Icons.add_circle_outline,
-                    color: primary, size: 18),
+                child: Icon(icon, color: primary, size: 18),
               ),
               const SizedBox(width: 10),
-              const Text('خدمات إضافية',
-                  style: TextStyle(
-                      color: chocolate,
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold)),
-              const Spacer(),
-              const Text('(اختياري)',
-                  style: TextStyle(color: Colors.black45, fontSize: 11)),
+              Text(
+                title,
+                style: const TextStyle(
+                  color: textDark,
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              if (subtitle != null) ...[
+                const SizedBox(width: 6),
+                Text(subtitle,
+                    style:
+                        const TextStyle(color: textLight, fontSize: 11)),
+              ],
             ],
           ),
           const SizedBox(height: 14),
-          ...(_availableServices.map((service) {
-            final selected = _selectedServices.contains(service['name']);
-            return GestureDetector(
-              onTap: () => setState(() {
-                if (selected) {
-                  _selectedServices.remove(service['name']);
-                } else {
-                  _selectedServices.add(service['name'] as String);
-                }
-              }),
-              child: Container(
-                margin: const EdgeInsets.only(bottom: 8),
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: selected ? primary.withValues(alpha: 0.08) : cream,
-                  borderRadius: BorderRadius.circular(14),
-                  border: Border.all(
-                    color: selected ? primary : Colors.transparent,
-                    width: 1.5,
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 40,
-                      height: 40,
-                      decoration: BoxDecoration(
-                        color: selected ? primary : Colors.white,
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Icon(service['icon'] as IconData,
-                          color: selected ? Colors.white : primary, size: 20),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Text(service['name'] as String,
-                          style: TextStyle(
-                            color: chocolate,
-                            fontSize: 13,
-                            fontWeight:
-                                selected ? FontWeight.bold : FontWeight.w500,
-                          )),
-                    ),
-                    Text('${service['price']} د.ل',
-                        style: TextStyle(
-                          color: selected ? primary : chocolate,
-                          fontSize: 13,
-                          fontWeight: FontWeight.bold,
-                        )),
-                    const SizedBox(width: 8),
-                    Icon(
-                      selected
-                          ? Icons.check_circle
-                          : Icons.radio_button_unchecked,
-                      color: selected ? primary : Colors.black26,
-                      size: 20,
-                    ),
-                  ],
-                ),
-              ),
-            );
-          }).toList()),
+          child,
         ],
       ),
     );
@@ -451,44 +591,49 @@ class _BookingScreenState extends State<BookingScreen> {
     return basePrice + services;
   }
 
+  // ── شريط التأكيد السفلي ──
   Widget _buildConfirmBar(int basePrice) {
     final total = _calculateTotal(basePrice);
     return Container(
       padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
       decoration: BoxDecoration(
         color: Colors.white,
-        boxShadow: [], // ✅ تم حذف التوهج
+        boxShadow: [
+          BoxShadow(
+            color: primary.withValues(alpha: 0.08),
+            blurRadius: 20,
+            offset: const Offset(0, -6),
+          ),
+        ],
       ),
       child: SafeArea(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            if (_selectedServices.isNotEmpty || _selectedDate != null) ...[
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text('الإجمالي',
-                      style: TextStyle(
-                          color: chocolate,
-                          fontSize: 15,
-                          fontWeight: FontWeight.bold)),
-                  RichText(
-                    text: TextSpan(children: [
-                      TextSpan(
-                          text: '$total ',
-                          style: const TextStyle(
-                              color: primary,
-                              fontSize: 22,
-                              fontWeight: FontWeight.bold)),
-                      const TextSpan(
-                          text: 'د.ل',
-                          style: TextStyle(color: chocolate, fontSize: 13)),
-                    ]),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 10),
-            ],
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text('الإجمالي',
+                    style: TextStyle(
+                        color: textDark,
+                        fontSize: 15,
+                        fontWeight: FontWeight.bold)),
+                RichText(
+                  text: TextSpan(children: [
+                    TextSpan(
+                        text: '$total ',
+                        style: const TextStyle(
+                            color: primary,
+                            fontSize: 22,
+                            fontWeight: FontWeight.bold)),
+                    const TextSpan(
+                        text: 'د.ل',
+                        style: TextStyle(color: textDark, fontSize: 13)),
+                  ]),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
             SizedBox(
               width: double.infinity,
               height: 54,
@@ -500,7 +645,7 @@ class _BookingScreenState extends State<BookingScreen> {
                   disabledBackgroundColor: primary.withValues(alpha: 0.5),
                   shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(20)),
-                  elevation: 0, // ✅ إزالة الظل
+                  elevation: 0,
                 ),
                 child: _loading
                     ? const SizedBox(
@@ -521,10 +666,20 @@ class _BookingScreenState extends State<BookingScreen> {
   }
 
   Future<void> _confirmBooking(int basePrice) async {
+    // ── التحققات ──
+    if (_selectedEventType == null) {
+      _showError('الرجاء اختيار نوع المناسبة');
+      return;
+    }
     if (_selectedDate == null) {
       _showError('الرجاء اختيار تاريخ الحجز');
       return;
     }
+    if (_selectedTimeSlot == null) {
+      _showError('الرجاء اختيار الفترة الزمنية');
+      return;
+    }
+
     final uid = FirebaseAuth.instance.currentUser?.uid;
     if (uid == null) {
       _showError('الرجاء تسجيل الدخول');
@@ -542,6 +697,9 @@ class _BookingScreenState extends State<BookingScreen> {
         'userId': uid,
         'hallId': widget.hallId ?? '',
         'hallName': widget.hallData['name'] ?? '',
+        'hallImage': widget.hallData['image'] ?? widget.hallData['coverImage'] ?? '',
+        'eventType': _selectedEventType,
+        'timeSlot': _selectedTimeSlot,
         'eventDate': Timestamp.fromDate(_selectedDate!),
         'guestsCount': _guestsCount,
         'services': _selectedServices,
@@ -558,20 +716,21 @@ class _BookingScreenState extends State<BookingScreen> {
       await showDialog(
         context: context,
         builder: (_) => AlertDialog(
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          backgroundColor: cream,
+          shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20)),
+          backgroundColor: Colors.white,
           title: const Row(
             children: [
               Icon(Icons.check_circle, color: Colors.green, size: 28),
               SizedBox(width: 10),
               Text('تم الحجز بنجاح',
-                  style: TextStyle(color: chocolate, fontSize: 18)),
+                  style: TextStyle(color: textDark, fontSize: 18)),
             ],
           ),
           content: Text(
             'حجزك في ${widget.hallData['name'] ?? ''} قيد المراجعة من قبل المزوّد.\nسيتم إشعارك عند التأكيد.',
-            style: const TextStyle(color: chocolate, fontSize: 14, height: 1.6),
+            style: const TextStyle(
+                color: textDark, fontSize: 14, height: 1.6),
           ),
           actions: [
             ElevatedButton(
