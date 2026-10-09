@@ -2,7 +2,7 @@ import 'package:farah/core/constants/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'features/bookings/presentation/screens/booking_screen.dart';
+import 'booking_screen.dart';
 
 class HallDetailsScreen extends StatefulWidget {
   final Map<String, dynamic> hallData;
