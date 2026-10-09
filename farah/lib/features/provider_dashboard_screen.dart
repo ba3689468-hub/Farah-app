@@ -36,7 +36,6 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
     final uid = FirebaseAuth.instance.currentUser?.uid;
     if (uid == null) throw 'no user';
 
-    // ── جلب قاعات المزود ──
     List<QueryDocumentSnapshot<Map<String, dynamic>>> halls = [];
     for (final field in ['providerId', 'ownerId', 'userId']) {
       final snap = await FirebaseFirestore.instance
@@ -59,7 +58,6 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
 
     final hallIds = halls.map((d) => d.id).toList();
 
-    // ── جلب الحجوزات (مع تقسيم whereIn إلى مجموعات من 10) ──
     final List<QueryDocumentSnapshot<Map<String, dynamic>>> allBookings = [];
     for (int i = 0; i < hallIds.length; i += 10) {
       final end = (i + 10 > hallIds.length) ? hallIds.length : i + 10;
@@ -71,7 +69,6 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
       allBookings.addAll(snap.docs);
     }
 
-    // ── جلب أسماء الزبائن ──
     final userIds = <String>{};
     for (final b in allBookings) {
       final u = (b.data()['userId'] ?? '') as String;
@@ -89,7 +86,6 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
       }
     }
 
-    // ── ترتيب الحجوزات حسب التاريخ ──
     allBookings.sort((a, b) {
       final aT = a.data()['createdAt'] as Timestamp?;
       final bT = b.data()['createdAt'] as Timestamp?;
@@ -168,7 +164,8 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
                               (context, i) {
                                 final b = filtered[i];
                                 return Padding(
-                                  padding: const EdgeInsets.only(bottom: 14),
+                                  padding:
+                                      const EdgeInsets.only(bottom: 14),
                                   child: _buildBookingCard(
                                       b.data(), b.id, userMap),
                                 );
@@ -187,8 +184,8 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
     );
   }
 
-  // ── إحصائيات سريعة ──
-  Widget _buildStats(List<QueryDocumentSnapshot<Map<String, dynamic>>> bookings) {
+  Widget _buildStats(
+      List<QueryDocumentSnapshot<Map<String, dynamic>>> bookings) {
     int pending = 0;
     int confirmed = 0;
     int netProfit = 0;
@@ -213,11 +210,11 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
           _statCard(Icons.access_time, 'قيد الانتظار', '$pending',
               Colors.orange),
           const SizedBox(width: 10),
-          _statCard(Icons.check_circle, 'مؤكدة', '$confirmed',
-              Colors.green),
+          _statCard(
+              Icons.check_circle, 'مؤكدة', '$confirmed', Colors.green),
           const SizedBox(width: 10),
-          _statCard(Icons.payments_outlined, 'صافي الأرباح', '$netProfit',
-              primary),
+          _statCard(Icons.payments_outlined, 'صافي الأرباح',
+              '$netProfit', primary),
         ],
       ),
     );
@@ -265,7 +262,6 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
     );
   }
 
-  // ── شرائح الفلترة ──
   Widget _buildFilterTabs() {
     final tabs = [
       {'key': 'all', 'label': 'الكل', 'icon': Icons.list_alt},
@@ -326,7 +322,6 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
     );
   }
 
-  // ── بطاقة الحجز ──
   Widget _buildBookingCard(Map<String, dynamic> data, String docId,
       Map<String, String> userMap) {
     final hallName = data['hallName'] ?? 'قاعة';
@@ -347,6 +342,10 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
     final statusIcon = statusInfo['icon'] as IconData;
     final statusLabel = statusInfo['label'] as String;
 
+    final dateStr = eventDate != null
+        ? DateFormat('yyyy/MM/dd').format(eventDate)
+        : 'غير محدد';
+
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -361,6 +360,7 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
       ),
       child: Column(
         children: [
+          // ── الرأس ──
           Padding(
             padding: const EdgeInsets.all(14),
             child: Row(
@@ -371,13 +371,15 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
                     width: 70,
                     height: 70,
                     child: (image != null && image.toString().isNotEmpty)
-                        ? Image.network(image.toString(),
+                        ? Image.network(
+                            image.toString(),
                             fit: BoxFit.cover,
                             errorBuilder: (_, __, ___) => Container(
                               color: primary.withValues(alpha: 0.15),
                               child: const Icon(Icons.celebration,
                                   color: primary, size: 30),
-                            ))
+                            ),
+                          )
                         : Container(
                             color: primary.withValues(alpha: 0.15),
                             child: const Icon(Icons.celebration,
@@ -437,7 +439,9 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
               ],
             ),
           ),
-          Container(height: 1, color: Colors.black.withValues(alpha: 0.05)),
+          Container(
+              height: 1, color: Colors.black.withValues(alpha: 0.05)),
+          // ── التفاصيل ──
           Padding(
             padding: const EdgeInsets.all(14),
             child: Column(
@@ -446,15 +450,13 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
                   children: [
                     Expanded(
                       child: _infoItem(Icons.calendar_today_outlined,
-                          'التاريخ',
-                          eventDate != null
-                              ? DateFormat('yyyy/MM/dd').format(eventDate)
-                              : 'غير محدد'),
+                          'التاريخ', dateStr),
                     ),
                     Expanded(
-                      child: _infoItem(Icons.people_outline, 'الضيوف',
-                          '$guests ضيف'),
-                  ),
+                      child: _infoItem(Icons.people_outline,
+                          'الضيوف', '$guests ضيف'),
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 12),
                 Row(
@@ -464,8 +466,10 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
                           'المناسبة', eventType),
                     ),
                     Expanded(
-                      child: _infoItem(Icons.access_time,
-                          'الفترة', timeSlot.isNotEmpty ? timeSlot : '-'),
+                      child: _infoItem(
+                          Icons.access_time,
+                          'الفترة',
+                          timeSlot.isNotEmpty ? timeSlot : '-'),
                     ),
                   ],
                 ),
@@ -473,8 +477,8 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
                 Row(
                   children: [
                     Expanded(
-                      child: _infoItem(
-                          Icons.attach_money, 'الإجمالي', '$total د.ل'),
+                      child: _infoItem(Icons.attach_money,
+                          'الإجمالي', '$total د.ل'),
                     ),
                     Expanded(
                       child: _infoItem(Icons.payments_outlined,
@@ -482,73 +486,73 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
                     ),
                   ],
                 ),
-                if (status == 'pending') ...[
-                  const SizedBox(height: 16),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: GestureDetector(
-                          onTap: () =>
-                              _updateBookingStatus(docId, 'cancelled'),
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(vertical: 12),
-                            decoration: BoxDecoration(
-                              color: Colors.red.withValues(alpha: 0.08),
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(
-                                  color: Colors.redAccent
-                                      .withValues(alpha: 0.3)),
-                            ),
-                            child: const Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(Icons.close,
-                                    color: Colors.redAccent, size: 16),
-                                SizedBox(width: 6),
-                                Text('رفض',
-                                    style: TextStyle(
-                                        color: Colors.redAccent,
-                                        fontSize: 13,
-                                        fontWeight: FontWeight.bold)),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: GestureDetector(
-                          onTap: () =>
-                              _updateBookingStatus(docId, 'confirmed'),
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(vertical: 12),
-                            decoration: BoxDecoration(
-                              color: Colors.green.withValues(alpha: 0.1),
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(
-                                  color: Colors.green
-                                      .withValues(alpha: 0.4)),
-                            ),
-                            child: const Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(Icons.check,
-                                    color: Colors.green, size: 16),
-                                SizedBox(width: 6),
-                                Text('قبول',
-                                    style: TextStyle(
-                                        color: Colors.green,
-                                        fontSize: 13,
-                                        fontWeight: FontWeight.bold)),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
+                // ── أزرار القبول/الرفض ──
+                if (status == 'pending') _buildActionButtons(docId),
               ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildActionButtons(String docId) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 16),
+      child: Row(
+        children: [
+          Expanded(
+            child: GestureDetector(
+              onTap: () => _updateBookingStatus(docId, 'cancelled'),
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                decoration: BoxDecoration(
+                  color: Colors.red.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                      color: Colors.redAccent.withValues(alpha: 0.3)),
+                ),
+                child: const Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.close,
+                        color: Colors.redAccent, size: 16),
+                    SizedBox(width: 6),
+                    Text('رفض',
+                        style: TextStyle(
+                            color: Colors.redAccent,
+                            fontSize: 13,
+                            fontWeight: FontWeight.bold)),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: GestureDetector(
+              onTap: () => _updateBookingStatus(docId, 'confirmed'),
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                decoration: BoxDecoration(
+                  color: Colors.green.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                      color: Colors.green.withValues(alpha: 0.4)),
+                ),
+                child: const Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.check, color: Colors.green, size: 16),
+                    SizedBox(width: 6),
+                    Text('قبول',
+                        style: TextStyle(
+                            color: Colors.green,
+                            fontSize: 13,
+                            fontWeight: FontWeight.bold)),
+                  ],
+                ),
+              ),
             ),
           ),
         ],
@@ -573,8 +577,7 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(label,
-                  style:
-                      const TextStyle(color: textLight, fontSize: 9)),
+                  style: const TextStyle(color: textLight, fontSize: 9)),
               Text(value,
                   style: const TextStyle(
                       color: textDark,
@@ -589,7 +592,6 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
     );
   }
 
-  // ── تحديث حالة الحجز ──
   Future<void> _updateBookingStatus(String docId, String newStatus) async {
     final isConfirm = newStatus == 'confirmed';
     final ok = await showDialog<bool>(
@@ -602,9 +604,7 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
             textAlign: TextAlign.right,
             style: const TextStyle(color: textDark)),
         content: Text(
-          isConfirm
-              ? 'هل تريد تأكيد هذا الحجز؟'
-              : 'هل تريد رفض هذا الحجز؟',
+          isConfirm ? 'هل تريد تأكيد هذا الحجز؟' : 'هل تريد رفض هذا الحجز؟',
           textAlign: TextAlign.right,
         ),
         actions: [
@@ -634,9 +634,8 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(isConfirm
-              ? '✅ تم تأكيد الحجز'
-              : '✅ تم رفض الحجز'),
+          content:
+              Text(isConfirm ? '✅ تم تأكيد الحجز' : '✅ تم رفض الحجز'),
           backgroundColor: Colors.green,
         ),
       );
@@ -651,7 +650,6 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
     }
   }
 
-  // ── لا توجد قاعات ──
   Widget _buildNoHalls() {
     return Center(
       child: Padding(
@@ -683,7 +681,6 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
     );
   }
 
-  // ── لا توجد حجوزات ──
   Widget _buildEmptyBookings() {
     return Center(
       child: Padding(
@@ -757,4 +754,4 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
         };
     }
   }
-          }
+}
