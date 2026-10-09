@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
+import 'add_edit_hall_screen.dart';
+import '../hall_list_screen.dart';
 
 class ProviderDashboardScreen extends StatefulWidget {
   const ProviderDashboardScreen({super.key});
@@ -19,6 +21,7 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
 
   late Future<Map<String, dynamic>> _dataFuture;
   String _filter = 'all';
+  int _currentTab = 0;
 
   @override
   void initState() {
@@ -106,84 +109,324 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        foregroundColor: textDark,
-        title: const Text('لوحة المزود',
-            style: TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 18,
-                color: textDark)),
-        centerTitle: true,
-      ),
       body: SafeArea(
-        child: FutureBuilder<Map<String, dynamic>>(
-          future: _dataFuture,
-          builder: (context, snap) {
-            if (snap.connectionState == ConnectionState.waiting) {
-              return const Center(
-                  child: CircularProgressIndicator(color: primary));
-            }
-            if (snap.hasError) {
-              return _buildError();
-            }
-
-            final data = snap.data!;
-            final halls = data['halls']
-                as List<QueryDocumentSnapshot<Map<String, dynamic>>>;
-            final bookings = data['bookings']
-                as List<QueryDocumentSnapshot<Map<String, dynamic>>>;
-            final userMap = data['userMap'] as Map<String, String>;
-
-            if (halls.isEmpty) return _buildNoHalls();
-
-            final filtered = _filter == 'all'
-                ? bookings
-                : bookings.where((b) {
-                    final s = b.data()['status'] ?? 'pending';
-                    return s == _filter;
-                  }).toList();
-
-            return RefreshIndicator(
-              onRefresh: () async {
-                _loadData();
-                await _dataFuture;
-              },
-              color: primary,
-              child: CustomScrollView(
-                slivers: [
-                  SliverToBoxAdapter(child: _buildStats(bookings)),
-                  SliverToBoxAdapter(child: _buildFilterTabs()),
-                  filtered.isEmpty
-                      ? SliverFillRemaining(child: _buildEmptyBookings())
-                      : SliverPadding(
-                          padding: const EdgeInsets.all(16),
-                          sliver: SliverList(
-                            delegate: SliverChildBuilderDelegate(
-                              (context, i) {
-                                final b = filtered[i];
-                                return Padding(
-                                  padding:
-                                      const EdgeInsets.only(bottom: 14),
-                                  child: _buildBookingCard(
-                                      b.data(), b.id, userMap),
-                                );
-                              },
-                              childCount: filtered.length,
-                            ),
-                          ),
-                        ),
-                  const SliverToBoxAdapter(child: SizedBox(height: 30)),
-                ],
-              ),
-            );
-          },
+        child: IndexedStack(
+          index: _currentTab,
+          children: [
+            _buildDashboardTab(),
+            _buildMyHallsTab(),
+            _buildBookingsTab(),
+            _buildProfileTab(),
+          ],
         ),
+      ),
+      bottomNavigationBar: _buildProviderBottomNav(),
+    );
+  }
+
+  // ═══ تبويب الرئيسية (Dashboard) ═══
+  Widget _buildDashboardTab() {
+    return FutureBuilder<Map<String, dynamic>>(
+      future: _dataFuture,
+      builder: (context, snap) {
+        if (snap.connectionState == ConnectionState.waiting) {
+          return const Center(
+              child: CircularProgressIndicator(color: primary));
+        }
+        if (snap.hasError) return _buildError();
+
+        final data = snap.data!;
+        final bookings = data['bookings']
+            as List<QueryDocumentSnapshot<Map<String, dynamic>>>;
+        final halls = data['halls']
+            as List<QueryDocumentSnapshot<Map<String, dynamic>>>;
+
+        return CustomScrollView(
+          slivers: [
+            SliverToBoxAdapter(child: _buildAppBar('لوحة المزود')),
+            SliverToBoxAdapter(child: _buildStats(bookings)),
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Container(
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      begin: Alignment.topRight,
+                      end: Alignment.bottomLeft,
+                      colors: [primary, primaryDark],
+                    ),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.trending_up,
+                          color: Colors.white, size: 40),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
+                            const Text('ملخص الأداء',
+                                style: TextStyle(
+                                    color: Colors.white70,
+                                    fontSize: 12)),
+                            const SizedBox(height: 4),
+                            Text(
+                              '${halls.length} قاعة • ${bookings.length} حجز',
+                              style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            const SliverToBoxAdapter(child: SizedBox(height: 30)),
+          ],
+        );
+      },
+    );
+  }
+
+  // ═══ تبويب قاعاتي ═══
+  Widget _buildMyHallsTab() {
+    return FutureBuilder<Map<String, dynamic>>(
+      future: _dataFuture,
+      builder: (context, snap) {
+        if (snap.connectionState == ConnectionState.waiting) {
+          return const Center(
+              child: CircularProgressIndicator(color: primary));
+        }
+        if (snap.hasError) return _buildError();
+
+        final data = snap.data!;
+        final halls = data['halls']
+            as List<QueryDocumentSnapshot<Map<String, dynamic>>>;
+
+        return CustomScrollView(
+          slivers: [
+            SliverToBoxAdapter(child: _buildAppBar('قاعاتي')),
+            if (halls.isEmpty)
+              SliverFillRemaining(child: _buildNoHalls())
+            else
+              SliverPadding(
+                padding: const EdgeInsets.all(16),
+                sliver: SliverList(
+                  delegate: SliverChildBuilderDelegate(
+                    (context, i) {
+                      final hall = halls[i];
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 14),
+                        child: _buildHallFullCard(hall.data(), hall.id),
+                      );
+                    },
+                    childCount: halls.length,
+                  ),
+                ),
+              ),
+            const SliverToBoxAdapter(child: SizedBox(height: 30)),
+          ],
+        );
+      },
+    );
+  }
+
+  // ═══ تبويب الحجوزات ═══
+  Widget _buildBookingsTab() {
+    return FutureBuilder<Map<String, dynamic>>(
+      future: _dataFuture,
+      builder: (context, snap) {
+        if (snap.connectionState == ConnectionState.waiting) {
+          return const Center(
+              child: CircularProgressIndicator(color: primary));
+        }
+        if (snap.hasError) return _buildError();
+
+        final data = snap.data!;
+        final bookings = data['bookings']
+            as List<QueryDocumentSnapshot<Map<String, dynamic>>>;
+        final userMap = data['userMap'] as Map<String, String>;
+
+        final filtered = _filter == 'all'
+            ? bookings
+            : bookings.where((b) {
+                final s = b.data()['status'] ?? 'pending';
+                return s == _filter;
+              }).toList();
+
+        return CustomScrollView(
+          slivers: [
+            SliverToBoxAdapter(child: _buildAppBar('الحجوزات')),
+            SliverToBoxAdapter(child: _buildFilterTabs()),
+            if (filtered.isEmpty)
+              SliverFillRemaining(child: _buildEmptyBookings())
+            else
+              SliverPadding(
+                padding: const EdgeInsets.all(16),
+                sliver: SliverList(
+                  delegate: SliverChildBuilderDelegate(
+                    (context, i) {
+                      final b = filtered[i];
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 14),
+                        child:
+                            _buildBookingCard(b.data(), b.id, userMap),
+                      );
+                    },
+                    childCount: filtered.length,
+                  ),
+                ),
+              ),
+            const SliverToBoxAdapter(child: SizedBox(height: 30)),
+          ],
+        );
+      },
+    );
+  }
+
+  // ═══ تبويب حسابي ═══
+  Widget _buildProfileTab() {
+    return const SimpleProfileScreen();
+  }
+
+  // ── AppBar موحّد ──
+  Widget _buildAppBar(String title) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                  colors: [primary, primaryDark]),
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: const Icon(Icons.storefront,
+                color: Colors.white, size: 22),
+          ),
+          const SizedBox(width: 12),
+          Text(title,
+              style: const TextStyle(
+                  color: textDark,
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold)),
+          const Spacer(),
+          if (_currentTab == 0 || _currentTab == 1)
+            GestureDetector(
+              onTap: () async {
+                final result = await Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const AddEditHallScreen(),
+                  ),
+                );
+                if (result == true) _loadData();
+              },
+              child: Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: primary.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: const Icon(Icons.add,
+                    color: primary, size: 22),
+              ),
+            ),
+        ],
       ),
     );
   }
 
+  // ── شريط التنقل السفلي ──
+  Widget _buildProviderBottomNav() {
+    final items = [
+      {
+        'icon': Icons.dashboard_outlined,
+        'active': Icons.dashboard,
+        'label': 'الرئيسية'
+      },
+      {
+        'icon': Icons.storefront_outlined,
+        'active': Icons.storefront,
+        'label': 'قاعاتي'
+      },
+      {
+        'icon': Icons.event_note_outlined,
+        'active': Icons.event_note,
+        'label': 'الحجوزات'
+      },
+      {
+        'icon': Icons.person_outline,
+        'active': Icons.person,
+        'label': 'حسابي'
+      },
+    ];
+    return Container(
+      margin: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(28),
+        boxShadow: [
+          BoxShadow(
+            color: primary.withValues(alpha: 0.12),
+            blurRadius: 25,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: List.generate(items.length, (i) {
+          final active = i == _currentTab;
+          return GestureDetector(
+            onTap: () => setState(() => _currentTab = i),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 250),
+              padding: EdgeInsets.symmetric(
+                  horizontal: active ? 12 : 8, vertical: 8),
+              decoration: BoxDecoration(
+                gradient: active
+                    ? const LinearGradient(
+                        colors: [primary, primaryDark])
+                    : null,
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    active
+                        ? items[i]['active'] as IconData
+                        : items[i]['icon'] as IconData,
+                    color: active ? Colors.white : textLight,
+                    size: 20,
+                  ),
+                  if (active) ...[
+                    const SizedBox(width: 5),
+                    Text(items[i]['label'] as String,
+                        style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold)),
+                  ],
+                ],
+              ),
+            ),
+          );
+        }),
+      ),
+    );
+  }
+
+  // ── إحصائيات ──
   Widget _buildStats(
       List<QueryDocumentSnapshot<Map<String, dynamic>>> bookings) {
     int pending = 0;
@@ -204,7 +447,7 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
     }
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
       child: Row(
         children: [
           _statCard(Icons.access_time, 'قيد الانتظار', '$pending',
@@ -262,6 +505,7 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
     );
   }
 
+  // ── شرائح الفلترة ──
   Widget _buildFilterTabs() {
     final tabs = [
       {'key': 'all', 'label': 'الكل', 'icon': Icons.list_alt},
@@ -322,6 +566,193 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
     );
   }
 
+  // ── بطاقة قاعة كبيرة ──
+  Widget _buildHallFullCard(
+      Map<String, dynamic> hall, String hallId) {
+    final name = hall['name'] ?? 'قاعة';
+    final image = hall['image'] ?? hall['coverImage'];
+    final price = hall['price'] ?? 0;
+    final rating = (hall['rating'] ?? 0).toDouble();
+    final isAvailable = hall['isAvailable'] ?? true;
+    final city = hall['city'] ?? 'غير محدد';
+
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: primary.withValues(alpha: 0.06),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          ClipRRect(
+            borderRadius: const BorderRadius.horizontal(
+                right: Radius.circular(16)),
+            child: SizedBox(
+              width: 100,
+              height: 130,
+              child: (image != null && image.toString().isNotEmpty)
+                  ? Image.network(image.toString(),
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) => Container(
+                        color: primary.withValues(alpha: 0.2),
+                        child: const Icon(Icons.celebration,
+                            color: Colors.white, size: 30),
+                      ))
+                  : Container(
+                      color: primary.withValues(alpha: 0.2),
+                      child: const Icon(Icons.celebration,
+                          color: Colors.white, size: 30),
+                    ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: isAvailable
+                              ? Colors.green.withValues(alpha: 0.15)
+                              : Colors.redAccent.withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(
+                          isAvailable ? 'متاحة' : 'مغلقة',
+                          style: TextStyle(
+                              color: isAvailable
+                                  ? Colors.green
+                                  : Colors.redAccent,
+                              fontSize: 9,
+                              fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      Expanded(
+                        child: Text(name,
+                            style: const TextStyle(
+                                color: textDark,
+                                fontSize: 15,
+                                fontWeight: FontWeight.bold),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            textAlign: TextAlign.right),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      Text(city,
+                          style: const TextStyle(
+                              color: textLight, fontSize: 11)),
+                      const SizedBox(width: 4),
+                      const Icon(Icons.location_on_outlined,
+                          color: textLight, size: 12),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      Text('$price د.ل',
+                          style: const TextStyle(
+                              color: primary,
+                              fontSize: 13,
+                              fontWeight: FontWeight.bold)),
+                      const Spacer(),
+                      const Icon(Icons.star,
+                          color: Colors.amber, size: 12),
+                      const SizedBox(width: 2),
+                      Text(rating.toStringAsFixed(1),
+                          style: const TextStyle(
+                              color: textDark,
+                              fontSize: 11,
+                              fontWeight: FontWeight.bold)),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: () async {
+                            final result = await Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => AddEditHallScreen(
+                                  hallData: hall,
+                                  hallId: hallId,
+                                ),
+                              ),
+                            );
+                            if (result == true) _loadData();
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                                vertical: 6),
+                            decoration: BoxDecoration(
+                              color: primary.withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: const Row(
+                              mainAxisAlignment:
+                                  MainAxisAlignment.center,
+                              children: [
+                                Icon(Icons.edit,
+                                    color: primary, size: 12),
+                                SizedBox(width: 3),
+                                Text('تعديل',
+                                    style: TextStyle(
+                                        color: primary,
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.bold)),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      GestureDetector(
+                        onTap: () => _deleteHall(hallId, name),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 8, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: Colors.red.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: const Icon(Icons.delete_outline,
+                              color: Colors.redAccent, size: 14),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+        ],
+      ),
+    );
+  }
+
+  // ── بطاقة الحجز ──
   Widget _buildBookingCard(Map<String, dynamic> data, String docId,
       Map<String, String> userMap) {
     final hallName = data['hallName'] ?? 'قاعة';
@@ -360,7 +791,6 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
       ),
       child: Column(
         children: [
-          // ── الرأس ──
           Padding(
             padding: const EdgeInsets.all(14),
             child: Row(
@@ -370,16 +800,15 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
                   child: SizedBox(
                     width: 70,
                     height: 70,
-                    child: (image != null && image.toString().isNotEmpty)
-                        ? Image.network(
-                            image.toString(),
+                    child: (image != null &&
+                            image.toString().isNotEmpty)
+                        ? Image.network(image.toString(),
                             fit: BoxFit.cover,
                             errorBuilder: (_, __, ___) => Container(
                               color: primary.withValues(alpha: 0.15),
                               child: const Icon(Icons.celebration,
                                   color: primary, size: 30),
-                            ),
-                          )
+                            ))
                         : Container(
                             color: primary.withValues(alpha: 0.15),
                             child: const Icon(Icons.celebration,
@@ -441,7 +870,6 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
           ),
           Container(
               height: 1, color: Colors.black.withValues(alpha: 0.05)),
-          // ── التفاصيل ──
           Padding(
             padding: const EdgeInsets.all(14),
             child: Column(
@@ -486,7 +914,6 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
                     ),
                   ],
                 ),
-                // ── أزرار القبول/الرفض ──
                 if (status == 'pending') _buildActionButtons(docId),
               ],
             ),
@@ -597,8 +1024,8 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
     final ok = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
-        shape:
-            RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20)),
         backgroundColor: Colors.white,
         title: Text(isConfirm ? 'تأكيد الحجز' : 'رفض الحجز',
             textAlign: TextAlign.right,
@@ -650,6 +1077,59 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
     }
   }
 
+  Future<void> _deleteHall(String hallId, String hallName) async {
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20)),
+        backgroundColor: Colors.white,
+        title: const Text('حذف القاعة',
+            textAlign: TextAlign.right,
+            style: TextStyle(color: textDark)),
+        content: Text(
+          'هل أنت متأكد من حذف "$hallName"؟\nلا يمكن التراجع عن هذا الإجراء.',
+          textAlign: TextAlign.right,
+        ),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('إلغاء')),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.redAccent,
+              foregroundColor: Colors.white,
+            ),
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('نعم، حذف'),
+          ),
+        ],
+      ),
+    );
+    if (ok != true) return;
+
+    try {
+      await FirebaseFirestore.instance
+          .collection('halls')
+          .doc(hallId)
+          .delete();
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+            content: Text('✅ تم حذف القاعة'),
+            backgroundColor: Colors.green),
+      );
+      _loadData();
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+            content: Text('خطأ: $e'),
+            backgroundColor: Colors.redAccent),
+      );
+    }
+  }
+
   Widget _buildNoHalls() {
     return Center(
       child: Padding(
@@ -673,7 +1153,7 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
                     fontSize: 18,
                     fontWeight: FontWeight.bold)),
             const SizedBox(height: 8),
-            const Text('أضف قاعتك الأولى من إعدادات حسابك',
+            const Text('أضف قاعتك الأولى من الزر أعلاه',
                 style: TextStyle(color: textLight, fontSize: 13)),
           ],
         ),
