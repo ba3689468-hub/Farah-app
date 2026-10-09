@@ -9,6 +9,7 @@ import 'features/explore_screen.dart';
 import 'features/edit_profile_screen.dart';
 import 'features/wallet_screen.dart';
 import 'features/notifications_screen.dart';
+import 'features/provider_dashboard_screen.dart';
 import 'hall_details_screen.dart';
 import 'my_bookings_screen.dart';
 
@@ -981,6 +982,18 @@ class _SimpleProfileScreenState extends State<SimpleProfileScreen> {
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: Column(
                   children: [
+                    // ✅ لوحة المزود (تظهر فقط للمزودين)
+                    if (isProvider) ...[
+                      _menuItem(Icons.dashboard_outlined, 'لوحة المزود',
+                          'إدارة حجوزاتك وأرباحك', () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (_) => const ProviderDashboardScreen()),
+                        );
+                      }),
+                      const SizedBox(height: 10),
+                    ],
                     _menuItem(Icons.calendar_month, 'حجوزاتي', 'سجل حجوزاتك السابقة والقادمة', () {}),
                     const SizedBox(height: 10),
                     _menuItem(Icons.favorite_border, 'المفضلة', 'القاعات المحفوظة', () {}),
