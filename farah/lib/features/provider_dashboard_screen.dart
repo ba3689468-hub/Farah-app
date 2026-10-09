@@ -37,7 +37,7 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
     if (uid == null) throw 'no user';
 
     // ── جلب قاعات المزود ──
-    List<QueryDocumentSnapshot> halls = [];
+    List<QueryDocumentSnapshot<Map<String, dynamic>>> halls = [];
     for (final field in ['providerId', 'ownerId', 'userId']) {
       final snap = await FirebaseFirestore.instance
           .collection('halls')
@@ -51,8 +51,8 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
 
     if (halls.isEmpty) {
       return {
-        'halls': <QueryDocumentSnapshot>[],
-        'bookings': <QueryDocumentSnapshot>[],
+        'halls': <QueryDocumentSnapshot<Map<String, dynamic>>>[],
+        'bookings': <QueryDocumentSnapshot<Map<String, dynamic>>>[],
         'userMap': <String, String>{},
       };
     }
@@ -60,7 +60,7 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
     final hallIds = halls.map((d) => d.id).toList();
 
     // ── جلب الحجوزات (مع تقسيم whereIn إلى مجموعات من 10) ──
-    final List<QueryDocumentSnapshot> allBookings = [];
+    final List<QueryDocumentSnapshot<Map<String, dynamic>>> allBookings = [];
     for (int i = 0; i < hallIds.length; i += 10) {
       final end = (i + 10 > hallIds.length) ? hallIds.length : i + 10;
       final chunk = hallIds.sublist(i, end);
@@ -84,14 +84,15 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
           .doc(u)
           .get();
       if (doc.exists) {
-        userMap[u] = doc.data()?['fullName'] ?? 'مستخدم';
+        final data = doc.data() as Map<String, dynamic>?;
+        userMap[u] = data?['fullName'] ?? 'مستخدم';
       }
     }
 
     // ── ترتيب الحجوزات حسب التاريخ ──
     allBookings.sort((a, b) {
-      final aT = (a.data() as Map)['createdAt'] as Timestamp?;
-      final bT = (b.data() as Map)['createdAt'] as Timestamp?;
+      final aT = a.data()['createdAt'] as Timestamp?;
+      final bT = b.data()['createdAt'] as Timestamp?;
       if (aT == null && bT == null) return 0;
       if (aT == null) return 1;
       if (bT == null) return -1;
@@ -133,8 +134,10 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
             }
 
             final data = snap.data!;
-            final halls = data['halls'] as List<QueryDocumentSnapshot>;
-            final bookings = data['bookings'] as List<QueryDocumentSnapshot>;
+            final halls = data['halls']
+                as List<QueryDocumentSnapshot<Map<String, dynamic>>>;
+            final bookings = data['bookings']
+                as List<QueryDocumentSnapshot<Map<String, dynamic>>>;
             final userMap = data['userMap'] as Map<String, String>;
 
             if (halls.isEmpty) return _buildNoHalls();
@@ -142,7 +145,7 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
             final filtered = _filter == 'all'
                 ? bookings
                 : bookings.where((b) {
-                    final s = (b.data() as Map)['status'] ?? 'pending';
+                    final s = b.data()['status'] ?? 'pending';
                     return s == _filter;
                   }).toList();
 
@@ -164,11 +167,10 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
                             delegate: SliverChildBuilderDelegate(
                               (context, i) {
                                 final b = filtered[i];
-                                final bData =
-                                    b.data() as Map<String, dynamic>;
                                 return Padding(
                                   padding: const EdgeInsets.only(bottom: 14),
-                                  child: _buildBookingCard(bData, b.id, userMap),
+                                  child: _buildBookingCard(
+                                      b.data(), b.id, userMap),
                                 );
                               },
                               childCount: filtered.length,
@@ -186,13 +188,13 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
   }
 
   // ── إحصائيات سريعة ──
-  Widget _buildStats(List<QueryDocumentSnapshot> bookings) {
+  Widget _buildStats(List<QueryDocumentSnapshot<Map<String, dynamic>>> bookings) {
     int pending = 0;
     int confirmed = 0;
     int netProfit = 0;
 
     for (final b in bookings) {
-      final data = b.data() as Map<String, dynamic>;
+      final data = b.data();
       final status = data['status'] ?? 'pending';
       final net = (data['providerNet'] ?? 0) is int
           ? (data['providerNet'] as int)
@@ -755,4 +757,4 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
         };
     }
   }
-}
+          }
