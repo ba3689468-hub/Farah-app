@@ -26,9 +26,9 @@ class _AddEditHallScreenState extends State<AddEditHallScreen> {
   final _capacityCtrl = TextEditingController();
   final _imageCtrl = TextEditingController();
   final _phoneCtrl = TextEditingController();
+  final _customAmenityCtrl = TextEditingController();
 
   String _selectedCity = 'طرابلس';
-  String _selectedType = 'قاعات أفراح';
   final List<String> _selectedAmenities = [];
   bool _loading = false;
 
@@ -40,26 +40,26 @@ class _AddEditHallScreenState extends State<AddEditHallScreen> {
     'سبها',
   ];
 
-  final List<String> _types = const [
-    'قاعات أفراح',
-    'قاعات مؤتمرات',
-    'استراحات',
-  ];
+  // ✅ أُبقي على "قاعات أفراح" فقط
+  static const String _hallType = 'قاعات أفراح';
 
+  // ✅ تمت إزالة "مسبح" و "مسرح"
   final List<String> _amenitiesList = const [
     'تكييف',
     'مواقف سيارات',
-    'مسرح',
     'إضاءة متطورة',
     'كوشة',
     'خدمة ضيافة',
     'نظام صوتي',
     'شاشة عرض',
     'مطبخ',
-    'مسبح',
   ];
 
   bool get _isEdit => widget.hallId != null && widget.hallData != null;
+
+  // ── المرافق المخصصة (التي أضافها المزود يدوياً) ──
+  List<String> get _customAmenities =>
+      _selectedAmenities.where((a) => !_amenitiesList.contains(a)).toList();
 
   @override
   void initState() {
@@ -73,8 +73,6 @@ class _AddEditHallScreenState extends State<AddEditHallScreen> {
       _imageCtrl.text = data['image'] ?? data['coverImage'] ?? '';
       _phoneCtrl.text = data['providerPhone'] ?? data['phone'] ?? '';
       _selectedCity = _cities.contains(data['city']) ? data['city'] : 'طرابلس';
-      _selectedType =
-          _types.contains(data['type']) ? data['type'] : 'قاعات أفراح';
       if (data['amenities'] is List) {
         _selectedAmenities.addAll(
           List<String>.from(data['amenities']),
@@ -91,7 +89,28 @@ class _AddEditHallScreenState extends State<AddEditHallScreen> {
     _capacityCtrl.dispose();
     _imageCtrl.dispose();
     _phoneCtrl.dispose();
+    _customAmenityCtrl.dispose();
     super.dispose();
+  }
+
+  // ── إضافة مرفق مخصص ──
+  void _addCustomAmenity() {
+    final text = _customAmenityCtrl.text.trim();
+    if (text.isEmpty) return;
+    if (_selectedAmenities.contains(text)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('هذا المرفق مضاف مسبقاً'),
+          backgroundColor: Colors.orange,
+          duration: Duration(seconds: 1),
+        ),
+      );
+      return;
+    }
+    setState(() {
+      _selectedAmenities.add(text);
+      _customAmenityCtrl.clear();
+    });
   }
 
   Future<void> _save() async {
@@ -110,7 +129,7 @@ class _AddEditHallScreenState extends State<AddEditHallScreen> {
         'price': int.tryParse(_priceCtrl.text.trim()) ?? 0,
         'capacity': int.tryParse(_capacityCtrl.text.trim()) ?? 0,
         'city': _selectedCity,
-        'type': _selectedType,
+        'type': _hallType,
         'image': _imageCtrl.text.trim(),
         'coverImage': _imageCtrl.text.trim(),
         'providerPhone': _phoneCtrl.text.trim(),
@@ -257,19 +276,7 @@ class _AddEditHallScreenState extends State<AddEditHallScreen> {
                 _buildChips(
                   items: _cities,
                   selected: _selectedCity,
-                  onSelect: (v) =>
-                      setState(() => _selectedCity = v),
-                ),
-                const SizedBox(height: 16),
-
-                // ── النوع ──
-                _dropdownTitle('نوع القاعة', Icons.category_outlined),
-                const SizedBox(height: 8),
-                _buildChips(
-                  items: _types,
-                  selected: _selectedType,
-                  onSelect: (v) =>
-                      setState(() => _selectedType = v),
+                  onSelect: (v) => setState(() => _selectedCity = v),
                 ),
                 const SizedBox(height: 24),
 
@@ -332,9 +339,16 @@ class _AddEditHallScreenState extends State<AddEditHallScreen> {
                 ),
                 const SizedBox(height: 24),
 
-                // ── المرافق ──
+                // ── المرافق والخدمات ──
                 _sectionTitle('المرافق والخدمات', Icons.room_service_outlined),
+                const SizedBox(height: 6),
+                const Text(
+                  'اختر من القائمة أو أضف مرفقاً جديداً بنفسك',
+                  style: TextStyle(color: textLight, fontSize: 11),
+                ),
                 const SizedBox(height: 12),
+
+                // ── المرافق الجاهزة ──
                 Wrap(
                   spacing: 8,
                   runSpacing: 8,
@@ -390,6 +404,109 @@ class _AddEditHallScreenState extends State<AddEditHallScreen> {
                       ),
                     );
                   }).toList(),
+                ),
+
+                // ── المرافق المخصصة ──
+                if (_customAmenities.isNotEmpty) ...[
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      const Icon(Icons.star,
+                          color: Colors.amber, size: 14),
+                      const SizedBox(width: 4),
+                      const Text('مرافق مخصصة',
+                          style: TextStyle(
+                              color: textDark,
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold)),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: _customAmenities.map((a) {
+                      return Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 8),
+                        decoration: BoxDecoration(
+                          color: primary.withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(color: primary, width: 1.5),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              a,
+                              style: const TextStyle(
+                                  color: primary,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold),
+                            ),
+                            const SizedBox(width: 6),
+                            GestureDetector(
+                              onTap: () => setState(() {
+                                _selectedAmenities.remove(a);
+                              }),
+                              child: const Icon(Icons.close,
+                                  color: primary, size: 14),
+                            ),
+                          ],
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                ],
+
+                // ── إضافة مرفق جديد ──
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    Expanded(
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(
+                              color:
+                                  primary.withValues(alpha: 0.2),
+                              width: 1),
+                        ),
+                        child: TextField(
+                          controller: _customAmenityCtrl,
+                          textAlign: TextAlign.right,
+                          textDirection: TextDirection.rtl,
+                          style: const TextStyle(
+                              color: textDark, fontSize: 13),
+                          onSubmitted: (_) => _addCustomAmenity(),
+                          decoration: const InputDecoration(
+                            hintText: 'أضف مرفقاً أو خدمة مخصصة...',
+                            hintStyle: TextStyle(
+                                color: textLight, fontSize: 12),
+                            border: InputBorder.none,
+                            isDense: true,
+                            contentPadding: EdgeInsets.symmetric(
+                                horizontal: 14, vertical: 14),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    GestureDetector(
+                      onTap: _addCustomAmenity,
+                      child: Container(
+                        padding: const EdgeInsets.all(14),
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(
+                              colors: [primary, primaryDark]),
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                        child: const Icon(Icons.add,
+                            color: Colors.white, size: 22),
+                      ),
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 30),
 
