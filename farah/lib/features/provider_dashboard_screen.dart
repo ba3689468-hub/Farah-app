@@ -291,6 +291,7 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
     );
   }
 
+  // ✅ شريط علوي مع زر الإشعارات وعدّاد
   Widget _buildAppBar(String title) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
@@ -313,7 +314,12 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
                   fontSize: 22,
                   fontWeight: FontWeight.bold)),
           const Spacer(),
-          if (_currentTab == 0 || _currentTab == 1)
+
+          // ✅ زر الإشعارات مع العداد
+          _providerNotificationButton(),
+
+          if (_currentTab == 0 || _currentTab == 1) ...[
+            const SizedBox(width: 8),
             GestureDetector(
               onTap: () async {
                 final result = await Navigator.push(
@@ -334,8 +340,79 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
                     color: primary, size: 22),
               ),
             ),
+          ],
         ],
       ),
+    );
+  }
+
+  // ✅ زر الإشعارات مع العدّاد للمزود
+  Widget _providerNotificationButton() {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      return const SizedBox();
+    }
+
+    return StreamBuilder<QuerySnapshot>(
+      stream: FirebaseFirestore.instance
+          .collection('notifications')
+          .where('userId', isEqualTo: user.uid)
+          .where('isRead', isEqualTo: false)
+          .snapshots(),
+      builder: (context, snap) {
+        final count = snap.data?.docs.length ?? 0;
+        return GestureDetector(
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => const NotificationsScreen(),
+              ),
+            );
+          },
+          child: Stack(
+            clipBehavior: Clip.none,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(
+                      color: primary.withValues(alpha: 0.1),
+                      width: 1),
+                ),
+                child: const Icon(Icons.notifications_outlined,
+                    color: primary, size: 22),
+              ),
+              if (count > 0)
+                Positioned(
+                  top: -4,
+                  right: -4,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 6, vertical: 2),
+                    constraints: const BoxConstraints(minWidth: 20),
+                    decoration: BoxDecoration(
+                      color: Colors.red,
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: Colors.white, width: 1.5),
+                    ),
+                    child: Text(
+                      count > 99 ? '99+' : '$count',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        );
+      },
     );
   }
 
@@ -1009,9 +1086,7 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
     );
   }
 
-  // ═══════════════════════════════════════════════════
-  // ✅ دالة تحديث حالة الحجز مع إرسال الإشعار للزبون
-  // ═══════════════════════════════════════════════════
+  // ✅ دالة تحديث حالة الحجز + إرسال إشعار للزبون
   Future<void> _updateBookingStatus(String docId, String newStatus) async {
     final isConfirm = newStatus == 'confirmed';
     final ok = await showDialog<bool>(
@@ -1046,15 +1121,12 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
     if (ok != true) return;
 
     try {
-      // ── تحديث حالة الحجز ──
       await FirebaseFirestore.instance
           .collection('bookings')
           .doc(docId)
           .update({'status': newStatus});
 
-      // ═══════════════════════════════════════════════════
       // ✅ إرسال إشعار للزبون
-      // ═══════════════════════════════════════════════════
       try {
         final bookingDoc = await FirebaseFirestore.instance
             .collection('bookings')
@@ -1080,9 +1152,7 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
             );
           }
         }
-      } catch (_) {
-        // لا نوقف العملية إذا فشل الإشعار
-      }
+      } catch (_) {}
 
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
