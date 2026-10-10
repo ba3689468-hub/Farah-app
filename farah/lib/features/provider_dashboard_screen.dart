@@ -4,7 +4,10 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
 import 'add_edit_hall_screen.dart';
-import '../hall_list_screen.dart';
+import 'edit_profile_screen.dart';
+import 'wallet_screen.dart';
+import 'notifications_screen.dart';
+import 'features/auth/presentation/screens/login_screen_farah.dart';
 
 class ProviderDashboardScreen extends StatefulWidget {
   const ProviderDashboardScreen({super.key});
@@ -116,7 +119,7 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
             _buildDashboardTab(),
             _buildMyHallsTab(),
             _buildBookingsTab(),
-            _buildProfileTab(),
+            const ProviderProfileScreen(),
           ],
         ),
       ),
@@ -124,7 +127,6 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
     );
   }
 
-  // ═══ تبويب الرئيسية (Dashboard) ═══
   Widget _buildDashboardTab() {
     return FutureBuilder<Map<String, dynamic>>(
       future: _dataFuture,
@@ -194,7 +196,6 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
     );
   }
 
-  // ═══ تبويب قاعاتي ═══
   Widget _buildMyHallsTab() {
     return FutureBuilder<Map<String, dynamic>>(
       future: _dataFuture,
@@ -237,7 +238,6 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
     );
   }
 
-  // ═══ تبويب الحجوزات ═══
   Widget _buildBookingsTab() {
     return FutureBuilder<Map<String, dynamic>>(
       future: _dataFuture,
@@ -290,12 +290,6 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
     );
   }
 
-  // ═══ تبويب حسابي ═══
-  Widget _buildProfileTab() {
-    return const SimpleProfileScreen();
-  }
-
-  // ── AppBar موحّد ──
   Widget _buildAppBar(String title) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
@@ -344,7 +338,6 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
     );
   }
 
-  // ── شريط التنقل السفلي ──
   Widget _buildProviderBottomNav() {
     final items = [
       {
@@ -426,7 +419,6 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
     );
   }
 
-  // ── إحصائيات ──
   Widget _buildStats(
       List<QueryDocumentSnapshot<Map<String, dynamic>>> bookings) {
     int pending = 0;
@@ -505,7 +497,6 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
     );
   }
 
-  // ── شرائح الفلترة ──
   Widget _buildFilterTabs() {
     final tabs = [
       {'key': 'all', 'label': 'الكل', 'icon': Icons.list_alt},
@@ -566,7 +557,6 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
     );
   }
 
-  // ── بطاقة قاعة كبيرة ──
   Widget _buildHallFullCard(
       Map<String, dynamic> hall, String hallId) {
     final name = hall['name'] ?? 'قاعة';
@@ -752,7 +742,6 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
     );
   }
 
-  // ── بطاقة الحجز ──
   Widget _buildBookingCard(Map<String, dynamic> data, String docId,
       Map<String, String> userMap) {
     final hallName = data['hallName'] ?? 'قاعة';
@@ -1233,5 +1222,337 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
           'icon': Icons.access_time,
         };
     }
+  }
+}
+
+// ═══════════════════════════════════════════════
+// شاشة حسابي الخاصة بالمزود
+// ═══════════════════════════════════════════════
+class ProviderProfileScreen extends StatefulWidget {
+  const ProviderProfileScreen({super.key});
+  @override
+  State<ProviderProfileScreen> createState() =>
+      _ProviderProfileScreenState();
+}
+
+class _ProviderProfileScreenState extends State<ProviderProfileScreen> {
+  static const Color primary = AppColors.primary;
+  static const Color primaryDark = AppColors.primaryDark;
+  static const Color textDark = AppColors.textPrimary;
+  static const Color textLight = AppColors.textSecondary;
+
+  late Future<DocumentSnapshot> _userFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    _userFuture = uid == null
+        ? Future.error('no user')
+        : FirebaseFirestore.instance.collection('users').doc(uid).get();
+  }
+
+  Future<void> _logout() async {
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(24)),
+        backgroundColor: Colors.white,
+        title: const Text('تسجيل الخروج',
+            textAlign: TextAlign.right,
+            style: TextStyle(color: textDark)),
+        content:
+            const Text('هل أنت متأكد؟', textAlign: TextAlign.right),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('إلغاء')),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+                backgroundColor: primary,
+                foregroundColor: Colors.white),
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('خروج'),
+          ),
+        ],
+      ),
+    );
+    if (ok != true) return;
+    await FirebaseAuth.instance.signOut();
+    if (!mounted) return;
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(
+          builder: (_) => const FarahGlassLoginScreen()),
+      (route) => false,
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<DocumentSnapshot>(
+      future: _userFuture,
+      builder: (context, snap) {
+        if (snap.connectionState == ConnectionState.waiting) {
+          return const Center(
+              child: CircularProgressIndicator(color: primary));
+        }
+        if (!snap.hasData || !snap.data!.exists) {
+          return const Center(child: Text('تعذر تحميل البيانات'));
+        }
+        final user = snap.data!.data() as Map<String, dynamic>;
+        final name = user['fullName'] ?? 'مزود';
+        final phone = user['phone'] ?? '';
+
+        return SingleChildScrollView(
+          child: Column(
+            children: [
+              const SizedBox(height: 20),
+
+              // ── الصورة الرمزية (متجر) ──
+              Container(
+                width: 110,
+                height: 110,
+                decoration: const BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient:
+                      LinearGradient(colors: [primary, primaryDark]),
+                ),
+                child: const Icon(Icons.storefront,
+                    size: 55, color: Colors.white),
+              ),
+              const SizedBox(height: 16),
+
+              // ── الاسم ──
+              Text(name,
+                  style: const TextStyle(
+                      color: textDark,
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold)),
+              const SizedBox(height: 10),
+
+              // ── شارة "مزود خدمة" ──
+              Container(
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 18, vertical: 6),
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                      colors: [primary, primaryDark]),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: const Text('مزود خدمة',
+                    style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold)),
+              ),
+              const SizedBox(height: 24),
+
+              // ── رقم الهاتف ──
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Container(
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: _infoRow(Icons.phone_outlined, 'رقم الهاتف',
+                      phone.isEmpty ? 'غير محدد' : phone),
+                ),
+              ),
+              const SizedBox(height: 18),
+
+              // ── القائمة ──
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Column(
+                  children: [
+                    _menuItem(
+                        Icons.account_balance_wallet,
+                        'محفظتي والأرباح',
+                        'رصيدك وطرق الدفع', () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (_) => const WalletScreen()),
+                      );
+                    }),
+                    const SizedBox(height: 10),
+                    _menuItem(Icons.notifications_outlined,
+                        'الإشعارات', 'تخصيص التنبيهات', () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (_) =>
+                                const NotificationsScreen()),
+                      );
+                    }),
+                    const SizedBox(height: 10),
+                    _menuItem(Icons.edit_outlined,
+                        'تعديل الملف الشخصي', 'الاسم وكلمة المرور',
+                        () async {
+                      final result = await Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (_) =>
+                                const EditProfileScreen()),
+                      );
+                      if (result == true && mounted) {
+                        setState(() {
+                          _userFuture = FirebaseFirestore.instance
+                              .collection('users')
+                              .doc(FirebaseAuth
+                                  .instance.currentUser?.uid)
+                              .get();
+                        });
+                      }
+                    }),
+                    const SizedBox(height: 10),
+                    _menuItem(Icons.settings_outlined, 'الإعدادات',
+                        'اللغة والمظهر والخصوصية', () {}),
+                    const SizedBox(height: 10),
+                    _menuItem(Icons.help_outline, 'المساعدة والدعم',
+                        'تواصل معنا', () {}),
+                    const SizedBox(height: 10),
+                    _menuItem(Icons.info_outline, 'عن التطبيق',
+                        'فرح — الإصدار 1.0.0', () {}),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 22),
+
+              // ── تسجيل الخروج ──
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: GestureDetector(
+                  onTap: _logout,
+                  child: Container(
+                    width: double.infinity,
+                    height: 54,
+                    decoration: BoxDecoration(
+                      color: Colors.red.withValues(alpha: 0.08),
+                      borderRadius: BorderRadius.circular(28),
+                      border: Border.all(
+                          color: Colors.redAccent
+                              .withValues(alpha: 0.4),
+                          width: 1.2),
+                    ),
+                    child: const Center(
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.logout,
+                              color: Colors.redAccent, size: 20),
+                          SizedBox(width: 10),
+                          Text('تسجيل الخروج',
+                              style: TextStyle(
+                                  color: Colors.redAccent,
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.bold)),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 24),
+              const Text('فرح — الإصدار 1.0.0',
+                  style:
+                      TextStyle(color: textLight, fontSize: 11)),
+              const SizedBox(height: 30),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _infoRow(IconData icon, String label, String value) {
+    return Row(
+      children: [
+        Container(
+          width: 42,
+          height: 42,
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+                colors: [primary, primaryDark]),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Icon(icon, color: Colors.white, size: 20),
+        ),
+        const SizedBox(width: 14),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(label,
+                  style: const TextStyle(
+                      color: textLight, fontSize: 12)),
+              const SizedBox(height: 2),
+              Text(value,
+                  style: const TextStyle(
+                      color: textDark,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600),
+                  overflow: TextOverflow.ellipsis),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _menuItem(IconData icon, String title, String subtitle,
+      VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding:
+            const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(18)),
+        child: Row(
+          children: [
+            Container(
+              width: 46,
+              height: 46,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [primary.withValues(alpha: 0.9), primaryDark],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: Icon(icon, color: Colors.white, size: 22),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(title,
+                      style: const TextStyle(
+                          color: textDark,
+                          fontSize: 15,
+                          fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 3),
+                  Text(subtitle,
+                      style: const TextStyle(
+                          color: textLight, fontSize: 11),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis),
+                ],
+              ),
+            ),
+            const Icon(Icons.arrow_back_ios,
+                color: textLight, size: 14),
+          ],
+        ),
+      ),
+    );
   }
 }
