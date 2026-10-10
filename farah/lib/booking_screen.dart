@@ -1,4 +1,5 @@
 import 'package:farah/core/constants/app_colors.dart';
+import 'package:farah/core/utils/notification_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -26,7 +27,6 @@ class _BookingScreenState extends State<BookingScreen> {
   final List<String> _selectedServices = [];
   bool _loading = false;
 
-  // ── أنواع المناسبات (ليبية) ──
   final List<Map<String, dynamic>> _eventTypes = const [
     {'name': 'حفل زفاف', 'icon': Icons.favorite, 'color': Color(0xFFE91E63)},
     {'name': 'محضر', 'icon': Icons.description_outlined, 'color': Color(0xFF9C27B0)},
@@ -35,7 +35,6 @@ class _BookingScreenState extends State<BookingScreen> {
     {'name': 'حفل تخرج', 'icon': Icons.school_outlined, 'color': Color(0xFF4CAF50)},
   ];
 
-  // ── الفترات الزمنية ──
   final List<Map<String, dynamic>> _timeSlots = const [
     {
       'name': 'الفترة الصباحية',
@@ -57,7 +56,6 @@ class _BookingScreenState extends State<BookingScreen> {
     },
   ];
 
-  // ── الخدمات الإضافية ──
   final List<Map<String, dynamic>> _availableServices = const [
     {'name': 'خدمة الضيافة الكاملة', 'price': 500, 'icon': Icons.restaurant},
     {'name': 'تصوير احترافي', 'price': 800, 'icon': Icons.camera_alt},
@@ -103,7 +101,6 @@ class _BookingScreenState extends State<BookingScreen> {
     );
   }
 
-  // ── ملخص القاعة ──
   Widget _buildHallSummary(String name, int basePrice) {
     return Container(
       margin: const EdgeInsets.all(16),
@@ -166,7 +163,6 @@ class _BookingScreenState extends State<BookingScreen> {
     );
   }
 
-  // ── قسم أنواع المناسبات ──
   Widget _buildEventTypeSection() {
     return _buildSection(
       title: 'نوع المناسبة',
@@ -203,8 +199,7 @@ class _BookingScreenState extends State<BookingScreen> {
                     style: TextStyle(
                       color: selected ? color : textDark,
                       fontSize: 13,
-                      fontWeight:
-                          selected ? FontWeight.bold : FontWeight.w500,
+                      fontWeight: selected ? FontWeight.bold : FontWeight.w500,
                     ),
                   ),
                 ],
@@ -216,7 +211,6 @@ class _BookingScreenState extends State<BookingScreen> {
     );
   }
 
-  // ── قسم التقويم ──
   Widget _buildCalendarSection() {
     final now = DateTime.now();
     final firstDate = DateTime(now.year, now.month, now.day);
@@ -274,7 +268,6 @@ class _BookingScreenState extends State<BookingScreen> {
     );
   }
 
-  // ── قسم الفترات الزمنية ──
   Widget _buildTimeSlotSection() {
     return _buildSection(
       title: 'الفترة الزمنية',
@@ -365,7 +358,6 @@ class _BookingScreenState extends State<BookingScreen> {
     );
   }
 
-  // ── قسم عدد الضيوف ──
   Widget _buildGuestsSection() {
     return _buildSection(
       title: 'عدد الضيوف',
@@ -438,7 +430,6 @@ class _BookingScreenState extends State<BookingScreen> {
     );
   }
 
-  // ── قسم الخدمات ──
   Widget _buildServicesSection() {
     return _buildSection(
       title: 'خدمات إضافية',
@@ -521,7 +512,6 @@ class _BookingScreenState extends State<BookingScreen> {
     );
   }
 
-  // ── قسم عام (Helper) ──
   Widget _buildSection({
     required String title,
     required IconData icon,
@@ -591,7 +581,6 @@ class _BookingScreenState extends State<BookingScreen> {
     return basePrice + services;
   }
 
-  // ── شريط التأكيد السفلي ──
   Widget _buildConfirmBar(int basePrice) {
     final total = _calculateTotal(basePrice);
     return Container(
@@ -693,11 +682,15 @@ class _BookingScreenState extends State<BookingScreen> {
       final commission = (total * 0.1).round();
       final providerNet = total - commission;
 
-      await FirebaseFirestore.instance.collection('bookings').add({
+      // ── إضافة الحجز ──
+      final bookingRef =
+          await FirebaseFirestore.instance.collection('bookings').add({
         'userId': uid,
         'hallId': widget.hallId ?? '',
         'hallName': widget.hallData['name'] ?? '',
-        'hallImage': widget.hallData['image'] ?? widget.hallData['coverImage'] ?? '',
+        'hallImage': widget.hallData['image'] ??
+            widget.hallData['coverImage'] ??
+            '',
         'eventType': _selectedEventType,
         'timeSlot': _selectedTimeSlot,
         'eventDate': Timestamp.fromDate(_selectedDate!),
@@ -712,6 +705,35 @@ class _BookingScreenState extends State<BookingScreen> {
         'createdAt': FieldValue.serverTimestamp(),
       });
 
+      // ═══════════════════════════════════════════════════
+      // ✅ إرسال إشعار للمزود
+      // ═══════════════════════════════════════════════════
+      try {
+        final hallDoc = await FirebaseFirestore.instance
+            .collection('halls')
+            .doc(widget.hallId)
+            .get();
+
+        final providerId = hallDoc.data()?['providerId'] ?? '';
+        final userDoc = await FirebaseFirestore.instance
+            .collection('users')
+            .doc(uid)
+            .get();
+        final customerName = userDoc.data()?['fullName'] ?? 'زبون';
+
+        if (providerId.toString().isNotEmpty) {
+          await NotificationHelper.notifyProviderNewBooking(
+            providerId: providerId.toString(),
+            hallName: widget.hallData['name'] ?? 'قاعة',
+            customerName: customerName,
+            bookingId: bookingRef.id,
+          );
+        }
+      } catch (notifError) {
+        // لا نوقف الحجز إذا فشل الإشعار
+      }
+
+      // ── رسالة النجاح ──
       if (!mounted) return;
       await showDialog(
         context: context,
