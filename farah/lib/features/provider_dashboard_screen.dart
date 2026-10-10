@@ -7,7 +7,7 @@ import 'add_edit_hall_screen.dart';
 import 'edit_profile_screen.dart';
 import 'wallet_screen.dart';
 import 'notifications_screen.dart';
-import 'features/auth/presentation/screens/login_screen_farah.dart';
+import 'auth/presentation/screens/login_screen_farah.dart';
 
 class ProviderDashboardScreen extends StatefulWidget {
   const ProviderDashboardScreen({super.key});
@@ -1310,7 +1310,6 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen> {
             children: [
               const SizedBox(height: 20),
 
-              // ── الصورة الرمزية (متجر) ──
               Container(
                 width: 110,
                 height: 110,
@@ -1324,7 +1323,6 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen> {
               ),
               const SizedBox(height: 16),
 
-              // ── الاسم ──
               Text(name,
                   style: const TextStyle(
                       color: textDark,
@@ -1332,7 +1330,6 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen> {
                       fontWeight: FontWeight.bold)),
               const SizedBox(height: 10),
 
-              // ── شارة "مزود خدمة" ──
               Container(
                 padding: const EdgeInsets.symmetric(
                     horizontal: 18, vertical: 6),
@@ -1349,7 +1346,6 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen> {
               ),
               const SizedBox(height: 24),
 
-              // ── رقم الهاتف ──
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: Container(
@@ -1364,7 +1360,6 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen> {
               ),
               const SizedBox(height: 18),
 
-              // ── القائمة ──
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: Column(
@@ -1423,7 +1418,6 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen> {
               ),
               const SizedBox(height: 22),
 
-              // ── تسجيل الخروج ──
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: GestureDetector(
