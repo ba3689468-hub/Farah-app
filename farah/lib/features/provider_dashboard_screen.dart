@@ -1,4 +1,5 @@
 import 'package:farah/core/constants/app_colors.dart';
+import 'package:farah/core/utils/notification_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -1008,6 +1009,9 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
     );
   }
 
+  // ═══════════════════════════════════════════════════
+  // ✅ دالة تحديث حالة الحجز مع إرسال الإشعار للزبون
+  // ═══════════════════════════════════════════════════
   Future<void> _updateBookingStatus(String docId, String newStatus) async {
     final isConfirm = newStatus == 'confirmed';
     final ok = await showDialog<bool>(
@@ -1042,10 +1046,43 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
     if (ok != true) return;
 
     try {
+      // ── تحديث حالة الحجز ──
       await FirebaseFirestore.instance
           .collection('bookings')
           .doc(docId)
           .update({'status': newStatus});
+
+      // ═══════════════════════════════════════════════════
+      // ✅ إرسال إشعار للزبون
+      // ═══════════════════════════════════════════════════
+      try {
+        final bookingDoc = await FirebaseFirestore.instance
+            .collection('bookings')
+            .doc(docId)
+            .get();
+        final bookingData = bookingDoc.data() ?? {};
+        final customerId = bookingData['userId'] ?? '';
+        final hallName = bookingData['hallName'] ?? 'قاعة';
+
+        if (customerId.toString().isNotEmpty) {
+          if (isConfirm) {
+            await NotificationHelper.notifyCustomerConfirmed(
+              customerId: customerId.toString(),
+              hallName: hallName.toString(),
+              bookingId: docId,
+            );
+          } else {
+            await NotificationHelper.notifyCustomerCancelled(
+              customerId: customerId.toString(),
+              hallName: hallName.toString(),
+              bookingId: docId,
+              isByProvider: true,
+            );
+          }
+        }
+      } catch (_) {
+        // لا نوقف العملية إذا فشل الإشعار
+      }
 
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -1284,7 +1321,7 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen> {
     Navigator.pushAndRemoveUntil(
       context,
       MaterialPageRoute(
-          builder: (_) => const FarahGlassLoginScreen()),
+          builder: (_) => FarahGlassLoginScreen()),
       (route) => false,
     );
   }
