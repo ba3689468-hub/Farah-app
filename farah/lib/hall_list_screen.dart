@@ -142,7 +142,7 @@ class _HallListScreenState extends State<HallListScreen> {
               context,
               MaterialPageRoute(builder: (_) => const NotificationsScreen()),
             );
-          }, hasBadge: false),
+          }),
           const Spacer(),
           Container(
             width: 50, height: 50,
@@ -171,27 +171,92 @@ class _HallListScreenState extends State<HallListScreen> {
     );
   }
 
+  // ✅ زر أيقوني موحّد
   Widget _iconButton(IconData icon, VoidCallback onTap, {bool hasBadge = false}) {
+    if (icon == Icons.notifications_outlined) {
+      return _notificationButton(onTap);
+    }
     return GestureDetector(
       onTap: onTap,
-      child: Stack(
-        children: [
-          Container(
-            width: 44, height: 44,
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: primary.withValues(alpha: 0.1), width: 1),
-            ),
-            child: Icon(icon, color: primary, size: 22),
-          ),
-          if (hasBadge)
-            Positioned(
-              top: 8, right: 8,
-              child: Container(width: 8, height: 8, decoration: const BoxDecoration(color: Colors.red, shape: BoxShape.circle)),
-            ),
-        ],
+      child: Container(
+        width: 44, height: 44,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: primary.withValues(alpha: 0.1), width: 1),
+        ),
+        child: Icon(icon, color: primary, size: 22),
       ),
+    );
+  }
+
+  // ✅ زر الإشعارات مع عدّاد الإشعارات غير المقروءة
+  Widget _notificationButton(VoidCallback onTap) {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      return GestureDetector(
+        onTap: onTap,
+        child: Container(
+          width: 44, height: 44,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: primary.withValues(alpha: 0.1), width: 1),
+          ),
+          child: const Icon(Icons.notifications_outlined, color: primary, size: 22),
+        ),
+      );
+    }
+
+    return StreamBuilder<QuerySnapshot>(
+      stream: FirebaseFirestore.instance
+          .collection('notifications')
+          .where('userId', isEqualTo: user.uid)
+          .where('isRead', isEqualTo: false)
+          .snapshots(),
+      builder: (context, snap) {
+        final count = snap.data?.docs.length ?? 0;
+        return GestureDetector(
+          onTap: onTap,
+          child: Stack(
+            clipBehavior: Clip.none,
+            children: [
+              Container(
+                width: 44, height: 44,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: primary.withValues(alpha: 0.1), width: 1),
+                ),
+                child: const Icon(Icons.notifications_outlined, color: primary, size: 22),
+              ),
+              if (count > 0)
+                Positioned(
+                  top: -4,
+                  right: -4,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    constraints: const BoxConstraints(minWidth: 20),
+                    decoration: BoxDecoration(
+                      color: Colors.red,
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: Colors.white, width: 1.5),
+                    ),
+                    child: Text(
+                      count > 99 ? '99+' : '$count',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        );
+      },
     );
   }
 
@@ -872,7 +937,7 @@ class _HallListScreenState extends State<HallListScreen> {
 }
 
 // ═══════════════════════════════════════════════
-// شاشة الملف الشخصي المبسطة
+// شاشة الملف الشخصي المبسطة (للزبون)
 // ═══════════════════════════════════════════════
 class SimpleProfileScreen extends StatefulWidget {
   const SimpleProfileScreen({super.key});
@@ -982,7 +1047,6 @@ class _SimpleProfileScreenState extends State<SimpleProfileScreen> {
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: Column(
                   children: [
-                    // ✅ لوحة المزود (تظهر فقط للمزودين)
                     if (isProvider) ...[
                       _menuItem(Icons.dashboard_outlined, 'لوحة المزود',
                           'إدارة حجوزاتك وأرباحك', () {
