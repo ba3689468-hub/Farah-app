@@ -1,4 +1,5 @@
 import 'package:farah/core/constants/app_colors.dart';
+import 'package:farah/core/utils/notification_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -61,7 +62,7 @@ class _AddReviewScreenState extends State<AddReviewScreen> {
           userDoc.data()?['name'] ??
           'مستخدم';
 
-      // ── إضافة أو تحديث المراجعة ──
+      // ── إضافة المراجعة ──
       await FirebaseFirestore.instance.collection('reviews').add({
         'hallId': widget.hallId,
         'userId': user.uid,
@@ -73,6 +74,29 @@ class _AddReviewScreenState extends State<AddReviewScreen> {
 
       // ── تحديث متوسط تقييم القاعة ──
       await _updateHallRating();
+
+      // ═══════════════════════════════════════════════════
+      // ✅ إرسال إشعار للمزود
+      // ═══════════════════════════════════════════════════
+      try {
+        final hallDoc = await FirebaseFirestore.instance
+            .collection('halls')
+            .doc(widget.hallId)
+            .get();
+
+        final providerId = hallDoc.data()?['providerId'] ?? '';
+
+        if (providerId.toString().isNotEmpty) {
+          await NotificationHelper.notifyProviderNewReview(
+            providerId: providerId.toString(),
+            hallName: widget.hallName,
+            customerName: userName,
+            rating: _rating,
+          );
+        }
+      } catch (_) {
+        // لا نوقف العملية إذا فشل الإشعار
+      }
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
