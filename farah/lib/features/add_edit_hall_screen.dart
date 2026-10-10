@@ -1,8 +1,11 @@
+import 'dart:io';
 import 'package:farah/core/constants/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:image_picker/image_picker.dart';
 
 class AddEditHallScreen extends StatefulWidget {
   final Map<String, dynamic>? hallData;
@@ -24,13 +27,21 @@ class _AddEditHallScreenState extends State<AddEditHallScreen> {
   final _descCtrl = TextEditingController();
   final _priceCtrl = TextEditingController();
   final _capacityCtrl = TextEditingController();
-  final _imageCtrl = TextEditingController();
   final _phoneCtrl = TextEditingController();
   final _customAmenityCtrl = TextEditingController();
 
   String _selectedCity = 'طرابلس';
   final List<String> _selectedAmenities = [];
   bool _loading = false;
+  bool _uploadingImage = false;
+
+  // ── الصورة ──
+  File? _pickedImage;
+  String _existingImageUrl = '';
+
+  final ImagePicker _picker = ImagePicker();
+
+  static const String _hallType = 'قاعات أفراح';
 
   final List<String> _cities = const [
     'طرابلس',
@@ -40,10 +51,6 @@ class _AddEditHallScreenState extends State<AddEditHallScreen> {
     'سبها',
   ];
 
-  // ✅ أُبقي على "قاعات أفراح" فقط
-  static const String _hallType = 'قاعات أفراح';
-
-  // ✅ تمت إزالة "مسبح" و "مسرح"
   final List<String> _amenitiesList = const [
     'تكييف',
     'مواقف سيارات',
@@ -57,7 +64,6 @@ class _AddEditHallScreenState extends State<AddEditHallScreen> {
 
   bool get _isEdit => widget.hallId != null && widget.hallData != null;
 
-  // ── المرافق المخصصة (التي أضافها المزود يدوياً) ──
   List<String> get _customAmenities =>
       _selectedAmenities.where((a) => !_amenitiesList.contains(a)).toList();
 
@@ -70,8 +76,8 @@ class _AddEditHallScreenState extends State<AddEditHallScreen> {
       _descCtrl.text = data['description'] ?? '';
       _priceCtrl.text = (data['price'] ?? '').toString();
       _capacityCtrl.text = (data['capacity'] ?? '').toString();
-      _imageCtrl.text = data['image'] ?? data['coverImage'] ?? '';
       _phoneCtrl.text = data['providerPhone'] ?? data['phone'] ?? '';
+      _existingImageUrl = data['image'] ?? data['coverImage'] ?? '';
       _selectedCity = _cities.contains(data['city']) ? data['city'] : 'طرابلس';
       if (data['amenities'] is List) {
         _selectedAmenities.addAll(
@@ -87,13 +93,59 @@ class _AddEditHallScreenState extends State<AddEditHallScreen> {
     _descCtrl.dispose();
     _priceCtrl.dispose();
     _capacityCtrl.dispose();
-    _imageCtrl.dispose();
     _phoneCtrl.dispose();
     _customAmenityCtrl.dispose();
     super.dispose();
   }
 
-  // ── إضافة مرفق مخصص ──
+  // ✅ اختيار صورة من المعرض
+  Future<void> _pickImage() async {
+    try {
+      final XFile? picked = await _picker.pickImage(
+        source: ImageSource.gallery,
+        imageQuality: 70,
+        maxWidth: 1200,
+      );
+      if (picked == null) return;
+
+      setState(() {
+        _pickedImage = File(picked.path);
+      });
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('تعذر اختيار الصورة: $e'),
+            backgroundColor: Colors.redAccent,
+          ),
+        );
+      }
+    }
+  }
+
+  // ✅ رفع الصورة إلى Supabase Storage
+  Future<String> _uploadImageToSupabase(File image) async {
+    final user = FirebaseAuth.instance.currentUser;
+    final fileName =
+        '${user?.uid ?? "unknown"}_${DateTime.now().millisecondsSinceEpoch}.jpg';
+
+    final supabase = Supabase.instance.client;
+
+    // ── رفع الملف ──
+    await supabase.storage.from('halls').upload(
+          fileName,
+          image,
+          fileOptions: const FileOptions(
+            contentType: 'image/jpeg',
+            upsert: true,
+          ),
+        );
+
+    // ── الحصول على الرابط العام ──
+    final publicUrl = supabase.storage.from('halls').getPublicUrl(fileName);
+    return publicUrl;
+  }
+
   void _addCustomAmenity() {
     final text = _customAmenityCtrl.text.trim();
     if (text.isEmpty) return;
@@ -120,9 +172,28 @@ class _AddEditHallScreenState extends State<AddEditHallScreen> {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
 
+    // ── التحقق من وجود صورة ──
+    if (_pickedImage == null && _existingImageUrl.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('الرجاء اختيار صورة للقاعة'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
     setState(() => _loading = true);
 
     try {
+      // ✅ رفع الصورة إذا كانت جديدة
+      String imageUrl = _existingImageUrl;
+      if (_pickedImage != null) {
+        setState(() => _uploadingImage = true);
+        imageUrl = await _uploadImageToSupabase(_pickedImage!);
+        setState(() => _uploadingImage = false);
+      }
+
       final data = {
         'name': _nameCtrl.text.trim(),
         'description': _descCtrl.text.trim(),
@@ -130,8 +201,8 @@ class _AddEditHallScreenState extends State<AddEditHallScreen> {
         'capacity': int.tryParse(_capacityCtrl.text.trim()) ?? 0,
         'city': _selectedCity,
         'type': _hallType,
-        'image': _imageCtrl.text.trim(),
-        'coverImage': _imageCtrl.text.trim(),
+        'image': imageUrl,
+        'coverImage': imageUrl,
         'providerPhone': _phoneCtrl.text.trim(),
         'amenities': _selectedAmenities,
         'providerId': user.uid,
@@ -172,7 +243,12 @@ class _AddEditHallScreenState extends State<AddEditHallScreen> {
         );
       }
     } finally {
-      if (mounted) setState(() => _loading = false);
+      if (mounted) {
+        setState(() {
+          _loading = false;
+          _uploadingImage = false;
+        });
+      }
     }
   }
 
@@ -281,43 +357,14 @@ class _AddEditHallScreenState extends State<AddEditHallScreen> {
                 const SizedBox(height: 24),
 
                 // ── الصورة ──
-                _sectionTitle('الصورة', Icons.image_outlined),
-                const SizedBox(height: 12),
-                _buildField(
-                  controller: _imageCtrl,
-                  hint: 'رابط الصورة (URL)',
-                  icon: Icons.link,
-                  validator: (v) {
-                    if (v == null || v.trim().isEmpty) {
-                      return 'رابط الصورة مطلوب';
-                    }
-                    if (!v.startsWith('http')) {
-                      return 'الرابط غير صالح';
-                    }
-                    return null;
-                  },
+                _sectionTitle('صورة القاعة', Icons.image_outlined),
+                const SizedBox(height: 6),
+                const Text(
+                  'اختر صورة واضحة من معرض هاتفك',
+                  style: TextStyle(color: textLight, fontSize: 11),
                 ),
-                if (_imageCtrl.text.isNotEmpty) ...[
-                  const SizedBox(height: 12),
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(16),
-                    child: SizedBox(
-                      height: 160,
-                      width: double.infinity,
-                      child: Image.network(
-                        _imageCtrl.text.trim(),
-                        fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) => Container(
-                          color: primary.withValues(alpha: 0.1),
-                          child: const Center(
-                            child: Icon(Icons.broken_image_outlined,
-                                color: textLight, size: 40),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
+                const SizedBox(height: 12),
+                _buildImagePicker(),
                 const SizedBox(height: 24),
 
                 // ── رقم الهاتف ──
@@ -339,7 +386,7 @@ class _AddEditHallScreenState extends State<AddEditHallScreen> {
                 ),
                 const SizedBox(height: 24),
 
-                // ── المرافق والخدمات ──
+                // ── المرافق ──
                 _sectionTitle('المرافق والخدمات', Icons.room_service_outlined),
                 const SizedBox(height: 6),
                 const Text(
@@ -347,8 +394,6 @@ class _AddEditHallScreenState extends State<AddEditHallScreen> {
                   style: TextStyle(color: textLight, fontSize: 11),
                 ),
                 const SizedBox(height: 12),
-
-                // ── المرافق الجاهزة ──
                 Wrap(
                   spacing: 8,
                   runSpacing: 8,
@@ -405,8 +450,6 @@ class _AddEditHallScreenState extends State<AddEditHallScreen> {
                     );
                   }).toList(),
                 ),
-
-                // ── المرافق المخصصة ──
                 if (_customAmenities.isNotEmpty) ...[
                   const SizedBox(height: 16),
                   Row(
@@ -458,8 +501,6 @@ class _AddEditHallScreenState extends State<AddEditHallScreen> {
                     }).toList(),
                   ),
                 ],
-
-                // ── إضافة مرفق جديد ──
                 const SizedBox(height: 16),
                 Row(
                   children: [
@@ -469,8 +510,7 @@ class _AddEditHallScreenState extends State<AddEditHallScreen> {
                           color: Colors.white,
                           borderRadius: BorderRadius.circular(14),
                           border: Border.all(
-                              color:
-                                  primary.withValues(alpha: 0.2),
+                              color: primary.withValues(alpha: 0.2),
                               width: 1),
                         ),
                         child: TextField(
@@ -527,11 +567,25 @@ class _AddEditHallScreenState extends State<AddEditHallScreen> {
                       ),
                     ),
                     child: _loading
-                        ? const SizedBox(
-                            width: 22,
-                            height: 22,
-                            child: CircularProgressIndicator(
-                                color: Colors.white, strokeWidth: 2.5),
+                        ? Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const SizedBox(
+                                width: 22,
+                                height: 22,
+                                child: CircularProgressIndicator(
+                                    color: Colors.white, strokeWidth: 2.5),
+                              ),
+                              const SizedBox(width: 12),
+                              Text(
+                                _uploadingImage
+                                    ? 'جاري رفع الصورة...'
+                                    : 'جاري الحفظ...',
+                                style: const TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.bold),
+                              ),
+                            ],
                           )
                         : Row(
                             mainAxisAlignment: MainAxisAlignment.center,
@@ -560,6 +614,97 @@ class _AddEditHallScreenState extends State<AddEditHallScreen> {
           ),
         ),
       ),
+    );
+  }
+
+  // ✅ واجهة اختيار الصورة
+  Widget _buildImagePicker() {
+    return Column(
+      children: [
+        if (_pickedImage != null)
+          ClipRRect(
+            borderRadius: BorderRadius.circular(16),
+            child: SizedBox(
+              height: 200,
+              width: double.infinity,
+              child: Image.file(
+                _pickedImage!,
+                fit: BoxFit.cover,
+              ),
+            ),
+          )
+        else if (_existingImageUrl.isNotEmpty)
+          ClipRRect(
+            borderRadius: BorderRadius.circular(16),
+            child: SizedBox(
+              height: 200,
+              width: double.infinity,
+              child: Image.network(
+                _existingImageUrl,
+                fit: BoxFit.cover,
+                errorBuilder: (_, __, ___) => Container(
+                  color: primary.withValues(alpha: 0.1),
+                  child: const Center(
+                    child: Icon(Icons.broken_image_outlined,
+                        color: textLight, size: 40),
+                  ),
+                ),
+              ),
+            ),
+          )
+        else
+          Container(
+            height: 200,
+            width: double.infinity,
+            decoration: BoxDecoration(
+              color: primary.withValues(alpha: 0.05),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: primary.withValues(alpha: 0.3),
+                width: 1.5,
+                style: BorderStyle.solid,
+              ),
+            ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.add_photo_alternate_outlined,
+                    color: primary.withValues(alpha: 0.6), size: 50),
+                const SizedBox(height: 10),
+                const Text('لا توجد صورة',
+                    style: TextStyle(color: textLight, fontSize: 13)),
+              ],
+            ),
+          ),
+        const SizedBox(height: 12),
+
+        // ── زر الاختيار ──
+        SizedBox(
+          width: double.infinity,
+          height: 50,
+          child: ElevatedButton.icon(
+            onPressed: _loading ? null : _pickImage,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.white,
+              foregroundColor: primary,
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+                side: BorderSide(
+                    color: primary.withValues(alpha: 0.3), width: 1.5),
+              ),
+            ),
+            icon: const Icon(Icons.photo_library_outlined, size: 20),
+            label: Text(
+              _pickedImage == null && _existingImageUrl.isEmpty
+                  ? 'اختر صورة من المعرض'
+                  : 'تغيير الصورة',
+              style: const TextStyle(
+                  fontSize: 14, fontWeight: FontWeight.bold),
+            ),
+          ),
+        ),
+      ],
     );
   }
 
@@ -691,9 +836,6 @@ class _AddEditHallScreenState extends State<AddEditHallScreen> {
               inputFormatters: digitsOnly
                   ? [FilteringTextInputFormatter.digitsOnly]
                   : null,
-              onChanged: (v) {
-                if (icon == Icons.link) setState(() {});
-              },
               style: const TextStyle(
                   color: textDark,
                   fontSize: 14,
