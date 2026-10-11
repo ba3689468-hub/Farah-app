@@ -3,11 +3,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import '../../../../hall_list_screen.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../providers/auth_provider.dart';
-import 'register_screen.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+
+// استيراد ملفاتنا الجديدة
+import 'package:farah/features/auth/repository.dart'; 
+import '../../../../hall_list_screen.dart';
+import 'register_screen.dart';
 import 'package:farah/features/provider_dashboard_screen.dart';
 
 class FarahGlassLoginScreen extends ConsumerStatefulWidget {
@@ -20,13 +22,16 @@ class FarahGlassLoginScreen extends ConsumerStatefulWidget {
 
 class _FarahGlassLoginScreenState extends ConsumerState<FarahGlassLoginScreen> {
   final _phoneCtrl = TextEditingController();
-  final _passCtrl = TextEditingController();
+  final _otpCtrl = TextEditingController();
   final _formKey = GlobalKey<FormState>();
 
-  bool _obscure = true;
   bool _remember = false;
   bool _loading = false;
   String? _error;
+  
+  // متغيرات OTP الجديدة
+  bool _isOtpSent = false;
+  String? _verificationId;
 
   static const Color gold = AppColors.primary;
   static const Color lightGold = AppColors.background;
@@ -36,11 +41,12 @@ class _FarahGlassLoginScreenState extends ConsumerState<FarahGlassLoginScreen> {
   @override
   void dispose() {
     _phoneCtrl.dispose();
-    _passCtrl.dispose();
+    _otpCtrl.dispose();
     super.dispose();
   }
 
-  Future<void> _login() async {
+  // ── دالة إرسال الرمز أو التحقق منه ──
+  Future<void> _handleAuth() async {
     if (!_formKey.currentState!.validate()) return;
     FocusScope.of(context).unfocus();
     setState(() {
@@ -48,77 +54,115 @@ class _FarahGlassLoginScreenState extends ConsumerState<FarahGlassLoginScreen> {
       _error = null;
     });
 
-    try {
-      // ✅ نحول رقم الهاتف إلى بريد وهمي ليتمكن Firebase من تسجيل الدخول
-      final phone = _phoneCtrl.text.trim();
-      final fakeEmail = '$phone@farah.app';
+    final authRepo = AuthRepository();
 
-      final repo = ref.read(authRepositoryProvider);
-      await repo.signIn(fakeEmail, _passCtrl.text.trim());
+    if (!_isOtpSent) {
+      // المرحلة 1: إرسال الرمز
+      String phone = _phoneCtrl.text.trim();
+      // التأكد من إضافة مقدمة الدولة (ليبيا +218)
+      if (!phone.startsWith('+218')) {
+        phone = '+218$phone';
+      }
 
-      final fbUser = FirebaseAuth.instance.currentUser;
-      if (fbUser != null) {
-        final docRef =
-            FirebaseFirestore.instance.collection('users').doc(fbUser.uid);
-        final doc = await docRef.get();
-
-        // ── إذا كان المستخدم جديداً (لم يسجل بياناته سابقاً) ──
-        if (!doc.exists) {
-          await docRef.set({
-            'uid': fbUser.uid,
-            'fullName': fbUser.displayName ?? 'مستخدم فرح',
-            'email': fbUser.email ?? '',
-            'phone': phone,
-            'role': 'user',
-            'walletBalance': 0,
-            'isVerified': true,
-            'isBlocked': false,
-            'fcmTokens': [],
-            'createdAt': FieldValue.serverTimestamp(),
+      await authRepo.verifyPhoneNumber(
+        phoneNumber: phone,
+        onCodeSent: (verId) {
+          setState(() {
+            _isOtpSent = true;
+            _verificationId = verId;
+            _loading = false;
           });
-        }
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('تم إرسال رمز التحقق، يرجى إدخاله'), backgroundColor: Colors.green),
+          );
+        },
+        onError: (err) {
+          setState(() {
+            _loading = false;
+            _error = _translateError(err);
+          });
+        },
+      );
+    } else {
+      // المرحلة 2: التحقق من الرمز
+      if (_otpCtrl.text.trim().length < 6) {
+        setState(() {
+          _loading = false;
+          _error = 'الرجاء إدخال رمز مكون من 6 أرقام';
+        });
+        return;
+      }
 
-        if (mounted) {
-          // ✅ التحقق من دور المستخدم لتوجيهه للصفحة المناسبة
-          String role = 'user';
-          if (doc.exists) {
-            final userData = doc.data() as Map<String, dynamic>?;
-            role = userData?['role'] ?? 'user';
-          }
+      final userCredential = await authRepo.signInWithOTP(
+        verificationId: _verificationId!,
+        smsCode: _otpCtrl.text.trim(),
+      );
 
-          if (role == 'provider') {
-            // ── مزود خدمة → لوحة المزود ──
-            Navigator.pushAndRemoveUntil(
-              context,
-              MaterialPageRoute(
-                  builder: (_) => const ProviderDashboardScreen()),
-              (route) => false,
-            );
-          } else {
-            // ── زبون → الصفحة الرئيسية ──
-            Navigator.pushAndRemoveUntil(
-              context,
-              MaterialPageRoute(builder: (_) => HallListScreen()),
-              (route) => false,
-            );
-          }
+      if (userCredential != null && userCredential.user != null) {
+        await _checkUserRoleAndNavigate(userCredential.user!.uid);
+      } else {
+        setState(() {
+          _loading = false;
+          _error = 'الرمز غير صحيح أو انتهت صلاحيته';
+        });
+      }
+    }
+  }
+
+  // ── التحقق من الدور والتوجيه ──
+  Future<void> _checkUserRoleAndNavigate(String uid) async {
+    try {
+      final docRef = FirebaseFirestore.instance.collection('users').doc(uid);
+      final doc = await docRef.get();
+
+      if (!doc.exists) {
+        // مستخدم جديد: إنشاء وثيقة له في Firestore
+        await docRef.set({
+          'uid': uid,
+          'fullName': 'مستخدم فرح', // يمكن تعديله لاحقاً في شاشة الملف الشخصي
+          'phone': _phoneCtrl.text.trim(),
+          'role': 'user',
+          'walletBalance': 0,
+          'isVerified': true,
+          'isBlocked': false,
+          'fcmTokens': [],
+          'createdAt': FieldValue.serverTimestamp(),
+        });
+      }
+
+      if (mounted) {
+        String role = doc.exists ? (doc.data()?['role'] ?? 'user') : 'user';
+
+        if (role == 'provider') {
+          Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(builder: (_) => const ProviderDashboardScreen()),
+            (route) => false,
+          );
+        } else {
+          Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(builder: (_) => HallListScreen()),
+            (route) => false,
+          );
         }
       }
     } catch (e) {
-      setState(() => _error = _translateError(e.toString()));
-    } finally {
-      if (mounted) setState(() => _loading = false);
+      setState(() {
+        _loading = false;
+        _error = 'حدث خطأ أثناء جلب بيانات المستخدم';
+      });
     }
   }
 
   String _translateError(String msg) {
-    if (msg.contains('user-not-found')) return 'لا يوجد حساب بهذا الرقم';
-    if (msg.contains('wrong-password')) return 'كلمة المرور غير صحيحة';
-    if (msg.contains('invalid-email')) return 'رقم الهاتف غير صالح';
-    if (msg.contains('invalid-credential')) return 'بيانات الدخول غير صحيحة';
+    if (msg.contains('invalid-phone-number')) return 'رقم الهاتف غير صالح';
     if (msg.contains('too-many-requests')) return 'محاولات كثيرة، حاول لاحقاً';
+    if (msg.contains('quota-exceeded')) return 'تم استهلاك حصة الرسائل اليومية';
     if (msg.contains('network-request-failed')) return 'تحقق من اتصال الإنترنت';
-    return 'حدث خطأ، حاول مرة أخرى';
+    if (msg.contains('invalid-verification-code')) return 'رمز التحقق غير صحيح';
+    if (msg.contains('session-expired')) return 'انتهت الجلسة، أعد إرسال الرمز';
+    return msg.length > 50 ? 'حدث خطأ، حاول مرة أخرى' : msg;
   }
 
   void _goToRegister() {
@@ -180,25 +224,20 @@ class _FarahGlassLoginScreenState extends ConsumerState<FarahGlassLoginScreen> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                // ── العنوان ──
-                const Text(
-                  'تسجيل الدخول',
-                  style: TextStyle(
+                Text(
+                  _isOtpSent ? 'رمز التحقق' : 'تسجيل الدخول',
+                  style: const TextStyle(
                     color: chocolate,
                     fontSize: 30,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
                 const SizedBox(height: 6),
-
-                // ── الخط الفاصل ──
                 Container(
                   width: 60,
                   height: 2,
                   decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [gold, lightGold, gold],
-                    ),
+                    gradient: const LinearGradient(colors: [gold, lightGold, gold]),
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
@@ -207,10 +246,11 @@ class _FarahGlassLoginScreenState extends ConsumerState<FarahGlassLoginScreen> {
                 // ── حقل رقم الهاتف ──
                 _phoneField(),
 
-                const SizedBox(height: 18),
-
-                // ── حقل كلمة المرور ──
-                _passwordField(),
+                // ── حقل رمز التحقق (يظهر فقط بعد الإرسال) ──
+                if (_isOtpSent) ...[
+                  const SizedBox(height: 18),
+                  _otpField(),
+                ],
 
                 const SizedBox(height: 14),
 
@@ -222,78 +262,56 @@ class _FarahGlassLoginScreenState extends ConsumerState<FarahGlassLoginScreen> {
                       width: 22,
                       child: Checkbox(
                         value: _remember,
-                        onChanged: _loading
-                            ? null
-                            : (v) => setState(() => _remember = v!),
+                        onChanged: _loading ? null : (v) => setState(() => _remember = v!),
                         activeColor: deepRose,
                         checkColor: Colors.white,
-                        side: BorderSide(
-                          color: chocolate.withValues(alpha: 0.6),
-                          width: 1.5,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(4),
-                        ),
+                        side: BorderSide(color: chocolate.withValues(alpha: 0.6), width: 1.5),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
                       ),
                     ),
                     const SizedBox(width: 8),
-                    const Text(
-                      'تذكرني',
-                      style: TextStyle(color: chocolate, fontSize: 13),
-                    ),
+                    const Text('تذكرني', style: TextStyle(color: chocolate, fontSize: 13)),
                     const Spacer(),
-                    TextButton(
-                      onPressed: _loading
-                          ? null
-                          : () {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text('قريباً: استعادة كلمة المرور'),
-                                ),
-                              );
-                            },
-                      style: TextButton.styleFrom(
-                        padding: EdgeInsets.zero,
-                        minimumSize: const Size(0, 0),
-                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                      ),
-                      child: const Text(
-                        'نسيت كلمة المرور؟',
-                        style: TextStyle(
-                          color: deepRose,
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
-                          decoration: TextDecoration.underline,
-                          decorationColor: deepRose,
+                    if (!_isOtpSent)
+                      TextButton(
+                        onPressed: _loading ? null : () {
+                          setState(() => _isOtpSent = false); // إعادة تعيين الحالة
+                          // هنا يمكنك إضافة منطق استعادة كلمة المرور لاحقاً
+                        },
+                        style: TextButton.styleFrom(
+                          padding: EdgeInsets.zero,
+                          minimumSize: const Size(0, 0),
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        ),
+                        child: const Text(
+                          'نسيت كلمة المرور؟',
+                          style: TextStyle(
+                            color: deepRose,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            decoration: TextDecoration.underline,
+                            decorationColor: deepRose,
+                          ),
                         ),
                       ),
-                    ),
                   ],
                 ),
 
-                // ── رسالة الخطأ ──
                 if (_error != null) ...[
                   const SizedBox(height: 14),
                   Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 14, vertical: 10),
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                     decoration: BoxDecoration(
                       color: Colors.red.withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                          color: Colors.red.withValues(alpha: 0.4)),
+                      border: Border.all(color: Colors.red.withValues(alpha: 0.4)),
                     ),
                     child: Row(
                       children: [
-                        const Icon(Icons.error_outline,
-                            color: Colors.red, size: 20),
+                        const Icon(Icons.error_outline, color: Colors.red, size: 20),
                         const SizedBox(width: 8),
                         Expanded(
-                          child: Text(
-                            _error!,
-                            style: const TextStyle(
-                                color: Colors.red, fontSize: 13),
-                          ),
+                          child: Text(_error!, style: const TextStyle(color: Colors.red, fontSize: 13)),
                         ),
                       ],
                     ),
@@ -302,7 +320,7 @@ class _FarahGlassLoginScreenState extends ConsumerState<FarahGlassLoginScreen> {
 
                 const SizedBox(height: 26),
 
-                // ── زر الدخول ──
+                // ── زر الدخول / التحقق ──
                 Container(
                   width: 200,
                   height: 54,
@@ -318,26 +336,22 @@ class _FarahGlassLoginScreenState extends ConsumerState<FarahGlassLoginScreen> {
                     color: Colors.transparent,
                     child: InkWell(
                       borderRadius: BorderRadius.circular(30),
-                      onTap: _loading ? null : _login,
+                      onTap: _loading ? null : _handleAuth,
                       child: Center(
                         child: _loading
                             ? const SizedBox(
                                 height: 24,
                                 width: 24,
-                                child: CircularProgressIndicator(
-                                  color: Colors.white,
-                                  strokeWidth: 2.5,
-                                ),
+                                child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5),
                               )
-                            : const Row(
+                            : Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  Icon(Icons.celebration,
-                                      color: Colors.white, size: 20),
-                                  SizedBox(width: 10),
+                                  Icon(_isOtpSent ? Icons.check_circle : Icons.celebration, color: Colors.white, size: 20),
+                                  const SizedBox(width: 10),
                                   Text(
-                                    'دخول',
-                                    style: TextStyle(
+                                    _isOtpSent ? 'تأكيد الرمز' : 'إرسال الرمز',
+                                    style: const TextStyle(
                                       color: Colors.white,
                                       fontWeight: FontWeight.bold,
                                       fontSize: 17,
@@ -352,22 +366,28 @@ class _FarahGlassLoginScreenState extends ConsumerState<FarahGlassLoginScreen> {
                 ),
                 const SizedBox(height: 18),
 
-                // ── إنشاء حساب ──
+                // ── إنشاء حساب / تعديل الرقم ──
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
-                      'ليس لديك حساب؟ ',
-                      style: TextStyle(
-                        color: chocolate.withValues(alpha: 0.75),
-                        fontSize: 13,
-                      ),
+                      _isOtpSent ? 'أدخلت رقماً خاطئاً؟ ' : 'ليس لديك حساب؟ ',
+                      style: TextStyle(color: chocolate.withValues(alpha: 0.75), fontSize: 13),
                     ),
                     GestureDetector(
-                      onTap: _loading ? null : _goToRegister,
-                      child: const Text(
-                        'أنشئ حساباً الآن',
-                        style: TextStyle(
+                      onTap: _loading ? null : () {
+                        if (_isOtpSent) {
+                          setState(() {
+                            _isOtpSent = false;
+                            _otpCtrl.clear();
+                          });
+                        } else {
+                          _goToRegister();
+                        }
+                      },
+                      child: Text(
+                        _isOtpSent ? 'تعديل الرقم' : 'أنشئ حساباً الآن',
+                        style: const TextStyle(
                           color: deepRose,
                           fontSize: 13,
                           fontWeight: FontWeight.bold,
@@ -402,11 +422,7 @@ class _FarahGlassLoginScreenState extends ConsumerState<FarahGlassLoginScreen> {
               ],
             ),
             child: const Center(
-              child: Icon(
-                Icons.person,
-                size: 55,
-                color: AppColors.primary,
-              ),
+              child: Icon(Icons.person, size: 55, color: AppColors.primary),
             ),
           ),
         ),
@@ -443,29 +459,19 @@ class _FarahGlassLoginScreenState extends ConsumerState<FarahGlassLoginScreen> {
               ),
               borderRadius: BorderRadius.circular(14),
             ),
-            child: const Icon(
-              Icons.phone_outlined,
-              color: Colors.white,
-              size: 22,
-            ),
+            child: const Icon(Icons.phone_outlined, color: Colors.white, size: 22),
           ),
           const SizedBox(width: 12),
           Expanded(
             child: TextFormField(
               controller: _phoneCtrl,
               keyboardType: TextInputType.phone,
-              enabled: !_loading,
+              enabled: !_loading && !_isOtpSent, // تعطيل الحقل إذا تم إرسال الرمز
               textAlign: TextAlign.right,
               textDirection: TextDirection.rtl,
               maxLength: 10,
-              inputFormatters: [
-                FilteringTextInputFormatter.digitsOnly,
-              ],
-              style: const TextStyle(
-                color: chocolate,
-                fontSize: 15,
-                fontWeight: FontWeight.w500,
-              ),
+              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+              style: const TextStyle(color: chocolate, fontSize: 15, fontWeight: FontWeight.w500),
               validator: (v) {
                 if (v == null || v.isEmpty) return 'رقم الهاتف مطلوب';
                 if (v.length < 10) return 'رقم الهاتف يجب أن يكون 10 أرقام';
@@ -473,13 +479,9 @@ class _FarahGlassLoginScreenState extends ConsumerState<FarahGlassLoginScreen> {
               },
               decoration: InputDecoration(
                 hintText: '9X XXXXXXX',
-                hintStyle: TextStyle(
-                  color: chocolate.withValues(alpha: 0.5),
-                  fontSize: 14,
-                ),
+                hintStyle: TextStyle(color: chocolate.withValues(alpha: 0.5), fontSize: 14),
                 counterText: '',
-                errorStyle: const TextStyle(
-                    color: Colors.red, fontSize: 11, height: 0.8),
+                errorStyle: const TextStyle(color: Colors.red, fontSize: 11, height: 0.8),
                 border: InputBorder.none,
                 enabledBorder: InputBorder.none,
                 focusedBorder: InputBorder.none,
@@ -494,8 +496,8 @@ class _FarahGlassLoginScreenState extends ConsumerState<FarahGlassLoginScreen> {
     );
   }
 
-  // ── حقل كلمة المرور ──
-  Widget _passwordField() {
+  // ── حقل رمز التحقق OTP ──
+  Widget _otpField() {
     return Container(
       height: 58,
       decoration: BoxDecoration(
@@ -523,38 +525,28 @@ class _FarahGlassLoginScreenState extends ConsumerState<FarahGlassLoginScreen> {
               ),
               borderRadius: BorderRadius.circular(14),
             ),
-            child: const Icon(
-              Icons.lock_outline,
-              color: Colors.white,
-              size: 22,
-            ),
+            child: const Icon(Icons.lock_outline, color: Colors.white, size: 22),
           ),
           const SizedBox(width: 12),
           Expanded(
             child: TextFormField(
-              controller: _passCtrl,
-              obscureText: _obscure,
+              controller: _otpCtrl,
+              keyboardType: TextInputType.number,
               enabled: !_loading,
-              textAlign: TextAlign.right,
-              textDirection: TextDirection.rtl,
-              style: const TextStyle(
-                color: chocolate,
-                fontSize: 15,
-                fontWeight: FontWeight.w500,
-              ),
+              textAlign: TextAlign.center,
+              maxLength: 6,
+              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+              style: const TextStyle(color: chocolate, fontSize: 20, fontWeight: FontWeight.bold, letterSpacing: 8),
               validator: (v) {
-                if (v == null || v.isEmpty) return 'كلمة المرور مطلوبة';
-                if (v.length < 6) return 'كلمة المرور قصيرة';
+                if (v == null || v.isEmpty) return 'رمز التحقق مطلوب';
+                if (v.length < 6) return 'الرمز يجب أن يكون 6 أرقام';
                 return null;
               },
               decoration: InputDecoration(
-                hintText: '••••••••••••••',
-                hintStyle: TextStyle(
-                  color: chocolate.withValues(alpha: 0.5),
-                  fontSize: 14,
-                ),
-                errorStyle: const TextStyle(
-                    color: Colors.red, fontSize: 11, height: 0.8),
+                hintText: '------',
+                hintStyle: TextStyle(color: chocolate.withValues(alpha: 0.5), fontSize: 18, letterSpacing: 8),
+                counterText: '',
+                errorStyle: const TextStyle(color: Colors.red, fontSize: 11, height: 0.8),
                 border: InputBorder.none,
                 enabledBorder: InputBorder.none,
                 focusedBorder: InputBorder.none,
@@ -563,17 +555,7 @@ class _FarahGlassLoginScreenState extends ConsumerState<FarahGlassLoginScreen> {
               ),
             ),
           ),
-          IconButton(
-            icon: Icon(
-              _obscure
-                  ? Icons.visibility_outlined
-                  : Icons.visibility_off_outlined,
-              color: chocolate,
-              size: 20,
-            ),
-            onPressed: () => setState(() => _obscure = !_obscure),
-          ),
-          const SizedBox(width: 6),
+          const SizedBox(width: 10),
         ],
       ),
     );
