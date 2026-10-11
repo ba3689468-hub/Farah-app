@@ -345,21 +345,35 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
             ],
           ),
           const SizedBox(height: 12),
+          // ✅ عرض المرافق من البيانات الفعلية
           Wrap(
             spacing: 8,
             runSpacing: 8,
-            children: [
-              _amenityChip('تكييف'),
-              _amenityChip('مواقف سيارات'),
-              _amenityChip('مسرح'),
-              _amenityChip('إضاءة متطورة'),
-              _amenityChip('كوشة'),
-              _amenityChip('خدمة ضيافة'),
-            ],
+            children: _buildAmenitiesFromData(),
           ),
         ],
       ),
     );
+  }
+
+  // ✅ بناء شرائح المرافق من بيانات القاعة الفعلية
+  List<Widget> _buildAmenitiesFromData() {
+    final amenities = _hall['amenities'];
+
+    // إذا كانت قائمة فارغة أو غير موجودة
+    if (amenities == null || amenities is! List || amenities.isEmpty) {
+      return [
+        const Text(
+          'لم يتم إضافة مرافق',
+          style: TextStyle(color: textLight, fontSize: 13),
+        ),
+      ];
+    }
+
+    // بناء شريحة لكل مرفق
+    return amenities
+        .map<Widget>((a) => _amenityChip(a.toString()))
+        .toList();
   }
 
   Widget _infoCard(
@@ -758,7 +772,6 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
     );
   }
 
-  // ── شريط الحجز السفلي ──
   Widget _buildBookingBar(int price) {
     return Container(
       padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
@@ -799,8 +812,6 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
               ],
             ),
             const Spacer(),
-
-            // ── زر الاتصال ──
             GestureDetector(
               onTap: _callProvider,
               child: Container(
@@ -818,8 +829,6 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
               ),
             ),
             const SizedBox(width: 10),
-
-            // ── زر الحجز ──
             GestureDetector(
               onTap: () {
                 Navigator.push(
@@ -867,7 +876,6 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
     );
   }
 
-  // ── فتح تطبيق الاتصال ──
   Future<void> _callProvider() async {
     final phone = _hall['providerPhone'] ??
         _hall['phone'] ??
@@ -886,7 +894,6 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
       return;
     }
 
-    // ── تنظيف الرقم وإضافة +218 إذا لزم ──
     String cleanPhone =
         phone.toString().replaceAll(RegExp(r'[^\d+]'), '');
     if (cleanPhone.startsWith('00')) {
@@ -928,7 +935,6 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
     }
   }
 
-  // ── مشاركة القاعة ──
   Future<void> _shareHall() async {
     final name = _hall['name'] ?? 'قاعة';
     final city = _hall['city'] ?? '';
