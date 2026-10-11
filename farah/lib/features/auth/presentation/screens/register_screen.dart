@@ -19,12 +19,17 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   final _phoneCtrl = TextEditingController();
   final _passCtrl = TextEditingController();
   final _confirmPassCtrl = TextEditingController();
+  final _otpCtrl = TextEditingController(); // حقل رمز التحقق الجديد
 
   bool _obscure = true;
   bool _obscureConfirm = true;
   bool _loading = false;
   String? _error;
   String _selectedRole = 'user';
+
+  // متغيرات OTP
+  bool _isOtpSent = false;
+  String? _verificationId;
 
   static const Color gold = AppColors.primary;
   static const Color lightGold = AppColors.background;
@@ -43,28 +48,86 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     _phoneCtrl.dispose();
     _passCtrl.dispose();
     _confirmPassCtrl.dispose();
+    _otpCtrl.dispose();
     super.dispose();
   }
 
   Future<void> _register() async {
-    if (!_formKey.currentState!.validate()) return;
-    FocusScope.of(context).unfocus();
+    // المرحلة 1: إرسال الرمز
+    if (!_isOtpSent) {
+      if (!_formKey.currentState!.validate()) return;
+      FocusScope.of(context).unfocus();
+      setState(() {
+        _loading = true;
+        _error = null;
+      });
+
+      String phone = _phoneCtrl.text.trim();
+      // إضافة مقدمة الدولة (ليبيا +218)
+      if (!phone.startsWith('+218')) {
+        phone = '+218$phone';
+      }
+
+      final repo = ref.read(authRepositoryProvider);
+      await repo.verifyPhoneNumber(
+        phoneNumber: phone,
+        onCodeSent: (verId) {
+          setState(() {
+            _isOtpSent = true;
+            _verificationId = verId;
+            _loading = false;
+          });
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('تم إرسال رمز التحقق، يرجى إدخاله'),
+              backgroundColor: Colors.green,
+            ),
+          );
+        },
+        onError: (err) {
+          setState(() {
+            _loading = false;
+            _error = _translateError(err);
+          });
+        },
+      );
+      return;
+    }
+
+    // المرحلة 2: التحقق من الرمز وإنشاء الحساب
+    if (_otpCtrl.text.trim().length < 6) {
+      setState(() => _error = 'الرجاء إدخال رمز مكوّن من 6 أرقام');
+      return;
+    }
+
     setState(() {
       _loading = true;
       _error = null;
     });
 
     try {
-      // ✅ تحويل رقم الهاتف إلى بريد وهمي ليعمل مع Firebase
+      final repo = ref.read(authRepositoryProvider);
+
+      // 1. التحقق من رمز OTP
+      final otpCred = await repo.signInWithOTP(
+        verificationId: _verificationId!,
+        smsCode: _otpCtrl.text.trim(),
+      );
+
+      if (otpCred == null || otpCred.user == null) {
+        throw Exception('الرمز غير صحيح أو انتهت صلاحيته');
+      }
+
+      // 2. تم التحقق بنجاح، الآن ننشئ الحساب الفعلي بالبريد الوهمي
       final phone = _phoneCtrl.text.trim();
       final fakeEmail = '$phone@farah.app';
 
-      final repo = ref.read(authRepositoryProvider);
       final cred = await repo.signUp(
         fakeEmail,
         _passCtrl.text.trim(),
       );
 
+      // 3. حفظ بيانات المستخدم في Firestore
       await repo.saveUserData(UserModel(
         uid: cred.user!.uid,
         fullName: _nameCtrl.text.trim(),
@@ -81,7 +144,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             duration: Duration(seconds: 3),
           ),
         );
-        // ✅ العودة إلى شاشة تسجيل الدخول
+        // العودة إلى شاشة تسجيل الدخول
         Navigator.pop(context);
       }
     } catch (e) {
@@ -96,7 +159,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     if (msg.contains('invalid-email')) return 'رقم الهاتف غير صالح';
     if (msg.contains('weak-password')) return 'كلمة المرور ضعيفة جداً';
     if (msg.contains('network-request-failed')) return 'تحقق من اتصال الإنترنت';
-    return 'حدث خطأ، حاول مرة أخرى';
+    if (msg.contains('invalid-verification-code')) return 'رمز التحقق غير صحيح';
+    if (msg.contains('session-expired')) return 'انتهت الجلسة، أعد إرسال الرمز';
+    if (msg.contains('quota-exceeded')) return 'تم استهلاك حصة الرسائل اليومية';
+    return msg.length > 50 ? 'حدث خطأ، حاول مرة أخرى' : msg;
   }
 
   @override
@@ -123,8 +189,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                       shape: BoxShape.circle,
                       boxShadow: [
                         BoxShadow(
-                          color: AppColors.primaryDark
-                              .withValues(alpha: 0.1),
+                          color: AppColors.primaryDark.withValues(alpha: 0.1),
                           blurRadius: 10,
                           offset: const Offset(0, 3),
                         ),
@@ -142,8 +207,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
             Center(
               child: SingleChildScrollView(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
                 child: Form(
                   key: _formKey,
                   child: _buildGlassCard(context),
@@ -186,9 +250,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 // ── العنوان ──
-                const Text(
-                  'إنشاء حساب',
-                  style: TextStyle(
+                Text(
+                  _isOtpSent ? 'تأكيد رقم الهاتف' : 'إنشاء حساب',
+                  style: const TextStyle(
                     color: chocolate,
                     fontSize: 28,
                     fontWeight: FontWeight.bold,
@@ -210,17 +274,18 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 const SizedBox(height: 24),
 
                 // ── حقل الاسم ──
-                _buildField(
-                  controller: _nameCtrl,
-                  hint: 'الاسم الكامل',
-                  icon: Icons.person_outline,
-                  validator: (v) {
-                    if (v == null || v.trim().isEmpty) return 'الاسم مطلوب';
-                    if (v.trim().length < 3) return 'الاسم قصير';
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 14),
+                if (!_isOtpSent)
+                  _buildField(
+                    controller: _nameCtrl,
+                    hint: 'الاسم الكامل',
+                    icon: Icons.person_outline,
+                    validator: (v) {
+                      if (v == null || v.trim().isEmpty) return 'الاسم مطلوب';
+                      if (v.trim().length < 3) return 'الاسم قصير';
+                      return null;
+                    },
+                  ),
+                if (!_isOtpSent) const SizedBox(height: 14),
 
                 // ── حقل رقم الهاتف ──
                 _buildField(
@@ -230,6 +295,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   keyboardType: TextInputType.phone,
                   digitsOnly: true,
                   maxLength: 10,
+                  enabled: !_isOtpSent, // تعطيل الحقل عند إرسال الرمز
                   validator: (v) {
                     if (v == null || v.isEmpty) return 'رقم الهاتف مطلوب';
                     if (v.length < 10) return 'رقم الهاتف يجب أن يكون 10 أرقام';
@@ -238,93 +304,132 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 ),
                 const SizedBox(height: 14),
 
-                // ── حقل كلمة المرور ──
-                _buildField(
-                  controller: _passCtrl,
-                  hint: '••••••••••••••',
-                  icon: Icons.lock_outline,
-                  obscure: _obscure,
-                  validator: (v) {
-                    if (v == null || v.isEmpty) return 'كلمة المرور مطلوبة';
-                    if (v.length < 6) return 'كلمة المرور قصيرة (6+)';
-                    return null;
-                  },
-                  toggle: IconButton(
-                    icon: Icon(
-                      _obscure
-                          ? Icons.visibility_outlined
-                          : Icons.visibility_off_outlined,
-                      color: chocolate,
-                      size: 20,
+                // ── حقول كلمة المرور (تختفي عند إرسال الرمز) ──
+                if (!_isOtpSent) ...[
+                  _buildField(
+                    controller: _passCtrl,
+                    hint: '••••••••••••••',
+                    icon: Icons.lock_outline,
+                    obscure: _obscure,
+                    validator: (v) {
+                      if (v == null || v.isEmpty) return 'كلمة المرور مطلوبة';
+                      if (v.length < 6) return 'كلمة المرور قصيرة (6+)';
+                      return null;
+                    },
+                    toggle: IconButton(
+                      icon: Icon(
+                        _obscure
+                            ? Icons.visibility_outlined
+                            : Icons.visibility_off_outlined,
+                        color: chocolate,
+                        size: 20,
+                      ),
+                      onPressed: () => setState(() => _obscure = !_obscure),
                     ),
-                    onPressed: () => setState(() => _obscure = !_obscure),
                   ),
-                ),
-                const SizedBox(height: 14),
+                  const SizedBox(height: 14),
+                  _buildField(
+                    controller: _confirmPassCtrl,
+                    hint: 'تأكيد كلمة المرور',
+                    icon: Icons.lock_reset_outlined,
+                    obscure: _obscureConfirm,
+                    validator: (v) {
+                      if (v == null || v.isEmpty) {
+                        return 'تأكيد كلمة المرور مطلوب';
+                      }
+                      if (v != _passCtrl.text) {
+                        return 'كلمة المرور غير متطابقة';
+                      }
+                      return null;
+                    },
+                    toggle: IconButton(
+                      icon: Icon(
+                        _obscureConfirm
+                            ? Icons.visibility_outlined
+                            : Icons.visibility_off_outlined,
+                        color: chocolate,
+                        size: 20,
+                      ),
+                      onPressed: () =>
+                          setState(() => _obscureConfirm = !_obscureConfirm),
+                    ),
+                  ),
+                  const SizedBox(height: 18),
 
-                // ── حقل تأكيد كلمة المرور ──
-                _buildField(
-                  controller: _confirmPassCtrl,
-                  hint: 'تأكيد كلمة المرور',
-                  icon: Icons.lock_reset_outlined,
-                  obscure: _obscureConfirm,
-                  validator: (v) {
-                    if (v == null || v.isEmpty) {
-                      return 'تأكيد كلمة المرور مطلوب';
-                    }
-                    if (v != _passCtrl.text) {
-                      return 'كلمة المرور غير متطابقة';
-                    }
-                    return null;
-                  },
-                  toggle: IconButton(
-                    icon: Icon(
-                      _obscureConfirm
-                          ? Icons.visibility_outlined
-                          : Icons.visibility_off_outlined,
-                      color: chocolate,
-                      size: 20,
-                    ),
-                    onPressed: () => setState(
-                        () => _obscureConfirm = !_obscureConfirm),
-                  ),
-                ),
-                const SizedBox(height: 18),
-
-                // ── نوع الحساب ──
-                const Align(
-                  alignment: Alignment.centerRight,
-                  child: Text(
-                    'نوع الحساب:',
-                    style: TextStyle(
-                      color: chocolate,
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 10),
-                Row(
-                  children: [
-                    Expanded(
-                      child: _roleCard(
-                        value: 'user',
-                        icon: Icons.person,
-                        title: 'زبون',
-                        subtitle: 'أبحث عن خدمة',
+                  // ── نوع الحساب ──
+                  const Align(
+                    alignment: Alignment.centerRight,
+                    child: Text(
+                      'نوع الحساب:',
+                      style: TextStyle(
+                        color: chocolate,
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: _roleCard(
-                        value: 'provider',
-                        icon: Icons.storefront,
-                        title: 'مزوّد خدمة',
-                        subtitle: 'صالة / متجر',
+                  ),
+                  const SizedBox(height: 10),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _roleCard(
+                          value: 'user',
+                          icon: Icons.person,
+                          title: 'زبون',
+                          subtitle: 'أبحث عن خدمة',
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: _roleCard(
+                          value: 'provider',
+                          icon: Icons.storefront,
+                          title: 'مزوّد خدمة',
+                          subtitle: 'صالة / متجر',
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+
+                // ── حقل إدخال رمز OTP (يظهر فقط عند إرسال الرمز) ──
+                if (_isOtpSent) ...[
+                  _buildField(
+                    controller: _otpCtrl,
+                    hint: '------',
+                    icon: Icons.message_outlined,
+                    keyboardType: TextInputType.number,
+                    digitsOnly: true,
+                    maxLength: 6,
+                    validator: (v) {
+                      if (v == null || v.isEmpty) return 'رمز التحقق مطلوب';
+                      if (v.length < 6) return 'الرمز يجب أن يكون 6 أرقام';
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 14),
+                  // زر لتعديل الرقم في حال الخطأ
+                  TextButton(
+                    onPressed: _loading
+                        ? null
+                        : () {
+                            setState(() {
+                              _isOtpSent = false;
+                              _otpCtrl.clear();
+                              _error = null;
+                            });
+                          },
+                    child: const Text(
+                      'الرقم غير صحيح؟ تعديل الرقم',
+                      style: TextStyle(
+                        color: deepRose,
+                        fontSize: 13,
+                        fontWeight: FontWeight.bold,
+                        decoration: TextDecoration.underline,
                       ),
                     ),
-                  ],
-                ),
+                  ),
+                ],
 
                 // ── رسالة الخطأ ──
                 if (_error != null) ...[
@@ -356,7 +461,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 ],
                 const SizedBox(height: 24),
 
-                // ── زر إنشاء حساب ──
+                // ── زر الإجراء (إنشاء حساب / تأكيد الرمز) ──
                 Container(
                   width: 220,
                   height: 54,
@@ -383,15 +488,20 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                                   strokeWidth: 2.5,
                                 ),
                               )
-                            : const Row(
+                            : Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  Icon(Icons.person_add_alt_1,
-                                      color: Colors.white, size: 20),
-                                  SizedBox(width: 10),
+                                  Icon(
+                                    _isOtpSent
+                                        ? Icons.check_circle_outline
+                                        : Icons.person_add_alt_1,
+                                    color: Colors.white,
+                                    size: 20,
+                                  ),
+                                  const SizedBox(width: 10),
                                   Text(
-                                    'إنشاء حساب',
-                                    style: TextStyle(
+                                    _isOtpSent ? 'تأكيد وإنشاء' : 'إنشاء حساب',
+                                    style: const TextStyle(
                                       color: Colors.white,
                                       fontWeight: FontWeight.bold,
                                       fontSize: 16,
@@ -407,31 +517,32 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 const SizedBox(height: 18),
 
                 // ── رابط تسجيل الدخول ──
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      'لديك حساب بالفعل؟ ',
-                      style: TextStyle(
-                        color: chocolate.withValues(alpha: 0.75),
-                        fontSize: 13,
-                      ),
-                    ),
-                    GestureDetector(
-                      onTap: _loading ? null : () => Navigator.pop(context),
-                      child: const Text(
-                        'سجّل دخول',
+                if (!_isOtpSent)
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        'لديك حساب بالفعل؟ ',
                         style: TextStyle(
-                          color: deepRose,
+                          color: chocolate.withValues(alpha: 0.75),
                           fontSize: 13,
-                          fontWeight: FontWeight.bold,
-                          decoration: TextDecoration.underline,
-                          decorationColor: deepRose,
                         ),
                       ),
-                    ),
-                  ],
-                ),
+                      GestureDetector(
+                        onTap: _loading ? null : () => Navigator.pop(context),
+                        child: const Text(
+                          'سجّل دخول',
+                          style: TextStyle(
+                            color: deepRose,
+                            fontSize: 13,
+                            fontWeight: FontWeight.bold,
+                            decoration: TextDecoration.underline,
+                            decorationColor: deepRose,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
               ],
             ),
           ),
@@ -455,9 +566,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 ),
               ],
             ),
-            child: const Center(
+            child: Center(
               child: Icon(
-                Icons.person_add,
+                _isOtpSent ? Icons.sms_outlined : Icons.person_add,
                 size: 55,
                 color: AppColors.primary,
               ),
@@ -482,14 +593,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
         decoration: BoxDecoration(
-          color: isSelected
-              ? gold.withValues(alpha: 0.15)
-              : Colors.white,
+          color: isSelected ? gold.withValues(alpha: 0.15) : Colors.white,
           borderRadius: BorderRadius.circular(18),
           border: Border.all(
-            color: isSelected
-                ? gold
-                : Colors.black.withValues(alpha: 0.1),
+            color: isSelected ? gold : Colors.black.withValues(alpha: 0.1),
             width: isSelected ? 2 : 1,
           ),
         ),
@@ -498,18 +605,14 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           children: [
             Icon(
               icon,
-              color: isSelected
-                  ? deepRose
-                  : chocolate.withValues(alpha: 0.6),
+              color: isSelected ? deepRose : chocolate.withValues(alpha: 0.6),
               size: 28,
             ),
             const SizedBox(height: 6),
             Text(
               title,
               style: TextStyle(
-                color: isSelected
-                    ? chocolate
-                    : chocolate.withValues(alpha: 0.7),
+                color: isSelected ? chocolate : chocolate.withValues(alpha: 0.7),
                 fontSize: 13,
                 fontWeight: FontWeight.bold,
               ),
@@ -538,6 +641,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     TextInputType? keyboardType,
     bool digitsOnly = false,
     int? maxLength,
+    bool enabled = true,
     String? Function(String?)? validator,
   }) {
     return Container(
@@ -576,7 +680,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
               obscureText: obscure,
               keyboardType: keyboardType,
               validator: validator,
-              enabled: !_loading,
+              enabled: enabled && !_loading,
               textAlign: TextAlign.right,
               textDirection: TextDirection.rtl,
               maxLength: maxLength,
