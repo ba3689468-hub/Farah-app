@@ -55,6 +55,7 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
       backgroundColor: AppColors.background,
       body: CustomScrollView(
         slivers: [
+          // ── معرض الصور الرئيسي ──
           SliverAppBar(
             expandedHeight: 300,
             pinned: true,
@@ -90,11 +91,26 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
               background: _buildImageGallery(images),
             ),
           ),
+
+          // ── المصغرات ──
+          if (images.length > 1)
+            SliverToBoxAdapter(child: _buildThumbnails(images)),
+
+          // ── المعلومات الأساسية ──
           SliverToBoxAdapter(
             child: _buildInfoSection(
                 name, city, price, rating, capacity, description),
           ),
+
+          // ── بطاقة المزود ──
+          SliverToBoxAdapter(child: _buildProviderCard()),
+
+          // ── التقييمات ──
           SliverToBoxAdapter(child: _buildReviewsSection()),
+
+          // ── قاعات مشابهة ──
+          SliverToBoxAdapter(child: _buildSimilarHallsSection(city)),
+
           const SliverToBoxAdapter(child: SizedBox(height: 100)),
         ],
       ),
@@ -102,13 +118,19 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
     );
   }
 
+  // ═══════════════════════════════════════════════════
+  // معرض الصور
+  // ═══════════════════════════════════════════════════
+
   List<String> _getImages(Map<String, dynamic> hall) {
     final gallery = hall['gallery'];
     if (gallery is List && gallery.isNotEmpty) {
       return List<String>.from(gallery);
     }
     final single = hall['image'] ?? hall['coverImage'];
-    if (single != null) return [single.toString()];
+    if (single != null && single.toString().isNotEmpty) {
+      return [single.toString()];
+    }
     return [];
   }
 
@@ -179,6 +201,33 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
               }),
             ),
           ),
+        // ── شارة السعر ──
+        Positioned(
+          top: 90,
+          left: 16,
+          child: Container(
+            padding: const EdgeInsets.symmetric(
+                horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              color: primary,
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.2),
+                  blurRadius: 8,
+                ),
+              ],
+            ),
+            child: Text(
+              '${_hall['price'] ?? 0} د.ل / ليلة',
+              style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 13,
+                  fontWeight: FontWeight.bold),
+            ),
+          ),
+        ),
+        // ── شارة التقييم ──
         Positioned(
           bottom: 16,
           right: 16,
@@ -211,6 +260,7 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
             ),
           ),
         ),
+        // ── شارة عدد الصور ──
         Positioned(
           bottom: 16,
           left: 16,
@@ -241,6 +291,59 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
       ],
     );
   }
+
+  // ── المصغرات ──
+  Widget _buildThumbnails(List<String> images) {
+    return Container(
+      height: 80,
+      margin: const EdgeInsets.only(top: 8),
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        itemCount: images.length,
+        separatorBuilder: (_, __) => const SizedBox(width: 8),
+        itemBuilder: (context, i) {
+          final active = i == _currentImage;
+          return GestureDetector(
+            onTap: () {
+              _pageCtrl.animateToPage(
+                i,
+                duration: const Duration(milliseconds: 300),
+                curve: Curves.easeInOut,
+              );
+            },
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              width: 70,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: active ? primary : Colors.transparent,
+                  width: 2,
+                ),
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(10),
+                child: Image.network(
+                  images[i],
+                  fit: BoxFit.cover,
+                  errorBuilder: (_, __, ___) => Container(
+                    color: primary.withValues(alpha: 0.2),
+                    child: const Icon(Icons.broken_image,
+                        color: primary, size: 20),
+                  ),
+                ),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  // ═══════════════════════════════════════════════════
+  // المعلومات الأساسية
+  // ═══════════════════════════════════════════════════
 
   Widget _buildInfoSection(String name, String city, int price, double rating,
       int capacity, String description) {
@@ -294,9 +397,35 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
               const Icon(Icons.location_on_outlined,
                   color: primary, size: 18),
               const SizedBox(width: 4),
-              Text(city,
-                  style: const TextStyle(
-                      color: textLight, fontSize: 14)),
+              Expanded(
+                child: Text(city,
+                    style: const TextStyle(
+                        color: textLight, fontSize: 14)),
+              ),
+              // ✅ زر الاتجاهات
+              GestureDetector(
+                onTap: () => _openDirections(city, name),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 10, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: primary.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.directions, color: primary, size: 16),
+                      SizedBox(width: 4),
+                      Text('الاتجاهات',
+                          style: TextStyle(
+                              color: primary,
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold)),
+                    ],
+                  ),
+                ),
+              ),
             ],
           ),
           const SizedBox(height: 20),
@@ -345,7 +474,6 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
             ],
           ),
           const SizedBox(height: 12),
-          // ✅ عرض المرافق من البيانات الفعلية
           Wrap(
             spacing: 8,
             runSpacing: 8,
@@ -356,11 +484,9 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
     );
   }
 
-  // ✅ بناء شرائح المرافق من بيانات القاعة الفعلية
   List<Widget> _buildAmenitiesFromData() {
     final amenities = _hall['amenities'];
 
-    // إذا كانت قائمة فارغة أو غير موجودة
     if (amenities == null || amenities is! List || amenities.isEmpty) {
       return [
         const Text(
@@ -370,7 +496,6 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
       ];
     }
 
-    // بناء شريحة لكل مرفق
     return amenities
         .map<Widget>((a) => _amenityChip(a.toString()))
         .toList();
@@ -430,9 +555,88 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
     );
   }
 
-  Widget _buildReviewsSection() {
+  // ═══════════════════════════════════════════════════
+  // بطاقة المزود
+  // ═══════════════════════════════════════════════════
+
+  Widget _buildProviderCard() {
+    final phone = _hall['providerPhone'] ?? _hall['phone'] ?? '';
+
+    if (phone.toString().isEmpty) {
+      return const SizedBox();
+    }
+
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: primary.withValues(alpha: 0.06),
+            blurRadius: 15,
+            offset: const Offset(0, 5),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 50,
+            height: 50,
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                  colors: [primary, primaryDark]),
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child:
+                const Icon(Icons.storefront, color: Colors.white, size: 26),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('مزوّد الخدمة',
+                    style: TextStyle(
+                        color: textLight, fontSize: 11)),
+                const SizedBox(height: 3),
+                Text(
+                  phone.toString(),
+                  style: const TextStyle(
+                      color: textDark,
+                      fontSize: 15,
+                      fontWeight: FontWeight.bold),
+                ),
+              ],
+            ),
+          ),
+          GestureDetector(
+            onTap: _callProvider,
+            child: Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                    colors: [primary, primaryDark]),
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child:
+                  const Icon(Icons.phone, color: Colors.white, size: 20),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ═══════════════════════════════════════════════════
+  // التقييمات
+  // ═══════════════════════════════════════════════════
+
+  Widget _buildReviewsSection() {
+    return Container(
+      margin: const EdgeInsets.fromLTRB(16, 16, 16, 0),
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Colors.white,
@@ -772,6 +976,223 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
     );
   }
 
+  // ═══════════════════════════════════════════════════
+  // قاعات مشابهة
+  // ═══════════════════════════════════════════════════
+
+  Widget _buildSimilarHallsSection(String city) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Row(
+              children: [
+                Container(
+                  width: 4,
+                  height: 20,
+                  decoration: BoxDecoration(
+                    color: primary,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                const Text('قاعات مشابهة',
+                    style: TextStyle(
+                        color: textDark,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold)),
+              ],
+            ),
+          ),
+          const SizedBox(height: 14),
+          SizedBox(
+            height: 220,
+            child: StreamBuilder<QuerySnapshot>(
+              stream: FirebaseFirestore.instance
+                  .collection('halls')
+                  .where('city', isEqualTo: city)
+                  .limit(6)
+                  .snapshots(),
+              builder: (context, snap) {
+                if (!snap.hasData) {
+                  return const Center(
+                    child: Padding(
+                      padding: EdgeInsets.all(20),
+                      child:
+                          CircularProgressIndicator(color: primary),
+                    ),
+                  );
+                }
+
+                // استبعاد القاعة الحالية
+                final halls = snap.data!.docs
+                    .where((doc) => doc.id != _hallId)
+                    .toList();
+
+                if (halls.isEmpty) {
+                  return const Center(
+                    child: Padding(
+                      padding: EdgeInsets.all(20),
+                      child: Text(
+                        'لا توجد قاعات مشابهة في هذه المدينة',
+                        style: TextStyle(
+                            color: textLight, fontSize: 13),
+                      ),
+                    ),
+                  );
+                }
+
+                return ListView.separated(
+                  scrollDirection: Axis.horizontal,
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  itemCount: halls.length,
+                  separatorBuilder: (_, __) =>
+                      const SizedBox(width: 12),
+                  itemBuilder: (context, i) {
+                    final data =
+                        halls[i].data() as Map<String, dynamic>;
+                    data['_id'] = halls[i].id;
+                    return _buildSimilarCard(data);
+                  },
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSimilarCard(Map<String, dynamic> hall) {
+    final name = hall['name'] ?? 'قاعة';
+    final city = hall['city'] ?? '';
+    final price = hall['price'] ?? 0;
+    final rating = (hall['rating'] ?? 0).toDouble();
+    final image = hall['image'] ?? hall['coverImage'];
+
+    return GestureDetector(
+      onTap: () {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (_) => HallDetailsScreen(hallData: hall),
+          ),
+        );
+      },
+      child: Container(
+        width: 180,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: primary.withValues(alpha: 0.06),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            ClipRRect(
+              borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(16)),
+              child: SizedBox(
+                height: 120,
+                width: 180,
+                child: (image != null &&
+                        image.toString().isNotEmpty)
+                    ? Image.network(
+                        image.toString(),
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) => Container(
+                          color: primary.withValues(alpha: 0.2),
+                          child: const Icon(Icons.celebration,
+                              color: Colors.white, size: 40),
+                        ),
+                      )
+                    : Container(
+                        color: primary.withValues(alpha: 0.2),
+                        child: const Icon(Icons.celebration,
+                            color: Colors.white, size: 40),
+                      ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(10),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    name,
+                    style: const TextStyle(
+                        color: textDark,
+                        fontSize: 13,
+                        fontWeight: FontWeight.bold),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      const Icon(Icons.location_on_outlined,
+                          color: textLight, size: 11),
+                      const SizedBox(width: 2),
+                      Expanded(
+                        child: Text(
+                          city,
+                          style: const TextStyle(
+                              color: textLight, fontSize: 10),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  Row(
+                    mainAxisAlignment:
+                        MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        '$price د.ل',
+                        style: const TextStyle(
+                            color: primary,
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold),
+                      ),
+                      Row(
+                        children: [
+                          const Icon(Icons.star,
+                              color: Colors.amber, size: 11),
+                          Text(
+                            rating.toStringAsFixed(1),
+                            style: const TextStyle(
+                                color: textDark,
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ═══════════════════════════════════════════════════
+  // شريط الحجز السفلي
+  // ═══════════════════════════════════════════════════
+
   Widget _buildBookingBar(int price) {
     return Container(
       padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
@@ -876,6 +1297,10 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
     );
   }
 
+  // ═══════════════════════════════════════════════════
+  // الاتصال والاتجاهات والمشاركة
+  // ═══════════════════════════════════════════════════
+
   Future<void> _callProvider() async {
     final phone = _hall['providerPhone'] ??
         _hall['phone'] ??
@@ -918,6 +1343,52 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text('تعذر فتح الاتصال: $cleanPhone'),
+              backgroundColor: Colors.redAccent,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('خطأ: $e'),
+            backgroundColor: Colors.redAccent,
+          ),
+        );
+      }
+    }
+  }
+
+  // ✅ فتح الاتجاهات على Google Maps
+  Future<void> _openDirections(String city, String name) async {
+    // ── إذا كانت القاعة تحتوي على إحداثيات ──
+    final lat = _hall['latitude'];
+    final lng = _hall['longitude'];
+
+    Uri uri;
+
+    if (lat != null && lng != null) {
+      // فتح بإحداثيات دقيقة
+      uri = Uri.parse(
+        'https://www.google.com/maps/search/?api=1&query=$lat,$lng',
+      );
+    } else {
+      // فتح باسم القاعة والمدينة
+      final query = Uri.encodeComponent('$name $city ليبيا');
+      uri = Uri.parse(
+        'https://www.google.com/maps/search/?api=1&query=$query',
+      );
+    }
+
+    try {
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('تعذر فتح الخرائط'),
               backgroundColor: Colors.redAccent,
             ),
           );
