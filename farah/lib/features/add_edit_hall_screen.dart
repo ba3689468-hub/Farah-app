@@ -35,7 +35,6 @@ class _AddEditHallScreenState extends State<AddEditHallScreen> {
   bool _loading = false;
   bool _uploadingImage = false;
 
-  // ── الصورة ──
   File? _pickedImage;
   String _existingImageUrl = '';
 
@@ -131,7 +130,6 @@ class _AddEditHallScreenState extends State<AddEditHallScreen> {
 
     final supabase = Supabase.instance.client;
 
-    // ── رفع الملف ──
     await supabase.storage.from('halls').upload(
           fileName,
           image,
@@ -141,7 +139,6 @@ class _AddEditHallScreenState extends State<AddEditHallScreen> {
           ),
         );
 
-    // ── الحصول على الرابط العام ──
     final publicUrl = supabase.storage.from('halls').getPublicUrl(fileName);
     return publicUrl;
   }
@@ -166,6 +163,15 @@ class _AddEditHallScreenState extends State<AddEditHallScreen> {
   }
 
   Future<void> _save() async {
+    // ✅ إضافة تلقائية لأي نص متبقٍ في حقل المرافق المخصصة
+    final pendingText = _customAmenityCtrl.text.trim();
+    if (pendingText.isNotEmpty) {
+      if (!_selectedAmenities.contains(pendingText)) {
+        _selectedAmenities.add(pendingText);
+      }
+      _customAmenityCtrl.clear();
+    }
+
     if (!_formKey.currentState!.validate()) return;
     FocusScope.of(context).unfocus();
 
@@ -617,7 +623,6 @@ class _AddEditHallScreenState extends State<AddEditHallScreen> {
     );
   }
 
-  // ✅ واجهة اختيار الصورة
   Widget _buildImagePicker() {
     return Column(
       children: [
@@ -677,8 +682,6 @@ class _AddEditHallScreenState extends State<AddEditHallScreen> {
             ),
           ),
         const SizedBox(height: 12),
-
-        // ── زر الاختيار ──
         SizedBox(
           width: double.infinity,
           height: 50,
