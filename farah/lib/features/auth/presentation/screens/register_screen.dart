@@ -19,7 +19,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   final _phoneCtrl = TextEditingController();
   final _passCtrl = TextEditingController();
   final _confirmPassCtrl = TextEditingController();
-  final _otpCtrl = TextEditingController(); // حقل رمز التحقق الجديد
+  final _otpCtrl = TextEditingController();
 
   bool _obscure = true;
   bool _obscureConfirm = true;
@@ -63,7 +63,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       });
 
       String phone = _phoneCtrl.text.trim();
-      // إضافة مقدمة الدولة (ليبيا +218)
       if (!phone.startsWith('+218')) {
         phone = '+218$phone';
       }
@@ -108,7 +107,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     try {
       final repo = ref.read(authRepositoryProvider);
 
-      // 1. التحقق من رمز OTP
       final otpCred = await repo.signInWithOTP(
         verificationId: _verificationId!,
         smsCode: _otpCtrl.text.trim(),
@@ -118,7 +116,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         throw Exception('الرمز غير صحيح أو انتهت صلاحيته');
       }
 
-      // 2. تم التحقق بنجاح، الآن ننشئ الحساب الفعلي بالبريد الوهمي
       final phone = _phoneCtrl.text.trim();
       final fakeEmail = '$phone@farah.app';
 
@@ -127,7 +124,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         _passCtrl.text.trim(),
       );
 
-      // 3. حفظ بيانات المستخدم في Firestore
       await repo.saveUserData(UserModel(
         uid: cred.user!.uid,
         fullName: _nameCtrl.text.trim(),
@@ -144,7 +140,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             duration: Duration(seconds: 3),
           ),
         );
-        // العودة إلى شاشة تسجيل الدخول
         Navigator.pop(context);
       }
     } catch (e) {
@@ -273,21 +268,21 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 ),
                 const SizedBox(height: 24),
 
-                // ── حقل الاسم ──
-                if (!_isOtpSent)
-                  _buildField(
-                    controller: _nameCtrl,
-                    hint: 'الاسم الكامل',
-                    icon: Icons.person_outline,
-                    validator: (v) {
-                      if (v == null || v.trim().isEmpty) return 'الاسم مطلوب';
-                      if (v.trim().length < 3) return 'الاسم قصير';
-                      return null;
-                    },
-                  ),
-                if (!_isOtpSent) const SizedBox(height: 14),
+                // ── حقل الاسم (يظل ظاهراً ولكن معطلاً) ──
+                _buildField(
+                  controller: _nameCtrl,
+                  hint: 'الاسم الكامل',
+                  icon: Icons.person_outline,
+                  enabled: !_isOtpSent, // تعطيل عند إرسال الرمز
+                  validator: (v) {
+                    if (v == null || v.trim().isEmpty) return 'الاسم مطلوب';
+                    if (v.trim().length < 3) return 'الاسم قصير';
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 14),
 
-                // ── حقل رقم الهاتف ──
+                // ── حقل رقم الهاتف (يظل ظاهراً ولكن معطلاً) ──
                 _buildField(
                   controller: _phoneCtrl,
                   hint: '9X XXXXXXX',
@@ -295,7 +290,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   keyboardType: TextInputType.phone,
                   digitsOnly: true,
                   maxLength: 10,
-                  enabled: !_isOtpSent, // تعطيل الحقل عند إرسال الرمز
+                  enabled: !_isOtpSent, // تعطيل عند إرسال الرمز
                   validator: (v) {
                     if (v == null || v.isEmpty) return 'رقم الهاتف مطلوب';
                     if (v.length < 10) return 'رقم الهاتف يجب أن يكون 10 أرقام';
@@ -304,96 +299,101 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 ),
                 const SizedBox(height: 14),
 
-                // ── حقول كلمة المرور (تختفي عند إرسال الرمز) ──
-                if (!_isOtpSent) ...[
-                  _buildField(
-                    controller: _passCtrl,
-                    hint: '••••••••••••••',
-                    icon: Icons.lock_outline,
-                    obscure: _obscure,
-                    validator: (v) {
-                      if (v == null || v.isEmpty) return 'كلمة المرور مطلوبة';
-                      if (v.length < 6) return 'كلمة المرور قصيرة (6+)';
-                      return null;
-                    },
-                    toggle: IconButton(
-                      icon: Icon(
-                        _obscure
-                            ? Icons.visibility_outlined
-                            : Icons.visibility_off_outlined,
-                        color: chocolate,
-                        size: 20,
-                      ),
-                      onPressed: () => setState(() => _obscure = !_obscure),
+                // ── حقل كلمة المرور (يظل ظاهراً ولكن معطلاً) ──
+                _buildField(
+                  controller: _passCtrl,
+                  hint: '••••••••••••••',
+                  icon: Icons.lock_outline,
+                  obscure: _obscure,
+                  enabled: !_isOtpSent,
+                  validator: (v) {
+                    if (v == null || v.isEmpty) return 'كلمة المرور مطلوبة';
+                    if (v.length < 6) return 'كلمة المرور قصيرة (6+)';
+                    return null;
+                  },
+                  toggle: IconButton(
+                    icon: Icon(
+                      _obscure
+                          ? Icons.visibility_outlined
+                          : Icons.visibility_off_outlined,
+                      color: chocolate,
+                      size: 20,
                     ),
+                    onPressed: () => setState(() => _obscure = !_obscure),
                   ),
-                  const SizedBox(height: 14),
-                  _buildField(
-                    controller: _confirmPassCtrl,
-                    hint: 'تأكيد كلمة المرور',
-                    icon: Icons.lock_reset_outlined,
-                    obscure: _obscureConfirm,
-                    validator: (v) {
-                      if (v == null || v.isEmpty) {
-                        return 'تأكيد كلمة المرور مطلوب';
-                      }
-                      if (v != _passCtrl.text) {
-                        return 'كلمة المرور غير متطابقة';
-                      }
-                      return null;
-                    },
-                    toggle: IconButton(
-                      icon: Icon(
-                        _obscureConfirm
-                            ? Icons.visibility_outlined
-                            : Icons.visibility_off_outlined,
-                        color: chocolate,
-                        size: 20,
-                      ),
-                      onPressed: () =>
-                          setState(() => _obscureConfirm = !_obscureConfirm),
-                    ),
-                  ),
-                  const SizedBox(height: 18),
+                ),
+                const SizedBox(height: 14),
 
-                  // ── نوع الحساب ──
-                  const Align(
-                    alignment: Alignment.centerRight,
-                    child: Text(
-                      'نوع الحساب:',
-                      style: TextStyle(
-                        color: chocolate,
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                      ),
+                // ── حقل تأكيد كلمة المرور (يظل ظاهراً ولكن معطلاً) ──
+                _buildField(
+                  controller: _confirmPassCtrl,
+                  hint: 'تأكيد كلمة المرور',
+                  icon: Icons.lock_reset_outlined,
+                  obscure: _obscureConfirm,
+                  enabled: !_isOtpSent,
+                  validator: (v) {
+                    if (v == null || v.isEmpty) {
+                      return 'تأكيد كلمة المرور مطلوب';
+                    }
+                    if (v != _passCtrl.text) {
+                      return 'كلمة المرور غير متطابقة';
+                    }
+                    return null;
+                  },
+                  toggle: IconButton(
+                    icon: Icon(
+                      _obscureConfirm
+                          ? Icons.visibility_outlined
+                          : Icons.visibility_off_outlined,
+                      color: chocolate,
+                      size: 20,
+                    ),
+                    onPressed: () =>
+                        setState(() => _obscureConfirm = !_obscureConfirm),
+                  ),
+                ),
+                const SizedBox(height: 18),
+
+                // ── نوع الحساب (يظل ظاهراً ولكن معطلاً) ──
+                const Align(
+                  alignment: Alignment.centerRight,
+                  child: Text(
+                    'نوع الحساب:',
+                    style: TextStyle(
+                      color: chocolate,
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
-                  const SizedBox(height: 10),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _roleCard(
-                          value: 'user',
-                          icon: Icons.person,
-                          title: 'زبون',
-                          subtitle: 'أبحث عن خدمة',
-                        ),
+                ),
+                const SizedBox(height: 10),
+                Row(
+                  children: [
+                    Expanded(
+                      child: _roleCard(
+                        value: 'user',
+                        icon: Icons.person,
+                        title: 'زبون',
+                        subtitle: 'أبحث عن خدمة',
+                        enabled: !_isOtpSent,
                       ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: _roleCard(
-                          value: 'provider',
-                          icon: Icons.storefront,
-                          title: 'مزوّد خدمة',
-                          subtitle: 'صالة / متجر',
-                        ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: _roleCard(
+                        value: 'provider',
+                        icon: Icons.storefront,
+                        title: 'مزوّد خدمة',
+                        subtitle: 'صالة / متجر',
+                        enabled: !_isOtpSent,
                       ),
-                    ],
-                  ),
-                ],
+                    ),
+                  ],
+                ),
 
                 // ── حقل إدخال رمز OTP (يظهر فقط عند إرسال الرمز) ──
                 if (_isOtpSent) ...[
+                  const SizedBox(height: 18),
                   _buildField(
                     controller: _otpCtrl,
                     hint: '------',
@@ -585,10 +585,13 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     required IconData icon,
     required String title,
     required String subtitle,
+    required bool enabled,
   }) {
     final isSelected = _selectedRole == value;
     return GestureDetector(
-      onTap: _loading ? null : () => setState(() => _selectedRole = value),
+      onTap: (!enabled || _loading)
+          ? null
+          : () => setState(() => _selectedRole = value),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
@@ -647,7 +650,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     return Container(
       height: 58,
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: enabled
+            ? Colors.white
+            : Colors.grey.withValues(alpha: 0.1), // لون رمادي خفيف عند التعطيل
         borderRadius: BorderRadius.circular(30),
         boxShadow: [
           BoxShadow(
@@ -687,8 +692,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
               inputFormatters: digitsOnly
                   ? [FilteringTextInputFormatter.digitsOnly]
                   : null,
-              style: const TextStyle(
-                color: chocolate,
+              style: TextStyle(
+                color: enabled ? chocolate : chocolate.withValues(alpha: 0.5),
                 fontSize: 15,
                 fontWeight: FontWeight.w500,
               ),
