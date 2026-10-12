@@ -1,4 +1,4 @@
-import 'dart:async'; // 👈 ضروري لإضافة المؤقت
+import 'dart:async';
 import 'package:farah/core/constants/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -28,13 +28,11 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   String _selectedRole = 'user';
 
   bool _isOtpSent = false;
-  final String _fakeCode = "123456"; // الرمز الوهمي للتجربة
+  final String _fakeCode = "123456";
 
-  // متغيرات المؤقت لإعادة الإرسال
   int _timerSeconds = 60;
   Timer? _timer;
 
-  // نفس ألوان شاشة تسجيل الدخول
   static const Color gold = AppColors.primary;
   static const Color lightGold = AppColors.background;
   static const Color deepRose = AppColors.primary;
@@ -48,7 +46,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
   @override
   void dispose() {
-    _timer?.cancel(); // إلغاء المؤقت عند الخروج من الشاشة
+    _timer?.cancel();
     _nameCtrl.dispose();
     _phoneCtrl.dispose();
     _passCtrl.dispose();
@@ -57,7 +55,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     super.dispose();
   }
 
-  // دالة تشغيل المؤقت
   void _startResendTimer() {
     _timerSeconds = 60;
     _timer?.cancel();
@@ -75,16 +72,15 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   }
 
   Future<void> _register() async {
-    // المرحلة 1: إرسال الرمز الوهمي
     if (!_isOtpSent) {
       if (!_formKey.currentState!.validate()) return;
       FocusScope.of(context).unfocus();
       setState(() { _loading = true; _error = null; });
 
-      await Future.delayed(const Duration(seconds: 1)); // محاكاة الإرسال
+      await Future.delayed(const Duration(seconds: 1));
 
       setState(() { _isOtpSent = true; _loading = false; });
-      _startResendTimer(); // بدء العداد عند إرسال الرمز
+      _startResendTimer();
       
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('تم إرسال رمز وهمي (استخدم $_fakeCode)'), backgroundColor: Colors.green),
@@ -92,7 +88,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       return;
     }
 
-    // المرحلة 2: التحقق وإنشاء الحساب
     if (_otpCtrl.text.trim() != _fakeCode) {
       setState(() => _error = 'الرمز غير صحيح، استخدم $_fakeCode');
       return;
@@ -128,15 +123,14 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     }
   }
 
-  // دالة إعادة إرسال الرمز (وهمية)
   void _resendCode() {
-    if (_timerSeconds > 0) return; // لا تفعل شيئاً إذا كان العداد يعمل
+    if (_timerSeconds > 0) return;
     
     setState(() { _loading = true; _error = null; });
     
     Future.delayed(const Duration(seconds: 1), () {
       setState(() => _loading = false);
-      _startResendTimer(); // إعادة تشغيل العداد
+      _startResendTimer();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('تم إعادة إرسال الرمز الوهمي ($_fakeCode)'), backgroundColor: Colors.green),
       );
@@ -210,7 +204,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 _buildField(controller: _confirmPassCtrl, hint: 'تأكيد كلمة المرور', icon: Icons.lock_reset_outlined, obscure: _obscureConfirm, enabled: !_isOtpSent, validator: (v) => (v != _passCtrl.text) ? 'كلمة المرور غير متطابقة' : null, toggle: IconButton(icon: Icon(_obscureConfirm ? Icons.visibility_outlined : Icons.visibility_off_outlined, color: chocolate, size: 20), onPressed: () => setState(() => _obscureConfirm = !_obscureConfirm))),
                 const SizedBox(height: 18),
 
-                // 👈 التعديل 1: إخفاء اختيار نوع الحساب عند إرسال الرمز
                 if (!_isOtpSent) ...[
                   const Align(alignment: Alignment.centerRight, child: Text('نوع الحساب:', style: TextStyle(color: chocolate, fontSize: 14, fontWeight: FontWeight.bold))),
                   const SizedBox(height: 10),
@@ -226,11 +219,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   _buildField(controller: _otpCtrl, hint: '------', icon: Icons.message_outlined, keyboardType: TextInputType.number, digitsOnly: true, maxLength: 6, validator: (v) => (v == null || v.length < 6) ? 'رمز التحقق مطلوب' : null),
                   const SizedBox(height: 14),
                   
-                  // 👈 التعديل 2: إضافة عداد إعادة الإرسال وزر تعديل الرقم
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      // زر إعادة الإرسال (يظهر فقط عند انتهاء العداد)
                       TextButton(
                         onPressed: _timerSeconds > 0 ? null : _resendCode,
                         child: Text(
@@ -242,10 +233,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                           ),
                         ),
                       ),
-                      // زر تعديل الرقم
                       TextButton(
                         onPressed: _loading ? null : () {
-                          _timer?.cancel(); // إلغاء العداد
+                          _timer?.cancel();
                           setState(() { _isOtpSent = false; _otpCtrl.clear(); _error = null; });
                         },
                         child: const Text('الرقم غير صحيح؟ تعديل', style: TextStyle(color: deepRose, fontSize: 13, fontWeight: FontWeight.bold, decoration: TextDecoration.underline)),
@@ -298,7 +288,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     );
   }
 
-  // تصميم الحقل الموحد (نفس تسجيل الدخول)
+  // 🛠️ تعديل جذري لتصميم الحقل: استخدام TextFormField مباشرة لضمان الشكل الصحيح
   Widget _buildField({
     required TextEditingController controller,
     required String hint,
@@ -312,10 +302,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     String? Function(String?)? validator,
   }) {
     return Container(
-      height: 58,
       decoration: BoxDecoration(
         color: enabled ? Colors.white : Colors.grey.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(30),
+        borderRadius: BorderRadius.circular(30), // الحواف الدائرية
         boxShadow: [
           BoxShadow(
             color: AppColors.primaryDark.withValues(alpha: 0.06),
@@ -324,10 +313,45 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           ),
         ],
       ),
-      child: Row(
-        children: [
-          const SizedBox(width: 6),
-          Container(
+      child: TextFormField(
+        controller: controller,
+        obscureText: obscure,
+        keyboardType: keyboardType,
+        validator: validator,
+        enabled: enabled && !_loading,
+        textAlign: TextAlign.right,
+        textDirection: TextDirection.rtl,
+        maxLength: maxLength,
+        inputFormatters: digitsOnly ? [FilteringTextInputFormatter.digitsOnly] : null,
+        style: TextStyle(
+          color: enabled ? chocolate : chocolate.withValues(alpha: 0.5),
+          fontSize: 15,
+          fontWeight: FontWeight.w500,
+        ),
+        decoration: InputDecoration(
+          hintText: hint,
+          hintStyle: TextStyle(color: chocolate.withValues(alpha: 0.5), fontSize: 14),
+          counterText: '',
+          errorStyle: const TextStyle(color: Colors.red, fontSize: 11, height: 0.8),
+          // إعدادات الحواف والحدود
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(30),
+            borderSide: BorderSide.none, // إزالة الخط الافتراضي
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(30),
+            borderSide: BorderSide.none,
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(30),
+            borderSide: BorderSide.none,
+          ),
+          filled: true,
+          fillColor: Colors.transparent, // الخلفية تأتي من الـ Container
+          contentPadding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16), // مسافات داخلية مناسبة
+          // الأيقونة على اليمين (prefixIcon)
+          prefixIcon: Container(
+            margin: const EdgeInsets.all(6),
             width: 46,
             height: 46,
             decoration: BoxDecoration(
@@ -340,39 +364,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             ),
             child: Icon(icon, color: Colors.white, size: 22),
           ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: TextFormField(
-              controller: controller,
-              obscureText: obscure,
-              keyboardType: keyboardType,
-              validator: validator,
-              enabled: enabled && !_loading,
-              textAlign: TextAlign.right,
-              textDirection: TextDirection.rtl,
-              maxLength: maxLength,
-              inputFormatters: digitsOnly ? [FilteringTextInputFormatter.digitsOnly] : null,
-              style: TextStyle(
-                color: enabled ? chocolate : chocolate.withValues(alpha: 0.5),
-                fontSize: 15,
-                fontWeight: FontWeight.w500,
-              ),
-              decoration: InputDecoration(
-                hintText: hint,
-                hintStyle: TextStyle(color: chocolate.withValues(alpha: 0.5), fontSize: 14),
-                counterText: '',
-                errorStyle: const TextStyle(color: Colors.red, fontSize: 11, height: 0.8),
-                border: InputBorder.none,
-                enabledBorder: InputBorder.none,
-                focusedBorder: InputBorder.none,
-                isDense: true,
-                contentPadding: const EdgeInsets.symmetric(vertical: 14),
-              ),
-            ),
-          ),
-          if (toggle != null) toggle,
-          const SizedBox(width: 6),
-        ],
+          // زر العين على اليسار (suffixIcon)
+          suffixIcon: toggle,
+        ),
       ),
     );
   }
