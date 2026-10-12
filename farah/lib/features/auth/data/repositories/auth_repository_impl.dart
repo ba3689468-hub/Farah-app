@@ -17,13 +17,10 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
-  Future<void> saveUserData(dynamic user) async {
-    await _firestore.collection('users').doc(user.uid).set({
-      'uid': user.uid,
-      'fullName': user.fullName ?? 'مستخدم فرح',
-      'email': user.email,
-      'phone': user.phone,
-      'role': user.role,
+  Future<void> saveUserData(Map<String, dynamic> userData) async {
+    // نستخدم Map مباشرة لتجنب مشاكل UserModel و AppUser
+    await _firestore.collection('users').doc(userData['uid']).set({
+      ...userData, // وضع كل البيانات المرسلة من الواجهة
       'walletBalance': 0,
       'isVerified': true,
       'isBlocked': false,
