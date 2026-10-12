@@ -5,7 +5,7 @@ on:
   push:
     branches: [main]
 
-# إضافة الصلاحيات اللازمة لإنشاء الإصدار (Release)
+# ✅ إضافة الصلاحيات اللازمة لإتمام الإصدار (Release)
 permissions:
   contents: write
 
@@ -28,13 +28,10 @@ jobs:
           sudo rm -rf "/usr/local/share/boost"
           df -h
 
-      # ✅ خطوة تنظيف NDK التالف
-      - name: Clean NDK cache
+      # ✅ التعديل الأساسي: تثبيت نسخة NDK مستقرة بدلاً من مسح الكاش فقط
+      - name: Install Stable NDK
         run: |
-          rm -rf $ANDROID_HOME/ndk
-          rm -rf $ANDROID_HOME/.downloadIntermediates
-          rm -rf $ANDROID_HOME/cmdline-tools/latest
-          echo "NDK cache cleaned"
+          echo "y" | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --install "ndk;26.1.10909125"
 
       - name: Clean project
         run: cd farah && flutter clean
