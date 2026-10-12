@@ -1,3 +1,4 @@
+import 'dart:async'; // 👈 ضروري لإضافة المؤقت
 import 'package:farah/core/constants/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -27,7 +28,17 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   String _selectedRole = 'user';
 
   bool _isOtpSent = false;
-  final String _fakeCode = "123456"; // الرمز الوهمي
+  final String _fakeCode = "123456"; // الرمز الوهمي للتجربة
+
+  // متغيرات المؤقت لإعادة الإرسال
+  int _timerSeconds = 60;
+  Timer? _timer;
+
+  // نفس ألوان شاشة تسجيل الدخول
+  static const Color gold = AppColors.primary;
+  static const Color lightGold = AppColors.background;
+  static const Color deepRose = AppColors.primary;
+  static const Color chocolate = AppColors.primary;
 
   @override
   void initState() {
@@ -37,6 +48,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
   @override
   void dispose() {
+    _timer?.cancel(); // إلغاء المؤقت عند الخروج من الشاشة
     _nameCtrl.dispose();
     _phoneCtrl.dispose();
     _passCtrl.dispose();
@@ -45,7 +57,25 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     super.dispose();
   }
 
+  // دالة تشغيل المؤقت
+  void _startResendTimer() {
+    _timerSeconds = 60;
+    _timer?.cancel();
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (_timerSeconds == 0) {
+        timer.cancel();
+      } else {
+        if (mounted) {
+          setState(() {
+            _timerSeconds--;
+          });
+        }
+      }
+    });
+  }
+
   Future<void> _register() async {
+    // المرحلة 1: إرسال الرمز الوهمي
     if (!_isOtpSent) {
       if (!_formKey.currentState!.validate()) return;
       FocusScope.of(context).unfocus();
@@ -54,12 +84,15 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       await Future.delayed(const Duration(seconds: 1)); // محاكاة الإرسال
 
       setState(() { _isOtpSent = true; _loading = false; });
+      _startResendTimer(); // بدء العداد عند إرسال الرمز
+      
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('تم إرسال رمز وهمي (استخدم $_fakeCode)'), backgroundColor: Colors.green),
       );
       return;
     }
 
+    // المرحلة 2: التحقق وإنشاء الحساب
     if (_otpCtrl.text.trim() != _fakeCode) {
       setState(() => _error = 'الرمز غير صحيح، استخدم $_fakeCode');
       return;
@@ -93,6 +126,21 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     } finally {
       if (mounted) setState(() => _loading = false);
     }
+  }
+
+  // دالة إعادة إرسال الرمز (وهمية)
+  void _resendCode() {
+    if (_timerSeconds > 0) return; // لا تفعل شيئاً إذا كان العداد يعمل
+    
+    setState(() { _loading = true; _error = null; });
+    
+    Future.delayed(const Duration(seconds: 1), () {
+      setState(() => _loading = false);
+      _startResendTimer(); // إعادة تشغيل العداد
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('تم إعادة إرسال الرمز الوهمي ($_fakeCode)'), backgroundColor: Colors.green),
+      );
+    });
   }
 
   @override
@@ -145,33 +193,65 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text(_isOtpSent ? 'تأكيد رقم الهاتف' : 'إنشاء حساب', style: const TextStyle(color: AppColors.primary, fontSize: 28, fontWeight: FontWeight.bold)),
+                Text(_isOtpSent ? 'تأكيد رقم الهاتف' : 'إنشاء حساب', style: const TextStyle(color: chocolate, fontSize: 28, fontWeight: FontWeight.bold)),
                 const SizedBox(height: 6),
-                Container(width: 60, height: 2, decoration: BoxDecoration(gradient: const LinearGradient(colors: [AppColors.primary, AppColors.background, AppColors.primary]), borderRadius: BorderRadius.circular(2))),
+                Container(width: 60, height: 2, decoration: BoxDecoration(gradient: const LinearGradient(colors: [gold, lightGold, gold]), borderRadius: BorderRadius.circular(2))),
                 const SizedBox(height: 24),
 
                 _buildField(controller: _nameCtrl, hint: 'الاسم الكامل', icon: Icons.person_outline, enabled: !_isOtpSent, validator: (v) => (v == null || v.trim().isEmpty) ? 'الاسم مطلوب' : null),
-                const SizedBox(height: 14),
+                const SizedBox(height: 18),
+                
                 _buildField(controller: _phoneCtrl, hint: '9X XXXXXXX', icon: Icons.phone_outlined, keyboardType: TextInputType.phone, digitsOnly: true, maxLength: 10, enabled: !_isOtpSent, validator: (v) => (v == null || v.length < 10) ? 'رقم الهاتف يجب أن يكون 10 أرقام' : null),
-                const SizedBox(height: 14),
-                _buildField(controller: _passCtrl, hint: '••••••••••••••', icon: Icons.lock_outline, obscure: _obscure, enabled: !_isOtpSent, validator: (v) => (v == null || v.length < 6) ? 'كلمة المرور قصيرة' : null, toggle: IconButton(icon: Icon(_obscure ? Icons.visibility_outlined : Icons.visibility_off_outlined, color: AppColors.primary, size: 20), onPressed: () => setState(() => _obscure = !_obscure))),
-                const SizedBox(height: 14),
-                _buildField(controller: _confirmPassCtrl, hint: 'تأكيد كلمة المرور', icon: Icons.lock_reset_outlined, obscure: _obscureConfirm, enabled: !_isOtpSent, validator: (v) => (v != _passCtrl.text) ? 'كلمة المرور غير متطابقة' : null, toggle: IconButton(icon: Icon(_obscureConfirm ? Icons.visibility_outlined : Icons.visibility_off_outlined, color: AppColors.primary, size: 20), onPressed: () => setState(() => _obscureConfirm = !_obscureConfirm))),
                 const SizedBox(height: 18),
 
-                const Align(alignment: Alignment.centerRight, child: Text('نوع الحساب:', style: TextStyle(color: AppColors.primary, fontSize: 14, fontWeight: FontWeight.bold))),
-                const SizedBox(height: 10),
-                Row(children: [
-                  Expanded(child: _roleCard(value: 'user', icon: Icons.person, title: 'زبون', subtitle: 'أبحث عن خدمة', enabled: !_isOtpSent)),
-                  const SizedBox(width: 12),
-                  Expanded(child: _roleCard(value: 'provider', icon: Icons.storefront, title: 'مزوّد خدمة', subtitle: 'صالة / متجر', enabled: !_isOtpSent)),
-                ]),
+                _buildField(controller: _passCtrl, hint: '••••••••••••••', icon: Icons.lock_outline, obscure: _obscure, enabled: !_isOtpSent, validator: (v) => (v == null || v.length < 6) ? 'كلمة المرور قصيرة' : null, toggle: IconButton(icon: Icon(_obscure ? Icons.visibility_outlined : Icons.visibility_off_outlined, color: chocolate, size: 20), onPressed: () => setState(() => _obscure = !_obscure))),
+                const SizedBox(height: 18),
+                
+                _buildField(controller: _confirmPassCtrl, hint: 'تأكيد كلمة المرور', icon: Icons.lock_reset_outlined, obscure: _obscureConfirm, enabled: !_isOtpSent, validator: (v) => (v != _passCtrl.text) ? 'كلمة المرور غير متطابقة' : null, toggle: IconButton(icon: Icon(_obscureConfirm ? Icons.visibility_outlined : Icons.visibility_off_outlined, color: chocolate, size: 20), onPressed: () => setState(() => _obscureConfirm = !_obscureConfirm))),
+                const SizedBox(height: 18),
+
+                // 👈 التعديل 1: إخفاء اختيار نوع الحساب عند إرسال الرمز
+                if (!_isOtpSent) ...[
+                  const Align(alignment: Alignment.centerRight, child: Text('نوع الحساب:', style: TextStyle(color: chocolate, fontSize: 14, fontWeight: FontWeight.bold))),
+                  const SizedBox(height: 10),
+                  Row(children: [
+                    Expanded(child: _roleCard(value: 'user', icon: Icons.person, title: 'زبون', subtitle: 'أبحث عن خدمة', enabled: !_isOtpSent)),
+                    const SizedBox(width: 12),
+                    Expanded(child: _roleCard(value: 'provider', icon: Icons.storefront, title: 'مزوّد خدمة', subtitle: 'صالة / متجر', enabled: !_isOtpSent)),
+                  ]),
+                ],
 
                 if (_isOtpSent) ...[
                   const SizedBox(height: 18),
                   _buildField(controller: _otpCtrl, hint: '------', icon: Icons.message_outlined, keyboardType: TextInputType.number, digitsOnly: true, maxLength: 6, validator: (v) => (v == null || v.length < 6) ? 'رمز التحقق مطلوب' : null),
                   const SizedBox(height: 14),
-                  TextButton(onPressed: _loading ? null : () { setState(() { _isOtpSent = false; _otpCtrl.clear(); _error = null; }); }, child: const Text('الرقم غير صحيح؟ تعديل الرقم', style: TextStyle(color: AppColors.primary, fontSize: 13, fontWeight: FontWeight.bold, decoration: TextDecoration.underline))),
+                  
+                  // 👈 التعديل 2: إضافة عداد إعادة الإرسال وزر تعديل الرقم
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      // زر إعادة الإرسال (يظهر فقط عند انتهاء العداد)
+                      TextButton(
+                        onPressed: _timerSeconds > 0 ? null : _resendCode,
+                        child: Text(
+                          _timerSeconds > 0 ? 'إعادة الإرسال بعد $_timerSeconds ث' : 'إعادة إرسال الرمز',
+                          style: TextStyle(
+                            color: _timerSeconds > 0 ? Colors.grey : deepRose,
+                            fontSize: 13,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                      // زر تعديل الرقم
+                      TextButton(
+                        onPressed: _loading ? null : () {
+                          _timer?.cancel(); // إلغاء العداد
+                          setState(() { _isOtpSent = false; _otpCtrl.clear(); _error = null; });
+                        },
+                        child: const Text('الرقم غير صحيح؟ تعديل', style: TextStyle(color: deepRose, fontSize: 13, fontWeight: FontWeight.bold, decoration: TextDecoration.underline)),
+                      ),
+                    ],
+                  ),
                 ],
 
                 if (_error != null) ...[
@@ -190,12 +270,12 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 ),
                 const SizedBox(height: 18),
                 
-                if (!_isOtpSent) Row(mainAxisAlignment: MainAxisAlignment.center, children: [Text('لديك حساب بالفعل؟ ', style: TextStyle(color: AppColors.primary.withValues(alpha: 0.75), fontSize: 13)), GestureDetector(onTap: _loading ? null : () => Navigator.pop(context), child: const Text('سجّل دخول', style: TextStyle(color: AppColors.primary, fontSize: 13, fontWeight: FontWeight.bold, decoration: TextDecoration.underline))) ]),
+                if (!_isOtpSent) Row(mainAxisAlignment: MainAxisAlignment.center, children: [Text('لديك حساب بالفعل؟ ', style: TextStyle(color: chocolate.withValues(alpha: 0.75), fontSize: 13)), GestureDetector(onTap: _loading ? null : () => Navigator.pop(context), child: const Text('سجّل دخول', style: TextStyle(color: deepRose, fontSize: 13, fontWeight: FontWeight.bold, decoration: TextDecoration.underline))) ]),
               ],
             ),
           ),
         ),
-        Positioned(top: 0, child: Container(width: 95, height: 95, decoration: BoxDecoration(shape: BoxShape.circle, color: Colors.white, border: Border.all(color: AppColors.primary, width: 2), boxShadow: [BoxShadow(color: AppColors.primary.withValues(alpha: 0.15), blurRadius: 20, offset: const Offset(0, 8))]), child: Center(child: Icon(_isOtpSent ? Icons.sms_outlined : Icons.person_add, size: 55, color: AppColors.primary)))),
+        Positioned(top: 0, child: Container(width: 95, height: 95, decoration: BoxDecoration(shape: BoxShape.circle, color: Colors.white, border: Border.all(color: gold, width: 2), boxShadow: [BoxShadow(color: gold.withValues(alpha: 0.15), blurRadius: 20, offset: const Offset(0, 8))]), child: Center(child: Icon(_isOtpSent ? Icons.sms_outlined : Icons.person_add, size: 55, color: AppColors.primary)))),
       ],
     );
   }
@@ -206,36 +286,94 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       onTap: (!enabled || _loading) ? null : () => setState(() => _selectedRole = value),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200), padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
-        decoration: BoxDecoration(color: isSelected ? AppColors.primary.withValues(alpha: 0.15) : Colors.white, borderRadius: BorderRadius.circular(18), border: Border.all(color: isSelected ? AppColors.primary : Colors.black.withValues(alpha: 0.1), width: isSelected ? 2 : 1)),
+        decoration: BoxDecoration(color: isSelected ? gold.withValues(alpha: 0.15) : Colors.white, borderRadius: BorderRadius.circular(18), border: Border.all(color: isSelected ? gold : Colors.black.withValues(alpha: 0.1), width: isSelected ? 2 : 1)),
         child: Column(mainAxisSize: MainAxisSize.min, children: [
-          Icon(icon, color: isSelected ? AppColors.primary : AppColors.primary.withValues(alpha: 0.6), size: 28),
+          Icon(icon, color: isSelected ? deepRose : chocolate.withValues(alpha: 0.6), size: 28),
           const SizedBox(height: 6),
-          Text(title, style: TextStyle(color: isSelected ? AppColors.primary : AppColors.primary.withValues(alpha: 0.7), fontSize: 13, fontWeight: FontWeight.bold)),
+          Text(title, style: TextStyle(color: isSelected ? chocolate : chocolate.withValues(alpha: 0.7), fontSize: 13, fontWeight: FontWeight.bold)),
           const SizedBox(height: 2),
-          Text(subtitle, style: TextStyle(color: AppColors.primary.withValues(alpha: 0.55), fontSize: 10)),
+          Text(subtitle, style: TextStyle(color: chocolate.withValues(alpha: 0.55), fontSize: 10)),
         ]),
       ),
     );
   }
 
-  Widget _buildField({required TextEditingController controller, required String hint, required IconData icon, bool obscure = false, Widget? toggle, TextInputType? keyboardType, bool digitsOnly = false, int? maxLength, bool enabled = true, String? Function(String?)? validator}) {
+  // تصميم الحقل الموحد (نفس تسجيل الدخول)
+  Widget _buildField({
+    required TextEditingController controller,
+    required String hint,
+    required IconData icon,
+    bool obscure = false,
+    Widget? toggle,
+    TextInputType? keyboardType,
+    bool digitsOnly = false,
+    int? maxLength,
+    bool enabled = true,
+    String? Function(String?)? validator,
+  }) {
     return Container(
       height: 58,
-      decoration: BoxDecoration(color: enabled ? Colors.white : Colors.grey.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(30), boxShadow: [BoxShadow(color: AppColors.primaryDark.withValues(alpha: 0.06), blurRadius: 12, offset: const Offset(0, 4))]),
-      child: Row(children: [
-        const SizedBox(width: 6),
-        Container(width: 46, height: 46, decoration: BoxDecoration(gradient: const LinearGradient(colors: [AppColors.primary, AppColors.primaryDark], begin: Alignment.topLeft, end: Alignment.bottomRight), borderRadius: BorderRadius.circular(14)), child: Icon(icon, color: Colors.white, size: 22)),
-        const SizedBox(width: 12),
-        Expanded(child: TextFormField(
-          controller: controller, obscureText: obscure, keyboardType: keyboardType, validator: validator, enabled: enabled && !_loading,
-          textAlign: TextAlign.right, textDirection: TextDirection.rtl, maxLength: maxLength,
-          inputFormatters: digitsOnly ? [FilteringTextInputFormatter.digitsOnly] : null,
-          style: TextStyle(color: enabled ? AppColors.primary : AppColors.primary.withValues(alpha: 0.5), fontSize: 15, fontWeight: FontWeight.w500),
-          decoration: InputDecoration(hintText: hint, hintStyle: TextStyle(color: AppColors.primary.withValues(alpha: 0.5), fontSize: 14), counterText: '', errorStyle: const TextStyle(color: Colors.red, fontSize: 11, height: 0.8), border: InputBorder.none, enabledBorder: InputBorder.none, focusedBorder: InputBorder.none, isDense: true, contentPadding: const EdgeInsets.symmetric(vertical: 14)),
-        )),
-        if (toggle != null) toggle,
-        const SizedBox(width: 6),
-      ]),
+      decoration: BoxDecoration(
+        color: enabled ? Colors.white : Colors.grey.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(30),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.primaryDark.withValues(alpha: 0.06),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          const SizedBox(width: 6),
+          Container(
+            width: 46,
+            height: 46,
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [AppColors.primary, AppColors.primaryDark],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: Icon(icon, color: Colors.white, size: 22),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: TextFormField(
+              controller: controller,
+              obscureText: obscure,
+              keyboardType: keyboardType,
+              validator: validator,
+              enabled: enabled && !_loading,
+              textAlign: TextAlign.right,
+              textDirection: TextDirection.rtl,
+              maxLength: maxLength,
+              inputFormatters: digitsOnly ? [FilteringTextInputFormatter.digitsOnly] : null,
+              style: TextStyle(
+                color: enabled ? chocolate : chocolate.withValues(alpha: 0.5),
+                fontSize: 15,
+                fontWeight: FontWeight.w500,
+              ),
+              decoration: InputDecoration(
+                hintText: hint,
+                hintStyle: TextStyle(color: chocolate.withValues(alpha: 0.5), fontSize: 14),
+                counterText: '',
+                errorStyle: const TextStyle(color: Colors.red, fontSize: 11, height: 0.8),
+                border: InputBorder.none,
+                enabledBorder: InputBorder.none,
+                focusedBorder: InputBorder.none,
+                isDense: true,
+                contentPadding: const EdgeInsets.symmetric(vertical: 14),
+              ),
+            ),
+          ),
+          if (toggle != null) toggle,
+          const SizedBox(width: 6),
+        ],
+      ),
     );
   }
 }
