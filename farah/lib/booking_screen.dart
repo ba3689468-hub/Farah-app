@@ -251,12 +251,14 @@ class _BookingScreenState extends State<BookingScreen> {
                 children: [
                   const Icon(Icons.check_circle, color: primary, size: 18),
                   const SizedBox(width: 8),
-                  Text(
-                    'التاريخ المختار: ${DateFormat('EEEE، d MMMM yyyy', 'ar').format(_selectedDate!)}',
-                    style: const TextStyle(
-                      color: textDark,
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
+                  Expanded(
+                    child: Text(
+                      'التاريخ المختار: ${DateFormat('EEEE، d MMMM yyyy', 'ar').format(_selectedDate!)}',
+                      style: const TextStyle(
+                        color: textDark,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ),
                 ],
@@ -686,7 +688,8 @@ class _BookingScreenState extends State<BookingScreen> {
           children: [
             Icon(Icons.payment, color: primary, size: 28),
             SizedBox(width: 10),
-            Text('دفع رسم الحجز', style: TextStyle(color: textDark, fontSize: 18)),
+            Text('دفع رسم الحجز',
+                style: TextStyle(color: textDark, fontSize: 18)),
           ],
         ),
         content: Column(
@@ -708,13 +711,16 @@ class _BookingScreenState extends State<BookingScreen> {
                 child: Text(
                   '60 دينار ليبي',
                   style: TextStyle(
-                      color: primary, fontSize: 22, fontWeight: FontWeight.bold),
+                      color: primary,
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold),
                 ),
               ),
             ),
             const SizedBox(height: 12),
+            // ✅ توضيح أن الرسم لا علاقة له بسعر القاعة
             const Text(
-              'هذا المبلغ هو عمولة التطبيق فقط. باقي قيمة الحجز (العربون) يتم دفعها في القاعة خلال 2-3 أيام.',
+              'هذا المبلغ هو رسم حجز مبدئي للتطبيق فقط.\n\nسعر القاعة الكامل يُدفع نقداً لصاحب القاعة عند الحضور.',
               style: TextStyle(color: textLight, fontSize: 12, height: 1.5),
             ),
           ],
@@ -728,7 +734,8 @@ class _BookingScreenState extends State<BookingScreen> {
             style: ElevatedButton.styleFrom(
               backgroundColor: primary,
               foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              shape:
+                  RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             ),
             onPressed: () => Navigator.pop(context, true),
             child: const Text('دفع 60 د.ل'),
@@ -745,8 +752,7 @@ class _BookingScreenState extends State<BookingScreen> {
 
     try {
       final total = _calculateTotal(basePrice);
-      const double fixedCommission = 60.0; // ✅ الرسم الثابت 60 دينار
-      final providerNet = total - fixedCommission;
+      const double fixedCommission = 60.0; // ✅ رسم الحجز الثابت 60 دينار
 
       // ── 1. إنشاء الحجز بحالة "غير مدفوع" ──
       final bookingRef =
@@ -754,7 +760,9 @@ class _BookingScreenState extends State<BookingScreen> {
         'userId': uid,
         'hallId': widget.hallId ?? '',
         'hallName': widget.hallData['name'] ?? '',
-        'hallImage': widget.hallData['image'] ?? widget.hallData['coverImage'] ?? '',
+        'hallImage': widget.hallData['image'] ??
+            widget.hallData['coverImage'] ??
+            '',
         'eventType': _selectedEventType,
         'timeSlot': _selectedTimeSlot,
         'eventDate': Timestamp.fromDate(_selectedDate!),
@@ -762,22 +770,24 @@ class _BookingScreenState extends State<BookingScreen> {
         'services': _selectedServices,
         'basePrice': basePrice,
         'totalPrice': total,
-        'commission': fixedCommission, // ✅ 60 دينار
-        'providerNet': providerNet,
-        'status': 'pending', 
+
+        // ✅ العمولة: مبلغ ثابت مستقل يخص التطبيق فقط
+        'commission': fixedCommission,
+
+        // ✅ المزود: يستلم كامل السعر نقداً (لا يُخصم منه شيء)
+        'providerNet': total,
+
+        'status': 'pending',
         'paymentStatus': 'unpaid',
         'createdAt': FieldValue.serverTimestamp(),
       });
 
       // ── 2. تحديث حالة الدفع إلى "مدفوع" (محاكاة الدفع) ──
-      // ⚠️ هذا التحديث هو الذي سيُفعّل Cloud Function لحساب الرسم وإرسال الإشعارات
       await bookingRef.update({
         'paymentStatus': 'commission_paid',
       });
 
-      // ═══════════════════════════════════════════════════
-      // ✅ إرسال إشعار محلي للمزود (اختياري، الخادم سيرسل إشعاراً حقيقياً)
-      // ═══════════════════════════════════════════════════
+      // ── 3. إرسال إشعار للمزود ──
       try {
         final hallDoc = await FirebaseFirestore.instance
             .collection('halls')
@@ -803,23 +813,25 @@ class _BookingScreenState extends State<BookingScreen> {
         // لا نوقف الحجز إذا فشل الإشعار
       }
 
-      // ── 3. رسالة النجاح النهائية ──
+      // ── 4. رسالة النجاح النهائية ──
       if (!mounted) return;
       await showDialog(
         context: context,
         barrierDismissible: false,
         builder: (_) => AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           backgroundColor: Colors.white,
           title: const Row(
             children: [
               Icon(Icons.check_circle, color: Colors.green, size: 28),
               SizedBox(width: 10),
-              Text('تم الحجز المبدئي!', style: TextStyle(color: textDark, fontSize: 18)),
+              Text('تم الحجز المبدئي!',
+                  style: TextStyle(color: textDark, fontSize: 18)),
             ],
           ),
           content: Text(
-            'تم دفع رسم الحجز بنجاح (60 د.ل).\n\nيرجى التوجه إلى "${widget.hallData['name'] ?? 'القاعة'}" خلال 2-3 أيام لدفع العربون وإتمام الحجز.\n\nسيتم إشعارك عند تأكيد المزود.',
+            'تم دفع رسم الحجز للتطبيق بنجاح (60 د.ل).\n\nيرجى التوجه إلى "${widget.hallData['name'] ?? 'القاعة'}" خلال 2-3 أيام لدفع سعر القاعة كاملاً ($total د.ل) وإتمام الحجز.\n\nسيتم إشعارك عند تأكيد المزود.',
             style: const TextStyle(color: textDark, fontSize: 14, height: 1.6),
           ),
           actions: [
@@ -827,7 +839,8 @@ class _BookingScreenState extends State<BookingScreen> {
               style: ElevatedButton.styleFrom(
                 backgroundColor: primary,
                 foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12)),
               ),
               onPressed: () => Navigator.pop(context),
               child: const Text('حسناً'),
