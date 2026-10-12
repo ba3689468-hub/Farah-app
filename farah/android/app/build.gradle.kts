@@ -10,7 +10,7 @@ android {
     compileSdk = flutter.compileSdkVersion
     
     // ✅ تم تفعيل تحديد نسخة NDK يدوياً لمنع خطأ ZipException
-    ndkVersion = "26.1.10909125"
+    ndkVersion = "28.2.13676358"
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
