@@ -62,11 +62,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       if (_timerSeconds == 0) {
         timer.cancel();
       } else {
-        if (mounted) {
-          setState(() {
-            _timerSeconds--;
-          });
-        }
+        if (mounted) setState(() => _timerSeconds--);
       }
     });
   }
@@ -125,9 +121,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
   void _resendCode() {
     if (_timerSeconds > 0) return;
-    
     setState(() { _loading = true; _error = null; });
-    
     Future.delayed(const Duration(seconds: 1), () {
       setState(() => _loading = false);
       _startResendTimer();
@@ -194,13 +188,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
                 _buildField(controller: _nameCtrl, hint: 'الاسم الكامل', icon: Icons.person_outline, enabled: !_isOtpSent, validator: (v) => (v == null || v.trim().isEmpty) ? 'الاسم مطلوب' : null),
                 const SizedBox(height: 18),
-                
                 _buildField(controller: _phoneCtrl, hint: '9X XXXXXXX', icon: Icons.phone_outlined, keyboardType: TextInputType.phone, digitsOnly: true, maxLength: 10, enabled: !_isOtpSent, validator: (v) => (v == null || v.length < 10) ? 'رقم الهاتف يجب أن يكون 10 أرقام' : null),
                 const SizedBox(height: 18),
-
                 _buildField(controller: _passCtrl, hint: '••••••••••••••', icon: Icons.lock_outline, obscure: _obscure, enabled: !_isOtpSent, validator: (v) => (v == null || v.length < 6) ? 'كلمة المرور قصيرة' : null, toggle: IconButton(icon: Icon(_obscure ? Icons.visibility_outlined : Icons.visibility_off_outlined, color: chocolate, size: 20), onPressed: () => setState(() => _obscure = !_obscure))),
                 const SizedBox(height: 18),
-                
                 _buildField(controller: _confirmPassCtrl, hint: 'تأكيد كلمة المرور', icon: Icons.lock_reset_outlined, obscure: _obscureConfirm, enabled: !_isOtpSent, validator: (v) => (v != _passCtrl.text) ? 'كلمة المرور غير متطابقة' : null, toggle: IconButton(icon: Icon(_obscureConfirm ? Icons.visibility_outlined : Icons.visibility_off_outlined, color: chocolate, size: 20), onPressed: () => setState(() => _obscureConfirm = !_obscureConfirm))),
                 const SizedBox(height: 18),
 
@@ -218,7 +209,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   const SizedBox(height: 18),
                   _buildField(controller: _otpCtrl, hint: '------', icon: Icons.message_outlined, keyboardType: TextInputType.number, digitsOnly: true, maxLength: 6, validator: (v) => (v == null || v.length < 6) ? 'رمز التحقق مطلوب' : null),
                   const SizedBox(height: 14),
-                  
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -226,11 +216,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                         onPressed: _timerSeconds > 0 ? null : _resendCode,
                         child: Text(
                           _timerSeconds > 0 ? 'إعادة الإرسال بعد $_timerSeconds ث' : 'إعادة إرسال الرمز',
-                          style: TextStyle(
-                            color: _timerSeconds > 0 ? Colors.grey : deepRose,
-                            fontSize: 13,
-                            fontWeight: FontWeight.bold,
-                          ),
+                          style: TextStyle(color: _timerSeconds > 0 ? Colors.grey : deepRose, fontSize: 13, fontWeight: FontWeight.bold),
                         ),
                       ),
                       TextButton(
@@ -259,7 +245,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   )),
                 ),
                 const SizedBox(height: 18),
-                
                 if (!_isOtpSent) Row(mainAxisAlignment: MainAxisAlignment.center, children: [Text('لديك حساب بالفعل؟ ', style: TextStyle(color: chocolate.withValues(alpha: 0.75), fontSize: 13)), GestureDetector(onTap: _loading ? null : () => Navigator.pop(context), child: const Text('سجّل دخول', style: TextStyle(color: deepRose, fontSize: 13, fontWeight: FontWeight.bold, decoration: TextDecoration.underline))) ]),
               ],
             ),
@@ -288,7 +273,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     );
   }
 
-  // 🛠️ تعديل جذري لتصميم الحقل: استخدام TextFormField مباشرة لضمان الشكل الصحيح
+  // 🛠️ التعديل: جعل الخلفية بيضاء دائماً، وتغيير لون النص فقط عند التعطيل
   Widget _buildField({
     required TextEditingController controller,
     required String hint,
@@ -301,72 +286,51 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     bool enabled = true,
     String? Function(String?)? validator,
   }) {
-    return Container(
-      decoration: BoxDecoration(
-        color: enabled ? Colors.white : Colors.grey.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(30), // الحواف الدائرية
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.primaryDark.withValues(alpha: 0.06),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
+    return TextFormField(
+      controller: controller,
+      obscureText: obscure,
+      keyboardType: keyboardType,
+      validator: validator,
+      enabled: enabled && !_loading,
+      textAlign: TextAlign.right,
+      textDirection: TextDirection.rtl,
+      maxLength: maxLength,
+      inputFormatters: digitsOnly ? [FilteringTextInputFormatter.digitsOnly] : null,
+      style: TextStyle(
+        // لون النص يتغير إلى رمادي فاتح عند التعطيل
+        color: enabled ? chocolate : chocolate.withValues(alpha: 0.3),
+        fontSize: 15,
+        fontWeight: FontWeight.w500,
       ),
-      child: TextFormField(
-        controller: controller,
-        obscureText: obscure,
-        keyboardType: keyboardType,
-        validator: validator,
-        enabled: enabled && !_loading,
-        textAlign: TextAlign.right,
-        textDirection: TextDirection.rtl,
-        maxLength: maxLength,
-        inputFormatters: digitsOnly ? [FilteringTextInputFormatter.digitsOnly] : null,
-        style: TextStyle(
-          color: enabled ? chocolate : chocolate.withValues(alpha: 0.5),
-          fontSize: 15,
-          fontWeight: FontWeight.w500,
-        ),
-        decoration: InputDecoration(
-          hintText: hint,
-          hintStyle: TextStyle(color: chocolate.withValues(alpha: 0.5), fontSize: 14),
-          counterText: '',
-          errorStyle: const TextStyle(color: Colors.red, fontSize: 11, height: 0.8),
-          // إعدادات الحواف والحدود
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(30),
-            borderSide: BorderSide.none, // إزالة الخط الافتراضي
-          ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(30),
-            borderSide: BorderSide.none,
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(30),
-            borderSide: BorderSide.none,
-          ),
-          filled: true,
-          fillColor: Colors.transparent, // الخلفية تأتي من الـ Container
-          contentPadding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16), // مسافات داخلية مناسبة
-          // الأيقونة على اليمين (prefixIcon)
-          prefixIcon: Container(
-            margin: const EdgeInsets.all(6),
-            width: 46,
-            height: 46,
+      decoration: InputDecoration(
+        hintText: hint,
+        hintStyle: TextStyle(color: chocolate.withValues(alpha: 0.5), fontSize: 14),
+        counterText: '',
+        errorStyle: const TextStyle(color: Colors.red, fontSize: 11, height: 0.8),
+        filled: true,
+        // ✅ التعديل هنا: الخلفية تظل بيضاء دائماً
+        fillColor: Colors.white, 
+        contentPadding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+        
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(30), borderSide: BorderSide.none),
+        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(30), borderSide: BorderSide.none),
+        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(30), borderSide: BorderSide.none),
+        
+        prefixIconConstraints: const BoxConstraints(minWidth: 60, minHeight: 60),
+        prefixIcon: Padding(
+          padding: const EdgeInsets.all(6),
+          child: Container(
+            width: 46, height: 46,
             decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [AppColors.primary, AppColors.primaryDark],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
+              // الأيقونة تظل ملونة حتى عند التعطيل لتبدو جميلة
+              gradient: const LinearGradient(colors: [AppColors.primary, AppColors.primaryDark], begin: Alignment.topLeft, end: Alignment.bottomRight),
               borderRadius: BorderRadius.circular(14),
             ),
             child: Icon(icon, color: Colors.white, size: 22),
           ),
-          // زر العين على اليسار (suffixIcon)
-          suffixIcon: toggle,
         ),
+        
+        suffixIcon: toggle,
       ),
     );
   }
