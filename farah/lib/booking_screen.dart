@@ -27,12 +27,14 @@ class _BookingScreenState extends State<BookingScreen> {
   final List<String> _selectedServices = [];
   bool _loading = false;
 
+  // ✅ المناسبات مع أيقونات محدثة + "فضانية"
   final List<Map<String, dynamic>> _eventTypes = const [
     {'name': 'حفل زفاف', 'icon': Icons.favorite, 'color': Color(0xFFE91E63)},
-    {'name': 'محضر', 'icon': Icons.description_outlined, 'color': Color(0xFF9C27B0)},
-    {'name': 'فاتحة', 'icon': Icons.menu_book_outlined, 'color': Color(0xFF3F51B5)},
-    {'name': 'أسبوع', 'icon': Icons.calendar_view_week_outlined, 'color': Color(0xFFFF9800)},
+    {'name': 'محضر', 'icon': Icons.home_outlined, 'color': Color(0xFF9C27B0)},
+    {'name': 'عقد قران', 'icon': Icons.auto_stories_outlined, 'color': Color(0xFF3F51B5)},
+    {'name': 'أسبوع', 'icon': Icons.child_care_outlined, 'color': Color(0xFFFF9800)},
     {'name': 'حفل تخرج', 'icon': Icons.school_outlined, 'color': Color(0xFF4CAF50)},
+    {'name': 'فضانية', 'icon': Icons.diamond_outlined, 'color': Color(0xFF009688)},
   ];
 
   final List<Map<String, dynamic>> _timeSlots = const [
@@ -182,9 +184,7 @@ class _BookingScreenState extends State<BookingScreen> {
                 color: selected ? color.withValues(alpha: 0.15) : Colors.white,
                 borderRadius: BorderRadius.circular(14),
                 border: Border.all(
-                  color: selected
-                      ? color
-                      : Colors.black.withValues(alpha: 0.08),
+                  color: selected ? color : Colors.black.withValues(alpha: 0.08),
                   width: selected ? 2 : 1,
                 ),
               ),
@@ -289,9 +289,7 @@ class _BookingScreenState extends State<BookingScreen> {
                   color: selected ? color.withValues(alpha: 0.12) : Colors.white,
                   borderRadius: BorderRadius.circular(14),
                   border: Border.all(
-                    color: selected
-                        ? color
-                        : Colors.black.withValues(alpha: 0.08),
+                    color: selected ? color : Colors.black.withValues(alpha: 0.08),
                     width: selected ? 2 : 1,
                   ),
                 ),
@@ -346,8 +344,7 @@ class _BookingScreenState extends State<BookingScreen> {
                         color: selected ? color : Colors.transparent,
                       ),
                       child: selected
-                          ? const Icon(Icons.check,
-                              color: Colors.white, size: 16)
+                          ? const Icon(Icons.check, color: Colors.white, size: 16)
                           : null,
                     ),
                   ],
@@ -383,8 +380,7 @@ class _BookingScreenState extends State<BookingScreen> {
             ),
             Container(
               margin: const EdgeInsets.symmetric(horizontal: 20),
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 30, vertical: 14),
+              padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 14),
               decoration: BoxDecoration(
                 gradient: const LinearGradient(colors: [primary, primaryDark]),
                 borderRadius: BorderRadius.circular(16),
@@ -426,8 +422,7 @@ class _BookingScreenState extends State<BookingScreen> {
               : Colors.grey.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(14),
         ),
-        child:
-            Icon(icon, color: enabled ? primary : Colors.black26, size: 24),
+        child: Icon(icon, color: enabled ? primary : Colors.black26, size: 24),
       ),
     );
   }
@@ -452,14 +447,10 @@ class _BookingScreenState extends State<BookingScreen> {
               margin: const EdgeInsets.only(bottom: 8),
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: selected
-                    ? primary.withValues(alpha: 0.08)
-                    : Colors.white,
+                color: selected ? primary.withValues(alpha: 0.08) : Colors.white,
                 borderRadius: BorderRadius.circular(14),
                 border: Border.all(
-                  color: selected
-                      ? primary
-                      : Colors.black.withValues(alpha: 0.08),
+                  color: selected ? primary : Colors.black.withValues(alpha: 0.08),
                   width: 1.5,
                 ),
               ),
@@ -484,8 +475,7 @@ class _BookingScreenState extends State<BookingScreen> {
                       style: TextStyle(
                         color: textDark,
                         fontSize: 13,
-                        fontWeight:
-                            selected ? FontWeight.bold : FontWeight.w500,
+                        fontWeight: selected ? FontWeight.bold : FontWeight.w500,
                       ),
                     ),
                   ),
@@ -499,9 +489,7 @@ class _BookingScreenState extends State<BookingScreen> {
                   ),
                   const SizedBox(width: 8),
                   Icon(
-                    selected
-                        ? Icons.check_circle
-                        : Icons.radio_button_unchecked,
+                    selected ? Icons.check_circle : Icons.radio_button_unchecked,
                     color: selected ? primary : Colors.black26,
                     size: 20,
                   ),
@@ -559,8 +547,7 @@ class _BookingScreenState extends State<BookingScreen> {
               if (subtitle != null) ...[
                 const SizedBox(width: 6),
                 Text(subtitle,
-                    style:
-                        const TextStyle(color: textLight, fontSize: 11)),
+                    style: const TextStyle(color: textLight, fontSize: 11)),
               ],
             ],
           ),
@@ -677,7 +664,7 @@ class _BookingScreenState extends State<BookingScreen> {
       return;
     }
 
-    // ── إظهار نافذة الدفع أولاً ──
+    // ── نافذة الدفع ──
     final bool? shouldPay = await showDialog<bool>(
       context: context,
       barrierDismissible: false,
@@ -718,10 +705,29 @@ class _BookingScreenState extends State<BookingScreen> {
               ),
             ),
             const SizedBox(height: 12),
-            // ✅ توضيح أن الرسم لا علاقة له بسعر القاعة
             const Text(
               'هذا المبلغ هو رسم حجز مبدئي للتطبيق فقط.\n\nسعر القاعة الكامل يُدفع نقداً لصاحب القاعة عند الحضور.',
               style: TextStyle(color: textLight, fontSize: 12, height: 1.5),
+            ),
+            const SizedBox(height: 8),
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: Colors.orange.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: const Row(
+                children: [
+                  Icon(Icons.info_outline, color: Colors.orange, size: 16),
+                  SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      'يحق لك استرداد المبلغ كاملاً خلال 48 ساعة من الحجز',
+                      style: TextStyle(color: Colors.orange, fontSize: 11),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ],
         ),
@@ -744,17 +750,18 @@ class _BookingScreenState extends State<BookingScreen> {
       ),
     );
 
-    if (shouldPay != true) {
-      return; // إذا ألغى المستخدم الدفع
-    }
+    if (shouldPay != true) return;
 
     setState(() => _loading = true);
 
     try {
       final total = _calculateTotal(basePrice);
-      const double fixedCommission = 60.0; // ✅ رسم الحجز الثابت 60 دينار
+      const double fixedCommission = 60.0;
 
-      // ── 1. إنشاء الحجز بحالة "غير مدفوع" ──
+      // ⏰ حساب وقت الانتهاء (48 ساعة من الآن)
+      final expiresAt = DateTime.now().add(const Duration(hours: 48));
+
+      // ── 1. إنشاء الحجز ──
       final bookingRef =
           await FirebaseFirestore.instance.collection('bookings').add({
         'userId': uid,
@@ -770,19 +777,17 @@ class _BookingScreenState extends State<BookingScreen> {
         'services': _selectedServices,
         'basePrice': basePrice,
         'totalPrice': total,
-
-        // ✅ العمولة: مبلغ ثابت مستقل يخص التطبيق فقط
         'commission': fixedCommission,
-
-        // ✅ المزود: يستلم كامل السعر نقداً (لا يُخصم منه شيء)
         'providerNet': total,
-
         'status': 'pending',
         'paymentStatus': 'unpaid',
         'createdAt': FieldValue.serverTimestamp(),
+        // ✅ سياسة الـ 48 ساعة
+        'expiresAt': Timestamp.fromDate(expiresAt),
+        'refundEligibleUntil': Timestamp.fromDate(expiresAt),
       });
 
-      // ── 2. تحديث حالة الدفع إلى "مدفوع" (محاكاة الدفع) ──
+      // ── 2. تحديث حالة الدفع (يُفعّل Cloud Function) ──
       await bookingRef.update({
         'paymentStatus': 'commission_paid',
       });
@@ -813,14 +818,13 @@ class _BookingScreenState extends State<BookingScreen> {
         // لا نوقف الحجز إذا فشل الإشعار
       }
 
-      // ── 4. رسالة النجاح النهائية ──
+      // ── 4. رسالة النجاح ──
       if (!mounted) return;
       await showDialog(
         context: context,
         barrierDismissible: false,
         builder: (_) => AlertDialog(
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           backgroundColor: Colors.white,
           title: const Row(
             children: [
@@ -831,7 +835,9 @@ class _BookingScreenState extends State<BookingScreen> {
             ],
           ),
           content: Text(
-            'تم دفع رسم الحجز للتطبيق بنجاح (60 د.ل).\n\nيرجى التوجه إلى "${widget.hallData['name'] ?? 'القاعة'}" خلال 2-3 أيام لدفع سعر القاعة كاملاً ($total د.ل) وإتمام الحجز.\n\nسيتم إشعارك عند تأكيد المزود.',
+            'تم دفع رسم الحجز بنجاح (60 د.ل).\n\n'
+            'لديك 48 ساعة للتوجه إلى "${widget.hallData['name'] ?? 'القاعة'}" ودفع سعر القاعة كاملاً ($total د.ل).\n\n'
+            'خلال هذه المدة يمكنك إلغاء الحجز واسترداد 60 د.ل كاملة من "حجوزاتي".',
             style: const TextStyle(color: textDark, fontSize: 14, height: 1.6),
           ),
           actions: [
