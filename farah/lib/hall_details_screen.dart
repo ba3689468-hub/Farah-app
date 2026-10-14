@@ -26,6 +26,20 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
   int _currentImage = 0;
   late Map<String, dynamic> _hall;
 
+  // ═══════════════════════════════════════════════════
+  // 🔍 متغيرات فاحص التوفر (منع التسرب)
+  // ═══════════════════════════════════════════════════
+  DateTime? _searchDate;
+  String? _searchTimeSlot;
+  bool _checkingAvailability = false;
+  bool? _isAvailable; // null = لم يتم الفحص بعد | true = متاحة | false = محجوزة
+
+  static const List<String> _timeSlots = [
+    'الفترة الصباحية',
+    'الفترة العصرية',
+    'الفترة المسائية',
+  ];
+
   @override
   void initState() {
     super.initState();
@@ -38,8 +52,7 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
     super.dispose();
   }
 
-  String get _hallId =>
-      widget.hallId ?? _hall['_id'] ?? _hall['id'] ?? '';
+  String get _hallId => widget.hallId ?? _hall['_id'] ?? _hall['id'] ?? '';
 
   @override
   Widget build(BuildContext context) {
@@ -55,7 +68,7 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
       backgroundColor: AppColors.background,
       body: CustomScrollView(
         slivers: [
-          // ── معرض الصور الرئيسي ──
+          // ── معرض الصور ──
           SliverAppBar(
             expandedHeight: 300,
             pinned: true,
@@ -68,8 +81,7 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
                   color: Colors.white.withValues(alpha: 0.9),
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(Icons.arrow_back,
-                    color: textDark, size: 20),
+                child: const Icon(Icons.arrow_back, color: textDark, size: 20),
               ),
               onPressed: () => Navigator.pop(context),
             ),
@@ -81,8 +93,7 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
                     color: Colors.white.withValues(alpha: 0.9),
                     shape: BoxShape.circle,
                   ),
-                  child: const Icon(Icons.share_outlined,
-                      color: textDark, size: 20),
+                  child: const Icon(Icons.share_outlined, color: textDark, size: 20),
                 ),
                 onPressed: _shareHall,
               ),
@@ -98,9 +109,11 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
 
           // ── المعلومات الأساسية ──
           SliverToBoxAdapter(
-            child: _buildInfoSection(
-                name, city, price, rating, capacity, description),
+            child: _buildInfoSection(name, city, price, rating, capacity, description),
           ),
+
+          // 🔍 فاحص التوفر (منع التسرب)
+          SliverToBoxAdapter(child: _buildAvailabilityChecker()),
 
           // ── بطاقة المزود ──
           SliverToBoxAdapter(child: _buildProviderCard()),
@@ -116,6 +129,404 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
       ),
       bottomNavigationBar: _buildBookingBar(price),
     );
+  }
+
+  // ═══════════════════════════════════════════════════════════
+  // 🔍 بطاقة فاحص التوفر (منع التسرب)
+  // ═══════════════════════════════════════════════════════════
+  Widget _buildAvailabilityChecker() {
+    return Container(
+      margin: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: primary.withValues(alpha: 0.08),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
+          ),
+        ],
+        border: Border.all(color: primary.withValues(alpha: 0.15), width: 1.5),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // ── العنوان ──
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(colors: [primary, primaryDark]),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(Icons.event_available, color: Colors.white, size: 22),
+              ),
+              const SizedBox(width: 12),
+              const Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'تحقق من التوفر',
+                      style: TextStyle(
+                          color: textDark, fontSize: 17, fontWeight: FontWeight.bold),
+                    ),
+                    SizedBox(height: 2),
+                    Text(
+                      'اعرف إذا كانت القاعة متاحة في يومك',
+                      style: TextStyle(color: textLight, fontSize: 11),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+
+          // ── اختيار التاريخ ──
+          GestureDetector(
+            onTap: _pickSearchDate,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+              decoration: BoxDecoration(
+                color: _searchDate != null
+                    ? primary.withValues(alpha: 0.08)
+                    : AppColors.background,
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(
+                  color: _searchDate != null
+                      ? primary.withValues(alpha: 0.4)
+                      : Colors.transparent,
+                  width: 1.5,
+                ),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.calendar_month_outlined, color: primary, size: 22),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      _searchDate != null
+                          ? '${_searchDate!.day}/${_searchDate!.month}/${_searchDate!.year}'
+                          : 'اختر تاريخ المناسبة',
+                      style: TextStyle(
+                        color: _searchDate != null ? textDark : textLight,
+                        fontSize: 14,
+                        fontWeight: _searchDate != null ? FontWeight.bold : FontWeight.normal,
+                      ),
+                    ),
+                  ),
+                  const Icon(Icons.keyboard_arrow_down, color: textLight, size: 22),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 10),
+
+          // ── اختيار الفترة الزمنية ──
+          GestureDetector(
+            onTap: _pickSearchTimeSlot,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+              decoration: BoxDecoration(
+                color: _searchTimeSlot != null
+                    ? primary.withValues(alpha: 0.08)
+                    : AppColors.background,
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(
+                  color: _searchTimeSlot != null
+                      ? primary.withValues(alpha: 0.4)
+                      : Colors.transparent,
+                  width: 1.5,
+                ),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.access_time, color: primary, size: 22),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      _searchTimeSlot ?? 'اختر الفترة الزمنية',
+                      style: TextStyle(
+                        color: _searchTimeSlot != null ? textDark : textLight,
+                        fontSize: 14,
+                        fontWeight: _searchTimeSlot != null ? FontWeight.bold : FontWeight.normal,
+                      ),
+                    ),
+                  ),
+                  const Icon(Icons.keyboard_arrow_down, color: textLight, size: 22),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 14),
+
+          // ── زر التحقق ──
+          SizedBox(
+            width: double.infinity,
+            height: 50,
+            child: ElevatedButton(
+              onPressed: _checkingAvailability ? null : _checkAvailability,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: primary,
+                foregroundColor: Colors.white,
+                disabledBackgroundColor: primary.withValues(alpha: 0.5),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                elevation: 0,
+              ),
+              child: _checkingAvailability
+                  ? const SizedBox(
+                      width: 22,
+                      height: 22,
+                      child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5),
+                    )
+                  : const Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.search, color: Colors.white, size: 20),
+                        SizedBox(width: 8),
+                        Text('تحقق الآن',
+                            style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
+                      ],
+                    ),
+            ),
+          ),
+
+          // ── نتيجة الفحص ──
+          if (_isAvailable != null) ...[
+            const SizedBox(height: 14),
+            Container(
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: (_isAvailable!)
+                    ? Colors.green.withValues(alpha: 0.1)
+                    : Colors.red.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(
+                  color: (_isAvailable!)
+                      ? Colors.green.withValues(alpha: 0.3)
+                      : Colors.red.withValues(alpha: 0.3),
+                  width: 1.5,
+                ),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: (_isAvailable!) ? Colors.green : Colors.red,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      (_isAvailable!) ? Icons.check : Icons.close,
+                      color: Colors.white,
+                      size: 18,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          (_isAvailable!) ? 'القاعة متاحة! ✅' : 'القاعة محجوزة ❌',
+                          style: TextStyle(
+                            color: (_isAvailable!) ? Colors.green : Colors.red,
+                            fontSize: 15,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          (_isAvailable!)
+                              ? 'يمكنك الآن تأكيد الحجز والمتابعة.'
+                              : 'هذه القاعة محجوزة في هذا اليوم والفترة. جرب تاريخاً آخر.',
+                          style: const TextStyle(color: textLight, fontSize: 11),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+
+          // ── تنبيه للعميل (منع التسرب) ──
+          const SizedBox(height: 12),
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: Colors.amber.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: const Row(
+              children: [
+                Icon(Icons.info_outline, color: Colors.orange, size: 18),
+                SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'احجز عبر التطبيق لتضمن حجزك رسمياً ولتحصل على الميزات الحصرية.',
+                    style: TextStyle(color: Colors.orange, fontSize: 11),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ── اختيار تاريخ الفحص ──
+  Future<void> _pickSearchDate() async {
+    final now = DateTime.now();
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _searchDate ?? now,
+      firstDate: now,
+      lastDate: DateTime(now.year + 2),
+      builder: (context, child) => Theme(
+        data: Theme.of(context).copyWith(
+          colorScheme: const ColorScheme.light(primary: primary),
+        ),
+        child: child!,
+      ),
+    );
+    if (picked != null) {
+      setState(() {
+        _searchDate = picked;
+        _isAvailable = null; // إعادة تعيين النتيجة
+      });
+    }
+  }
+
+  // ── اختيار فترة الفحص ──
+  void _pickSearchTimeSlot() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+      builder: (context) => Container(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey.withValues(alpha: 0.3),
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(height: 16),
+            const Text('اختر الفترة الزمنية',
+                style: TextStyle(
+                    color: textDark, fontSize: 18, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 16),
+            ..._timeSlots.map((slot) {
+              final isSelected = _searchTimeSlot == slot;
+              final icons = {
+                'الفترة الصباحية': Icons.wb_sunny_outlined,
+                'الفترة العصرية': Icons.wb_twilight_outlined,
+                'الفترة المسائية': Icons.nightlight_round_outlined,
+              };
+              return ListTile(
+                leading: Icon(icons[slot] ?? Icons.access_time,
+                    color: isSelected ? primary : textLight),
+                title: Text(slot,
+                    style: TextStyle(
+                        color: isSelected ? primary : textDark,
+                        fontWeight: isSelected ? FontWeight.bold : FontWeight.normal)),
+                trailing: isSelected ? const Icon(Icons.check, color: primary) : null,
+                onTap: () {
+                  setState(() {
+                    _searchTimeSlot = slot;
+                    _isAvailable = null;
+                  });
+                  Navigator.pop(context);
+                },
+              );
+            }),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ═══════════════════════════════════════════════════════════
+  // 🔍 فحص التوفر في Firestore
+  // ═══════════════════════════════════════════════════════════
+  Future<void> _checkAvailability() async {
+    if (_searchDate == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('الرجاء اختيار تاريخ أولاً'), backgroundColor: Colors.orange),
+      );
+      return;
+    }
+    if (_searchTimeSlot == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('الرجاء اختيار الفترة الزمنية'), backgroundColor: Colors.orange),
+      );
+      return;
+    }
+    if (_hallId.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('لا يمكن الفحص: معرف القاعة غير موجود'), backgroundColor: Colors.redAccent),
+      );
+      return;
+    }
+
+    setState(() => _checkingAvailability = true);
+
+    try {
+      // جلب جميع حجوزات هذه القاعة
+      final bookings = await FirebaseFirestore.instance
+          .collection('bookings')
+          .where('hallId', isEqualTo: _hallId)
+          .get();
+
+      final targetDate = _searchDate!;
+      bool isBooked = false;
+
+      for (final doc in bookings.docs) {
+        final data = doc.data();
+        final status = data['status'] ?? '';
+
+        // تجاهل الحجوزات الملغية والمنتهية
+        if (status == 'cancelled' || status == 'expired') continue;
+
+        final eventDate = data['eventDate'] as Timestamp?;
+        if (eventDate == null) continue;
+
+        final d = eventDate.toDate();
+
+        // مقارنة التاريخ (يوم/شهر/سنة)
+        if (d.year == targetDate.year && d.month == targetDate.month && d.day == targetDate.day) {
+          // مطابقة الفترة
+          if (data['timeSlot'] == _searchTimeSlot) {
+            isBooked = true;
+            break;
+          }
+        }
+      }
+
+      setState(() {
+        _isAvailable = !isBooked;
+        _checkingAvailability = false;
+      });
+    } catch (e) {
+      setState(() => _checkingAvailability = false);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('خطأ في الفحص: $e'), backgroundColor: Colors.redAccent),
+        );
+      }
+    }
   }
 
   // ═══════════════════════════════════════════════════
@@ -169,10 +580,7 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
                 gradient: LinearGradient(
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
-                  colors: [
-                    Colors.transparent,
-                    primaryDark.withValues(alpha: 0.6),
-                  ],
+                  colors: [Colors.transparent, primaryDark.withValues(alpha: 0.6)],
                   stops: const [0.6, 1.0],
                 ),
               ),
@@ -201,48 +609,31 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
               }),
             ),
           ),
-        // ── شارة السعر ──
         Positioned(
           top: 90,
           left: 16,
           child: Container(
-            padding: const EdgeInsets.symmetric(
-                horizontal: 12, vertical: 6),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
               color: primary,
               borderRadius: BorderRadius.circular(12),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.2),
-                  blurRadius: 8,
-                ),
-              ],
+              boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.2), blurRadius: 8)],
             ),
             child: Text(
               '${_hall['price'] ?? 0} د.ل / ليلة',
-              style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 13,
-                  fontWeight: FontWeight.bold),
+              style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.bold),
             ),
           ),
         ),
-        // ── شارة التقييم ──
         Positioned(
           bottom: 16,
           right: 16,
           child: Container(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(14),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.1),
-                  blurRadius: 8,
-                ),
-              ],
+              boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 8)],
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
@@ -251,22 +642,17 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
                 const SizedBox(width: 4),
                 Text(
                   (_hall['rating'] ?? 0).toStringAsFixed(1),
-                  style: const TextStyle(
-                      color: textDark,
-                      fontSize: 13,
-                      fontWeight: FontWeight.bold),
+                  style: const TextStyle(color: textDark, fontSize: 13, fontWeight: FontWeight.bold),
                 ),
               ],
             ),
           ),
         ),
-        // ── شارة عدد الصور ──
         Positioned(
           bottom: 16,
           left: 16,
           child: Container(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
               color: Colors.black.withValues(alpha: 0.5),
               borderRadius: BorderRadius.circular(14),
@@ -274,15 +660,11 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(Icons.photo_library,
-                    color: Colors.white, size: 14),
+                const Icon(Icons.photo_library, color: Colors.white, size: 14),
                 const SizedBox(width: 4),
                 Text(
                   '${_currentImage + 1}/${images.length}',
-                  style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold),
+                  style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
                 ),
               ],
             ),
@@ -292,7 +674,6 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
     );
   }
 
-  // ── المصغرات ──
   Widget _buildThumbnails(List<String> images) {
     return Container(
       height: 80,
@@ -306,21 +687,14 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
           final active = i == _currentImage;
           return GestureDetector(
             onTap: () {
-              _pageCtrl.animateToPage(
-                i,
-                duration: const Duration(milliseconds: 300),
-                curve: Curves.easeInOut,
-              );
+              _pageCtrl.animateToPage(i, duration: const Duration(milliseconds: 300), curve: Curves.easeInOut);
             },
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 200),
               width: 70,
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: active ? primary : Colors.transparent,
-                  width: 2,
-                ),
+                border: Border.all(color: active ? primary : Colors.transparent, width: 2),
               ),
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(10),
@@ -329,8 +703,7 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
                   fit: BoxFit.cover,
                   errorBuilder: (_, __, ___) => Container(
                     color: primary.withValues(alpha: 0.2),
-                    child: const Icon(Icons.broken_image,
-                        color: primary, size: 20),
+                    child: const Icon(Icons.broken_image, color: primary, size: 20),
                   ),
                 ),
               ),
@@ -345,8 +718,7 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
   // المعلومات الأساسية
   // ═══════════════════════════════════════════════════
 
-  Widget _buildInfoSection(String name, String city, int price, double rating,
-      int capacity, String description) {
+  Widget _buildInfoSection(String name, String city, int price, double rating, int capacity, String description) {
     return Container(
       margin: const EdgeInsets.all(16),
       padding: const EdgeInsets.all(20),
@@ -354,11 +726,7 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
         color: Colors.white,
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
-          BoxShadow(
-            color: primary.withValues(alpha: 0.06),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
-          ),
+          BoxShadow(color: primary.withValues(alpha: 0.06), blurRadius: 20, offset: const Offset(0, 8)),
         ],
       ),
       child: Column(
@@ -367,47 +735,29 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
           Row(
             children: [
               Expanded(
-                child: Text(
-                  name,
-                  style: const TextStyle(
-                    color: textDark,
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
+                child: Text(name,
+                    style: const TextStyle(color: textDark, fontSize: 24, fontWeight: FontWeight.bold)),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 10, vertical: 4),
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
                   color: primary.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: const Text('مميزة',
-                    style: TextStyle(
-                        color: primary,
-                        fontSize: 11,
-                        fontWeight: FontWeight.bold)),
+                child: const Text('مميزة', style: TextStyle(color: primary, fontSize: 11, fontWeight: FontWeight.bold)),
               ),
             ],
           ),
           const SizedBox(height: 8),
           Row(
             children: [
-              const Icon(Icons.location_on_outlined,
-                  color: primary, size: 18),
+              const Icon(Icons.location_on_outlined, color: primary, size: 18),
               const SizedBox(width: 4),
-              Expanded(
-                child: Text(city,
-                    style: const TextStyle(
-                        color: textLight, fontSize: 14)),
-              ),
-              // ✅ زر الاتجاهات
+              Expanded(child: Text(city, style: const TextStyle(color: textLight, fontSize: 14))),
               GestureDetector(
                 onTap: () => _openDirections(city, name),
                 child: Container(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 10, vertical: 6),
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                   decoration: BoxDecoration(
                     color: primary.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(12),
@@ -417,11 +767,7 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
                     children: [
                       Icon(Icons.directions, color: primary, size: 16),
                       SizedBox(width: 4),
-                      Text('الاتجاهات',
-                          style: TextStyle(
-                              color: primary,
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold)),
+                      Text('الاتجاهات', style: TextStyle(color: primary, fontSize: 12, fontWeight: FontWeight.bold)),
                     ],
                   ),
                 ),
@@ -431,46 +777,29 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
           const SizedBox(height: 20),
           Row(
             children: [
-              _infoCard(Icons.star, rating.toStringAsFixed(1), 'التقييم',
-                  Colors.amber),
+              _infoCard(Icons.star, rating.toStringAsFixed(1), 'التقييم', Colors.amber),
               const SizedBox(width: 10),
-              _infoCard(Icons.people_outline, '$capacity', 'السعة',
-                  primary),
+              _infoCard(Icons.people_outline, '$capacity', 'السعة', primary),
               const SizedBox(width: 10),
-              _infoCard(Icons.attach_money, '$price', 'د.ل/ليلة',
-                  primaryDark),
+              _infoCard(Icons.attach_money, '$price', 'د.ل/ليلة', primaryDark),
             ],
           ),
           const SizedBox(height: 24),
           const Row(
             children: [
-              Icon(Icons.description_outlined,
-                  color: primary, size: 20),
+              Icon(Icons.description_outlined, color: primary, size: 20),
               SizedBox(width: 6),
-              Text('الوصف',
-                  style: TextStyle(
-                      color: textDark,
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold)),
+              Text('الوصف', style: TextStyle(color: textDark, fontSize: 18, fontWeight: FontWeight.bold)),
             ],
           ),
           const SizedBox(height: 10),
-          Text(
-            description,
-            style: const TextStyle(
-                color: textDark, fontSize: 14, height: 1.7),
-          ),
+          Text(description, style: const TextStyle(color: textDark, fontSize: 14, height: 1.7)),
           const SizedBox(height: 24),
           const Row(
             children: [
-              Icon(Icons.room_service_outlined,
-                  color: primary, size: 20),
+              Icon(Icons.room_service_outlined, color: primary, size: 20),
               SizedBox(width: 6),
-              Text('المرافق والخدمات',
-                  style: TextStyle(
-                      color: textDark,
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold)),
+              Text('المرافق والخدمات', style: TextStyle(color: textDark, fontSize: 18, fontWeight: FontWeight.bold)),
             ],
           ),
           const SizedBox(height: 12),
@@ -486,48 +815,27 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
 
   List<Widget> _buildAmenitiesFromData() {
     final amenities = _hall['amenities'];
-
     if (amenities == null || amenities is! List || amenities.isEmpty) {
-      return [
-        const Text(
-          'لم يتم إضافة مرافق',
-          style: TextStyle(color: textLight, fontSize: 13),
-        ),
-      ];
+      return [const Text('لم يتم إضافة مرافق', style: TextStyle(color: textLight, fontSize: 13))];
     }
-
-    return amenities
-        .map<Widget>((a) => _amenityChip(a.toString()))
-        .toList();
+    return amenities.map<Widget>((a) => _amenityChip(a.toString())).toList();
   }
 
-  Widget _infoCard(
-      IconData icon, String value, String label, Color color) {
+  Widget _infoCard(IconData icon, String value, String label, Color color) {
     return Expanded(
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 14),
         decoration: BoxDecoration(
           color: color.withValues(alpha: 0.08),
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(
-              color: color.withValues(alpha: 0.15), width: 1),
+          border: Border.all(color: color.withValues(alpha: 0.15), width: 1),
         ),
         child: Column(
           children: [
             Icon(icon, color: color, size: 20),
             const SizedBox(height: 6),
-            Text(
-              value,
-              style: TextStyle(
-                  color: color,
-                  fontSize: 15,
-                  fontWeight: FontWeight.bold),
-            ),
-            Text(
-              label,
-              style: const TextStyle(
-                  color: textLight, fontSize: 10),
-            ),
+            Text(value, style: TextStyle(color: color, fontSize: 15, fontWeight: FontWeight.bold)),
+            Text(label, style: const TextStyle(color: textLight, fontSize: 10)),
           ],
         ),
       ),
@@ -547,9 +855,7 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
         children: [
           const Icon(Icons.check_circle, color: primary, size: 14),
           const SizedBox(width: 5),
-          Text(name,
-              style: const TextStyle(
-                  color: textDark, fontSize: 12)),
+          Text(name, style: const TextStyle(color: textDark, fontSize: 12)),
         ],
       ),
     );
@@ -561,10 +867,7 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
 
   Widget _buildProviderCard() {
     final phone = _hall['providerPhone'] ?? _hall['phone'] ?? '';
-
-    if (phone.toString().isEmpty) {
-      return const SizedBox();
-    }
+    if (phone.toString().isEmpty) return const SizedBox();
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),
@@ -572,13 +875,7 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: primary.withValues(alpha: 0.06),
-            blurRadius: 15,
-            offset: const Offset(0, 5),
-          ),
-        ],
+        boxShadow: [BoxShadow(color: primary.withValues(alpha: 0.06), blurRadius: 15, offset: const Offset(0, 5))],
       ),
       child: Row(
         children: [
@@ -586,29 +883,19 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
             width: 50,
             height: 50,
             decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                  colors: [primary, primaryDark]),
+              gradient: const LinearGradient(colors: [primary, primaryDark]),
               borderRadius: BorderRadius.circular(14),
             ),
-            child:
-                const Icon(Icons.storefront, color: Colors.white, size: 26),
+            child: const Icon(Icons.storefront, color: Colors.white, size: 26),
           ),
           const SizedBox(width: 14),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('مزوّد الخدمة',
-                    style: TextStyle(
-                        color: textLight, fontSize: 11)),
+                const Text('مزوّد الخدمة', style: TextStyle(color: textLight, fontSize: 11)),
                 const SizedBox(height: 3),
-                Text(
-                  phone.toString(),
-                  style: const TextStyle(
-                      color: textDark,
-                      fontSize: 15,
-                      fontWeight: FontWeight.bold),
-                ),
+                Text(phone.toString(), style: const TextStyle(color: textDark, fontSize: 15, fontWeight: FontWeight.bold)),
               ],
             ),
           ),
@@ -617,12 +904,10 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
             child: Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                    colors: [primary, primaryDark]),
+                gradient: const LinearGradient(colors: [primary, primaryDark]),
                 borderRadius: BorderRadius.circular(14),
               ),
-              child:
-                  const Icon(Icons.phone, color: Colors.white, size: 20),
+              child: const Icon(Icons.phone, color: Colors.white, size: 20),
             ),
           ),
         ],
@@ -641,36 +926,23 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: primary.withValues(alpha: 0.06),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
-          ),
-        ],
+        boxShadow: [BoxShadow(color: primary.withValues(alpha: 0.06), blurRadius: 20, offset: const Offset(0, 8))],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              const Icon(Icons.reviews_outlined,
-                  color: primary, size: 20),
+              const Icon(Icons.reviews_outlined, color: primary, size: 20),
               const SizedBox(width: 6),
               const Text('التقييمات والمراجعات',
-                  style: TextStyle(
-                      color: textDark,
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold)),
+                  style: TextStyle(color: textDark, fontSize: 18, fontWeight: FontWeight.bold)),
               const Spacer(),
               TextButton.icon(
                 onPressed: _openAddReview,
                 icon: const Icon(Icons.add, color: primary, size: 18),
                 label: const Text('أضف تقييم',
-                    style: TextStyle(
-                        color: primary,
-                        fontSize: 13,
-                        fontWeight: FontWeight.bold)),
+                    style: TextStyle(color: primary, fontSize: 13, fontWeight: FontWeight.bold)),
               ),
             ],
           ),
@@ -678,40 +950,28 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
           Row(
             children: [
               Container(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 16, vertical: 12),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 decoration: BoxDecoration(
                   color: primary.withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(14),
                 ),
                 child: Column(
                   children: [
-                    Text(
-                      (_hall['rating'] ?? 0).toStringAsFixed(1),
-                      style: const TextStyle(
-                          color: primary,
-                          fontSize: 32,
-                          fontWeight: FontWeight.bold),
-                    ),
+                    Text((_hall['rating'] ?? 0).toStringAsFixed(1),
+                        style: const TextStyle(color: primary, fontSize: 32, fontWeight: FontWeight.bold)),
                     Row(
                       children: List.generate(5, (i) {
-                        final rating =
-                            (_hall['rating'] ?? 0).toDouble();
+                        final rating = (_hall['rating'] ?? 0).toDouble();
                         return Icon(
-                          i < rating
-                              ? Icons.star
-                              : Icons.star_border,
+                          i < rating ? Icons.star : Icons.star_border,
                           color: Colors.amber,
                           size: 14,
                         );
                       }),
                     ),
                     const SizedBox(height: 4),
-                    Text(
-                      '${_hall['reviewsCount'] ?? 0} مراجعة',
-                      style: const TextStyle(
-                          color: textLight, fontSize: 10),
-                    ),
+                    Text('${_hall['reviewsCount'] ?? 0} مراجعة',
+                        style: const TextStyle(color: textLight, fontSize: 10)),
                   ],
                 ),
               ),
@@ -741,45 +1001,33 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
                 return const Center(
                   child: Padding(
                     padding: EdgeInsets.all(20),
-                    child:
-                        CircularProgressIndicator(color: primary),
+                    child: CircularProgressIndicator(color: primary),
                   ),
                 );
               }
 
               final reviews = snap.data?.docs ?? [];
-
               if (reviews.isEmpty) {
                 return Container(
                   padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: AppColors.background,
-                    borderRadius: BorderRadius.circular(14),
-                  ),
+                  decoration: BoxDecoration(color: AppColors.background, borderRadius: BorderRadius.circular(14)),
                   child: const Row(
                     children: [
-                      Icon(Icons.info_outline,
-                          color: textLight, size: 20),
+                      Icon(Icons.info_outline, color: textLight, size: 20),
                       SizedBox(width: 10),
                       Expanded(
-                        child: Text(
-                          'لا توجد مراجعات بعد. كن أول من يشارك تجربته!',
-                          style: TextStyle(
-                              color: textLight, fontSize: 12),
-                        ),
+                        child: Text('لا توجد مراجعات بعد. كن أول من يشارك تجربته!',
+                            style: TextStyle(color: textLight, fontSize: 12)),
                       ),
                     ],
                   ),
                 );
               }
 
-              final sortedReviews =
-                  List<QueryDocumentSnapshot>.from(reviews);
+              final sortedReviews = List<QueryDocumentSnapshot>.from(reviews);
               sortedReviews.sort((a, b) {
-                final aT =
-                    (a.data() as Map)['createdAt'] as Timestamp?;
-                final bT =
-                    (b.data() as Map)['createdAt'] as Timestamp?;
+                final aT = (a.data() as Map)['createdAt'] as Timestamp?;
+                final bT = (b.data() as Map)['createdAt'] as Timestamp?;
                 if (aT == null && bT == null) return 0;
                 if (aT == null) return 1;
                 if (bT == null) return -1;
@@ -787,10 +1035,7 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
               });
 
               return Column(
-                children: sortedReviews
-                    .map((doc) => _buildReviewItem(
-                        doc.data() as Map<String, dynamic>))
-                    .toList(),
+                children: sortedReviews.map((doc) => _buildReviewItem(doc.data() as Map<String, dynamic>)).toList(),
               );
             },
           ),
@@ -802,30 +1047,19 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
   Future<void> _openAddReview() async {
     if (_hallId.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('لا يمكن إضافة تقييم: معرف القاعة غير موجود'),
-          backgroundColor: Colors.redAccent,
-        ),
+        const SnackBar(content: Text('لا يمكن إضافة تقييم: معرف القاعة غير موجود'), backgroundColor: Colors.redAccent),
       );
       return;
     }
 
     final result = await Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (_) => AddReviewScreen(
-          hallId: _hallId,
-          hallName: _hall['name'] ?? '',
-        ),
-      ),
+      MaterialPageRoute(builder: (_) => AddReviewScreen(hallId: _hallId, hallName: _hall['name'] ?? '')),
     );
 
     if (result == true && mounted) {
       try {
-        final doc = await FirebaseFirestore.instance
-            .collection('halls')
-            .doc(_hallId)
-            .get();
+        final doc = await FirebaseFirestore.instance.collection('halls').doc(_hallId).get();
         if (doc.exists && mounted) {
           setState(() {
             _hall = Map<String, dynamic>.from(doc.data()!);
@@ -862,8 +1096,7 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
       decoration: BoxDecoration(
         color: AppColors.background,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(
-            color: Colors.black.withValues(alpha: 0.05), width: 1),
+        border: Border.all(color: Colors.black.withValues(alpha: 0.05), width: 1),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -874,17 +1107,13 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
                 width: 40,
                 height: 40,
                 decoration: const BoxDecoration(
-                  gradient: LinearGradient(
-                      colors: [primary, primaryDark]),
+                  gradient: LinearGradient(colors: [primary, primaryDark]),
                   shape: BoxShape.circle,
                 ),
                 child: Center(
                   child: Text(
                     userName.isNotEmpty ? userName[0] : 'م',
-                    style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold),
+                    style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                 ),
               ),
@@ -893,19 +1122,9 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      userName,
-                      style: const TextStyle(
-                          color: textDark,
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold),
-                    ),
+                    Text(userName, style: const TextStyle(color: textDark, fontSize: 14, fontWeight: FontWeight.bold)),
                     const SizedBox(height: 2),
-                    Text(
-                      dateStr,
-                      style: const TextStyle(
-                          color: textLight, fontSize: 10),
-                    ),
+                    Text(dateStr, style: const TextStyle(color: textLight, fontSize: 10)),
                   ],
                 ),
               ),
@@ -922,11 +1141,7 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
           ),
           if (comment.isNotEmpty) ...[
             const SizedBox(height: 10),
-            Text(
-              comment,
-              style: const TextStyle(
-                  color: textDark, fontSize: 13, height: 1.6),
-            ),
+            Text(comment, style: const TextStyle(color: textDark, fontSize: 13, height: 1.6)),
           ],
         ],
       ),
@@ -938,14 +1153,7 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
       padding: const EdgeInsets.symmetric(vertical: 2),
       child: Row(
         children: [
-          SizedBox(
-            width: 12,
-            child: Text(
-              '$stars',
-              style: const TextStyle(
-                  color: textLight, fontSize: 11),
-            ),
-          ),
+          SizedBox(width: 12, child: Text('$stars', style: const TextStyle(color: textLight, fontSize: 11))),
           const Icon(Icons.star, color: Colors.amber, size: 12),
           const SizedBox(width: 6),
           Expanded(
@@ -954,22 +1162,16 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
               child: LinearProgressIndicator(
                 value: percent,
                 minHeight: 6,
-                backgroundColor:
-                    Colors.black.withValues(alpha: 0.05),
-                valueColor:
-                    const AlwaysStoppedAnimation<Color>(Colors.amber),
+                backgroundColor: Colors.black.withValues(alpha: 0.05),
+                valueColor: const AlwaysStoppedAnimation<Color>(Colors.amber),
               ),
             ),
           ),
           const SizedBox(width: 6),
           SizedBox(
             width: 30,
-            child: Text(
-              '${(percent * 100).toInt()}%',
-              style: const TextStyle(
-                  color: textLight, fontSize: 10),
-              textAlign: TextAlign.right,
-            ),
+            child: Text('${(percent * 100).toInt()}%',
+                style: const TextStyle(color: textLight, fontSize: 10), textAlign: TextAlign.right),
           ),
         ],
       ),
@@ -990,20 +1192,11 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
             padding: const EdgeInsets.symmetric(horizontal: 20),
             child: Row(
               children: [
-                Container(
-                  width: 4,
-                  height: 20,
-                  decoration: BoxDecoration(
-                    color: primary,
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
+                Container(width: 4, height: 20,
+                    decoration: BoxDecoration(color: primary, borderRadius: BorderRadius.circular(2))),
                 const SizedBox(width: 8),
                 const Text('قاعات مشابهة',
-                    style: TextStyle(
-                        color: textDark,
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold)),
+                    style: TextStyle(color: textDark, fontSize: 18, fontWeight: FontWeight.bold)),
               ],
             ),
           ),
@@ -1021,26 +1214,18 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
                   return const Center(
                     child: Padding(
                       padding: EdgeInsets.all(20),
-                      child:
-                          CircularProgressIndicator(color: primary),
+                      child: CircularProgressIndicator(color: primary),
                     ),
                   );
                 }
 
-                // استبعاد القاعة الحالية
-                final halls = snap.data!.docs
-                    .where((doc) => doc.id != _hallId)
-                    .toList();
-
+                final halls = snap.data!.docs.where((doc) => doc.id != _hallId).toList();
                 if (halls.isEmpty) {
                   return const Center(
                     child: Padding(
                       padding: EdgeInsets.all(20),
-                      child: Text(
-                        'لا توجد قاعات مشابهة في هذه المدينة',
-                        style: TextStyle(
-                            color: textLight, fontSize: 13),
-                      ),
+                      child: Text('لا توجد قاعات مشابهة في هذه المدينة',
+                          style: TextStyle(color: textLight, fontSize: 13)),
                     ),
                   );
                 }
@@ -1049,11 +1234,9 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
                   scrollDirection: Axis.horizontal,
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   itemCount: halls.length,
-                  separatorBuilder: (_, __) =>
-                      const SizedBox(width: 12),
+                  separatorBuilder: (_, __) => const SizedBox(width: 12),
                   itemBuilder: (context, i) {
-                    final data =
-                        halls[i].data() as Map<String, dynamic>;
+                    final data = halls[i].data() as Map<String, dynamic>;
                     data['_id'] = halls[i].id;
                     return _buildSimilarCard(data);
                   },
@@ -1077,9 +1260,7 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
       onTap: () {
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(
-            builder: (_) => HallDetailsScreen(hallData: hall),
-          ),
+          MaterialPageRoute(builder: (_) => HallDetailsScreen(hallData: hall)),
         );
       },
       child: Container(
@@ -1087,38 +1268,28 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: primary.withValues(alpha: 0.06),
-              blurRadius: 12,
-              offset: const Offset(0, 4),
-            ),
-          ],
+          boxShadow: [BoxShadow(color: primary.withValues(alpha: 0.06), blurRadius: 12, offset: const Offset(0, 4))],
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             ClipRRect(
-              borderRadius: const BorderRadius.vertical(
-                  top: Radius.circular(16)),
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
               child: SizedBox(
                 height: 120,
                 width: 180,
-                child: (image != null &&
-                        image.toString().isNotEmpty)
+                child: (image != null && image.toString().isNotEmpty)
                     ? Image.network(
                         image.toString(),
                         fit: BoxFit.cover,
                         errorBuilder: (_, __, ___) => Container(
                           color: primary.withValues(alpha: 0.2),
-                          child: const Icon(Icons.celebration,
-                              color: Colors.white, size: 40),
+                          child: const Icon(Icons.celebration, color: Colors.white, size: 40),
                         ),
                       )
                     : Container(
                         color: primary.withValues(alpha: 0.2),
-                        child: const Icon(Icons.celebration,
-                            color: Colors.white, size: 40),
+                        child: const Icon(Icons.celebration, color: Colors.white, size: 40),
                       ),
               ),
             ),
@@ -1127,55 +1298,34 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    name,
-                    style: const TextStyle(
-                        color: textDark,
-                        fontSize: 13,
-                        fontWeight: FontWeight.bold),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
+                  Text(name,
+                      style: const TextStyle(color: textDark, fontSize: 13, fontWeight: FontWeight.bold),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis),
                   const SizedBox(height: 4),
                   Row(
                     children: [
-                      const Icon(Icons.location_on_outlined,
-                          color: textLight, size: 11),
+                      const Icon(Icons.location_on_outlined, color: textLight, size: 11),
                       const SizedBox(width: 2),
                       Expanded(
-                        child: Text(
-                          city,
-                          style: const TextStyle(
-                              color: textLight, fontSize: 10),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
+                        child: Text(city,
+                            style: const TextStyle(color: textLight, fontSize: 10),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis),
                       ),
                     ],
                   ),
                   const SizedBox(height: 6),
                   Row(
-                    mainAxisAlignment:
-                        MainAxisAlignment.spaceBetween,
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(
-                        '$price د.ل',
-                        style: const TextStyle(
-                            color: primary,
-                            fontSize: 12,
-                            fontWeight: FontWeight.bold),
-                      ),
+                      Text('$price د.ل',
+                          style: const TextStyle(color: primary, fontSize: 12, fontWeight: FontWeight.bold)),
                       Row(
                         children: [
-                          const Icon(Icons.star,
-                              color: Colors.amber, size: 11),
-                          Text(
-                            rating.toStringAsFixed(1),
-                            style: const TextStyle(
-                                color: textDark,
-                                fontSize: 10,
-                                fontWeight: FontWeight.bold),
-                          ),
+                          const Icon(Icons.star, color: Colors.amber, size: 11),
+                          Text(rating.toStringAsFixed(1),
+                              style: const TextStyle(color: textDark, fontSize: 10, fontWeight: FontWeight.bold)),
                         ],
                       ),
                     ],
@@ -1190,106 +1340,122 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
   }
 
   // ═══════════════════════════════════════════════════
-  // شريط الحجز السفلي
+  // شريط الحجز السفلي (مع حالة التعطيل)
   // ═══════════════════════════════════════════════════
 
   Widget _buildBookingBar(int price) {
+    // ⚠️ إذا تم الفحص وظهرت القاعة محجوزة، نُعطّل زر الحجز
+    final bool isDisabled = _isAvailable == false;
+
     return Container(
       padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
       decoration: BoxDecoration(
         color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: primary.withValues(alpha: 0.08),
-            blurRadius: 20,
-            offset: const Offset(0, -6),
-          ),
-        ],
+        boxShadow: [BoxShadow(color: primary.withValues(alpha: 0.08), blurRadius: 20, offset: const Offset(0, -6))],
       ),
       child: SafeArea(
-        child: Row(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Text('السعر يبدأ من',
-                    style: TextStyle(
-                        color: textLight, fontSize: 11)),
-                RichText(
-                  text: TextSpan(children: [
-                    TextSpan(
-                        text: '$price ',
-                        style: const TextStyle(
-                            color: primary,
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold)),
-                    const TextSpan(
-                        text: 'د.ل',
-                        style: TextStyle(
-                            color: textDark, fontSize: 12)),
-                  ]),
-                ),
-              ],
-            ),
-            const Spacer(),
-            GestureDetector(
-              onTap: _callProvider,
-              child: Container(
-                padding: const EdgeInsets.all(14),
+            if (isDisabled) ...[
+              Container(
+                padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(
-                    color: primary.withValues(alpha: 0.3),
-                    width: 1.5,
-                  ),
-                ),
-                child: const Icon(Icons.phone_outlined,
-                    color: primary, size: 22),
-              ),
-            ),
-            const SizedBox(width: 10),
-            GestureDetector(
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => BookingScreen(
-                      hallData: _hall,
-                      hallId: _hallId,
-                    ),
-                  ),
-                );
-              },
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 24, vertical: 16),
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                      colors: [primary, primaryDark]),
-                  borderRadius: BorderRadius.circular(20),
-                  boxShadow: [
-                    BoxShadow(
-                      color: primary.withValues(alpha: 0.35),
-                      blurRadius: 15,
-                      offset: const Offset(0, 6),
-                    ),
-                  ],
+                  color: Colors.red.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(10),
                 ),
                 child: const Row(
                   children: [
-                    Icon(Icons.calendar_month,
-                        color: Colors.white, size: 18),
-                    SizedBox(width: 8),
-                    Text('احجز الآن',
-                        style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 15,
-                            fontWeight: FontWeight.bold)),
+                    Icon(Icons.block, color: Colors.red, size: 16),
+                    SizedBox(width: 6),
+                    Expanded(
+                      child: Text(
+                        'هذه القاعة محجوزة في التاريخ/الفترة المختارة',
+                        style: TextStyle(color: Colors.red, fontSize: 11, fontWeight: FontWeight.bold),
+                      ),
+                    ),
                   ],
                 ),
               ),
+              const SizedBox(height: 8),
+            ],
+            Row(
+              children: [
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Text('السعر يبدأ من', style: TextStyle(color: textLight, fontSize: 11)),
+                    RichText(
+                      text: TextSpan(children: [
+                        TextSpan(
+                          text: '$price ',
+                          style: const TextStyle(color: primary, fontSize: 20, fontWeight: FontWeight.bold),
+                        ),
+                        const TextSpan(text: 'د.ل', style: TextStyle(color: textDark, fontSize: 12)),
+                      ]),
+                    ),
+                  ],
+                ),
+                const Spacer(),
+                GestureDetector(
+                  onTap: _callProvider,
+                  child: Container(
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: primary.withValues(alpha: 0.3), width: 1.5),
+                    ),
+                    child: const Icon(Icons.phone_outlined, color: primary, size: 22),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                GestureDetector(
+                  onTap: isDisabled
+                      ? null
+                      : () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => BookingScreen(hallData: _hall, hallId: _hallId),
+                            ),
+                          );
+                        },
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                    decoration: BoxDecoration(
+                      gradient: isDisabled
+                          ? LinearGradient(colors: [Colors.grey.shade400, Colors.grey.shade500])
+                          : const LinearGradient(colors: [primary, primaryDark]),
+                      borderRadius: BorderRadius.circular(20),
+                      boxShadow: isDisabled
+                          ? []
+                          : [
+                              BoxShadow(
+                                color: primary.withValues(alpha: 0.35),
+                                blurRadius: 15,
+                                offset: const Offset(0, 6),
+                              ),
+                            ],
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          isDisabled ? Icons.block : Icons.calendar_month,
+                          color: Colors.white,
+                          size: 18,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          isDisabled ? 'محجوزة' : 'احجز الآن',
+                          style: const TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.bold),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
             ),
           ],
         ),
@@ -1302,28 +1468,18 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
   // ═══════════════════════════════════════════════════
 
   Future<void> _callProvider() async {
-    final phone = _hall['providerPhone'] ??
-        _hall['phone'] ??
-        _hall['contactPhone'] ??
-        '';
-
+    final phone = _hall['providerPhone'] ?? _hall['phone'] ?? _hall['contactPhone'] ?? '';
     if (phone.toString().trim().isEmpty) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('لا يوجد رقم هاتف متاح للمزود'),
-            backgroundColor: Colors.orange,
-          ),
+          const SnackBar(content: Text('لا يوجد رقم هاتف متاح للمزود'), backgroundColor: Colors.orange),
         );
       }
       return;
     }
 
-    String cleanPhone =
-        phone.toString().replaceAll(RegExp(r'[^\d+]'), '');
-    if (cleanPhone.startsWith('00')) {
-      cleanPhone = cleanPhone.substring(2);
-    }
+    String cleanPhone = phone.toString().replaceAll(RegExp(r'[^\d+]'), '');
+    if (cleanPhone.startsWith('00')) cleanPhone = cleanPhone.substring(2);
     if (!cleanPhone.startsWith('+')) {
       if (cleanPhone.startsWith('0')) {
         cleanPhone = '+218${cleanPhone.substring(1)}';
@@ -1341,44 +1497,29 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
       } else {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('تعذر فتح الاتصال: $cleanPhone'),
-              backgroundColor: Colors.redAccent,
-            ),
+            SnackBar(content: Text('تعذر فتح الاتصال: $cleanPhone'), backgroundColor: Colors.redAccent),
           );
         }
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('خطأ: $e'),
-            backgroundColor: Colors.redAccent,
-          ),
+          SnackBar(content: Text('خطأ: $e'), backgroundColor: Colors.redAccent),
         );
       }
     }
   }
 
-  // ✅ فتح الاتجاهات على Google Maps
   Future<void> _openDirections(String city, String name) async {
-    // ── إذا كانت القاعة تحتوي على إحداثيات ──
     final lat = _hall['latitude'];
     final lng = _hall['longitude'];
-
     Uri uri;
 
     if (lat != null && lng != null) {
-      // فتح بإحداثيات دقيقة
-      uri = Uri.parse(
-        'https://www.google.com/maps/search/?api=1&query=$lat,$lng',
-      );
+      uri = Uri.parse('https://www.google.com/maps/search/?api=1&query=$lat,$lng');
     } else {
-      // فتح باسم القاعة والمدينة
       final query = Uri.encodeComponent('$name $city ليبيا');
-      uri = Uri.parse(
-        'https://www.google.com/maps/search/?api=1&query=$query',
-      );
+      uri = Uri.parse('https://www.google.com/maps/search/?api=1&query=$query');
     }
 
     try {
@@ -1387,20 +1528,14 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
       } else {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('تعذر فتح الخرائط'),
-              backgroundColor: Colors.redAccent,
-            ),
+            const SnackBar(content: Text('تعذر فتح الخرائط'), backgroundColor: Colors.redAccent),
           );
         }
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('خطأ: $e'),
-            backgroundColor: Colors.redAccent,
-          ),
+          SnackBar(content: Text('خطأ: $e'), backgroundColor: Colors.redAccent),
         );
       }
     }
@@ -1420,17 +1555,11 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
         'https://github.com/ba3689468-hub/Farah-app/releases';
 
     try {
-      await Share.share(
-        text,
-        subject: 'قاعة $name على تطبيق فرح',
-      );
+      await Share.share(text, subject: 'قاعة $name على تطبيق فرح');
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('تعذر المشاركة: $e'),
-            backgroundColor: Colors.redAccent,
-          ),
+          SnackBar(content: Text('تعذر المشاركة: $e'), backgroundColor: Colors.redAccent),
         );
       }
     }
