@@ -34,26 +34,24 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
   static const Color textDark = AppColors.textPrimary;
   static const Color textLight = AppColors.textSecondary;
 
-  // ── حجز ──
+  // ✅ عمولة التطبيق الثابتة
+  static const double APP_COMMISSION = 60.0;
+
   DateTime? _selectedDate;
   String? _selectedEventType;
   String? _selectedTimeSlot;
   int _guestsCount = 50;
 
-  // ── التقويم ──
   DateTime _calendarMonth = DateTime(DateTime.now().year, DateTime.now().month);
   Set<String> _bookedDates = {};
   bool _loadingBookings = true;
 
-  // ── الصور ──
   final _pageCtrl = PageController();
   int _currentImage = 0;
 
-  // ── الحالة ──
   bool _loading = false;
   late Map<String, dynamic> _hall;
 
-  // ── القوائم ──
   static const List<String> _timeSlots = [
     'الفترة الصباحية',
     'الفترة العصرية',
@@ -95,9 +93,6 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
     return p is int ? p : int.tryParse(p.toString()) ?? 0;
   }
 
-  // ═══════════════════════════════════════════════════════════
-  // 📥 تحميل أيام الحجز السابقة
-  // ═══════════════════════════════════════════════════════════
   Future<void> _loadBookedDates() async {
     if (_hallId.isEmpty) {
       if (mounted) setState(() => _loadingBookings = false);
@@ -150,7 +145,6 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
       backgroundColor: AppColors.background,
       body: CustomScrollView(
         slivers: [
-          // ── الصور ──
           SliverAppBar(
             expandedHeight: 300,
             pinned: true,
@@ -187,7 +181,6 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
           if (images.length > 1)
             SliverToBoxAdapter(child: _buildThumbnails(images)),
 
-          // ── المعلومات الأساسية ──
           SliverToBoxAdapter(
             child: _buildInfoSection(name, city, rating, capacity, description),
           ),
@@ -195,10 +188,10 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
           // ── قسم الحجز ──
           SliverToBoxAdapter(child: _buildBookingCard()),
 
-          // ── التقييمات ──
-          SliverToBoxAdapter(child: _buildReviewsSection()),
+          // ── ملخص الدفع + سياسة الإلغاء ──
+          SliverToBoxAdapter(child: _buildPaymentSummaryCard()),
 
-          // ── قاعات مشابهة ──
+          SliverToBoxAdapter(child: _buildReviewsSection()),
           SliverToBoxAdapter(child: _buildSimilarHallsSection(city)),
 
           const SliverToBoxAdapter(child: SizedBox(height: 100)),
@@ -211,7 +204,6 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
   // ═══════════════════════════════════════════════════════════
   // 🖼️ معرض الصور
   // ═══════════════════════════════════════════════════════════
-
   List<String> _getImages(Map<String, dynamic> hall) {
     final gallery = hall['gallery'];
     if (gallery is List && gallery.isNotEmpty) return List<String>.from(gallery);
@@ -373,7 +365,6 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
   // ═══════════════════════════════════════════════════════════
   // 📋 المعلومات الأساسية
   // ═══════════════════════════════════════════════════════════
-
   Widget _buildInfoSection(String name, String city, double rating, int capacity, String description) {
     return Container(
       margin: const EdgeInsets.all(16),
@@ -534,7 +525,6 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
           ),
           const SizedBox(height: 16),
 
-          // ── نوع المناسبة ──
           const Text('نوع المناسبة', style: TextStyle(color: textDark, fontSize: 13, fontWeight: FontWeight.bold)),
           const SizedBox(height: 8),
           Wrap(
@@ -578,7 +568,6 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
           ),
           const SizedBox(height: 16),
 
-          // ── التاريخ + الفترة ──
           Row(
             children: [
               Expanded(child: _buildPickerField(
@@ -600,7 +589,6 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
           ),
           const SizedBox(height: 12),
 
-          // ── عدد الضيوف ──
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
             decoration: BoxDecoration(
@@ -636,13 +624,183 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
           ),
           const SizedBox(height: 16),
 
-          // ── التقويم ──
           const Text('تقويم التوفر',
               style: TextStyle(color: textDark, fontSize: 13, fontWeight: FontWeight.bold)),
           const SizedBox(height: 8),
           _buildVisualCalendar(),
         ],
       ),
+    );
+  }
+
+  // ═══════════════════════════════════════════════════════════
+  // ✅ جديد: بطاقة ملخص الدفع + سياسة الإلغاء
+  // ═══════════════════════════════════════════════════════════
+  Widget _buildPaymentSummaryCard() {
+    return Container(
+      margin: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [BoxShadow(color: primary.withValues(alpha: 0.06), blurRadius: 15, offset: const Offset(0, 5))],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // ── العنوان ──
+          const Row(
+            children: [
+              Icon(Icons.receipt_long, color: primary, size: 22),
+              SizedBox(width: 8),
+              Text('ملخص الدفع',
+                  style: TextStyle(color: textDark, fontSize: 17, fontWeight: FontWeight.bold)),
+            ],
+          ),
+          const SizedBox(height: 14),
+
+          // ── سعر القاعة ──
+          _paymentRow(
+            icon: Icons.home_outlined,
+            label: 'سعر القاعة (يُدفع في القاعة)',
+            value: '$_basePrice د.ل',
+            color: textDark,
+          ),
+          const Divider(height: 20),
+
+          // ── عمولة التطبيق ──
+          _paymentRow(
+            icon: Icons.app_registration,
+            label: 'رسم حجز التطبيق (يُدفع الآن)',
+            value: '${APP_COMMISSION.toInt()} د.ل',
+            color: primary,
+            bold: true,
+          ),
+          const SizedBox(height: 12),
+
+          // ── المطلوب دفعه الآن ──
+          Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [primary, primaryDark],
+                begin: Alignment.centerLeft,
+                end: Alignment.centerRight,
+              ),
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.payment, color: Colors.white, size: 22),
+                const SizedBox(width: 10),
+                const Expanded(
+                  child: Text('المطلوب دفعه الآن',
+                      style: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold)),
+                ),
+                Text('${APP_COMMISSION.toInt()} د.ل',
+                    style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
+              ],
+            ),
+          ),
+          const SizedBox(height: 14),
+
+          // ── سياسة الإلغاء ──
+          Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: Colors.amber.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: Colors.amber.withValues(alpha: 0.4), width: 1.5),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Row(
+                  children: [
+                    Icon(Icons.policy_outlined, color: Colors.orange, size: 20),
+                    SizedBox(width: 8),
+                    Text('سياسة الإلغاء',
+                        style: TextStyle(color: Colors.orange, fontSize: 14, fontWeight: FontWeight.bold)),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                _policyItem(
+                  icon: Icons.check_circle_outline,
+                  color: Colors.green,
+                  text: 'استرداد كامل (60 د.ل) خلال 48 ساعة من الحجز',
+                ),
+                const SizedBox(height: 6),
+                _policyItem(
+                  icon: Icons.cancel_outlined,
+                  color: Colors.redAccent,
+                  text: 'لا يوجد استرداد بعد مرور 48 ساعة',
+                ),
+                const SizedBox(height: 6),
+                _policyItem(
+                  icon: Icons.info_outline,
+                  color: Colors.blueGrey,
+                  text: 'إذا لم تتوجه للقاعة خلال 48 ساعة، يُلغى الحجز تلقائياً',
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _paymentRow({
+    required IconData icon,
+    required String label,
+    required String value,
+    required Color color,
+    bool bold = false,
+  }) {
+    return Row(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: color.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Icon(icon, color: color, size: 18),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Text(
+            label,
+            style: TextStyle(
+              color: textDark,
+              fontSize: 13,
+              fontWeight: bold ? FontWeight.bold : FontWeight.w500,
+            ),
+          ),
+        ),
+        Text(
+          value,
+          style: TextStyle(
+            color: color,
+            fontSize: bold ? 18 : 15,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _policyItem({required IconData icon, required Color color, required String text}) {
+    return Row(
+      children: [
+        Icon(icon, color: color, size: 16),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Text(
+            text,
+            style: const TextStyle(color: textDark, fontSize: 12, height: 1.4),
+          ),
+        ),
+      ],
     );
   }
 
@@ -704,7 +862,7 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
   }
 
   // ═══════════════════════════════════════════════════════════
-  // 📅 التقويم الوهمي
+  // 📅 التقويم
   // ═══════════════════════════════════════════════════════════
   Widget _buildVisualCalendar() {
     final firstDay = DateTime(_calendarMonth.year, _calendarMonth.month, 1);
@@ -749,11 +907,7 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
         GestureDetector(
           onTap: (isPast || isBooked)
               ? null
-              : () {
-                  setState(() {
-                    _selectedDate = date;
-                  });
-                },
+              : () => setState(() => _selectedDate = date),
           child: Container(
             margin: const EdgeInsets.all(2),
             decoration: BoxDecoration(
@@ -1168,7 +1322,7 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
   }
 
   // ═══════════════════════════════════════════════════════════
-  // 💰 شريط الحجز السفلي
+  // 💰 شريط الحجز السفلي (محدث ليشمل العمولة)
   // ═══════════════════════════════════════════════════════════
   Widget _buildBottomBar() {
     return Container(
@@ -1180,21 +1334,26 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
       child: SafeArea(
         child: Row(
           children: [
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Text('السعر يبدأ من', style: TextStyle(color: textLight, fontSize: 11)),
-                RichText(
-                  text: TextSpan(children: [
-                    TextSpan(text: '$_basePrice ',
-                        style: const TextStyle(color: primary, fontSize: 20, fontWeight: FontWeight.bold)),
-                    const TextSpan(text: 'د.ل', style: TextStyle(color: textDark, fontSize: 12)),
-                  ]),
-                ),
-              ],
+            // ✅ عرض واضح: سعر القاعة + عمولة التطبيق
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text('المطلوب دفعه الآن',
+                      style: TextStyle(color: textLight, fontSize: 11)),
+                  RichText(
+                    text: TextSpan(children: [
+                      TextSpan(text: '${APP_COMMISSION.toInt()} ',
+                          style: const TextStyle(color: primary, fontSize: 22, fontWeight: FontWeight.bold)),
+                      const TextSpan(text: 'د.ل', style: TextStyle(color: textDark, fontSize: 13)),
+                    ]),
+                  ),
+                  Text('+ $_basePrice د.ل في القاعة',
+                      style: const TextStyle(color: textLight, fontSize: 10)),
+                ],
+              ),
             ),
-            const Spacer(),
             GestureDetector(
               onTap: _callProvider,
               child: Container(
@@ -1211,7 +1370,7 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
             GestureDetector(
               onTap: _loading ? null : _confirmBooking,
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
                 decoration: BoxDecoration(
                   gradient: const LinearGradient(colors: [primary, primaryDark]),
                   borderRadius: BorderRadius.circular(20),
@@ -1223,9 +1382,9 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
                     : const Row(
                         children: [
                           Icon(Icons.calendar_month, color: Colors.white, size: 18),
-                          SizedBox(width: 8),
+                          SizedBox(width: 6),
                           Text('احجز الآن',
-                              style: TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.bold)),
+                              style: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold)),
                         ],
                       ),
               ),
@@ -1301,7 +1460,7 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
   }
 
   // ═══════════════════════════════════════════════════════════
-  // ✅ تنفيذ الحجز مباشرة
+  // ✅ تنفيذ الحجز
   // ═══════════════════════════════════════════════════════════
   Future<void> _confirmBooking() async {
     if (_selectedEventType == null) {
@@ -1400,7 +1559,6 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
 
     try {
       final total = _basePrice;
-      const double fixedCommission = 60.0;
       final expiresAt = DateTime.now().add(const Duration(hours: 48));
 
       final bookingRef = await FirebaseFirestore.instance.collection('bookings').add({
@@ -1414,7 +1572,7 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
         'guestsCount': _guestsCount,
         'basePrice': _basePrice,
         'totalPrice': total,
-        'commission': fixedCommission,
+        'commission': APP_COMMISSION,
         'providerNet': total,
         'status': 'pending',
         'paymentStatus': 'unpaid',
@@ -1499,7 +1657,6 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
   // ═══════════════════════════════════════════════════════════
   // الاتصال والاتجاهات والمشاركة
   // ═══════════════════════════════════════════════════════════
-
   Future<void> _callProvider() async {
     final phone = _hall['providerPhone'] ?? _hall['phone'] ?? _hall['contactPhone'] ?? '';
     if (phone.toString().trim().isEmpty) {
