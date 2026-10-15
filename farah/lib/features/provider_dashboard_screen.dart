@@ -7,6 +7,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
 import 'add_edit_hall_screen.dart';
 import 'add_manual_booking_screen.dart';
+import 'api_integration_screen.dart';
 import 'edit_profile_screen.dart';
 import 'wallet_screen.dart';
 import 'notifications_screen.dart';
@@ -393,6 +394,27 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
 
           if (_currentTab == 0 || _currentTab == 1) ...[
             const SizedBox(width: 8),
+            // ✅ زر الربط البرمجي (جديد)
+GestureDetector(
+  onTap: () async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const ApiIntegrationScreen(),
+      ),
+    );
+  },
+  child: Container(
+    padding: const EdgeInsets.all(10),
+    decoration: BoxDecoration(
+      color: Colors.purple.withValues(alpha: 0.1),
+      borderRadius: BorderRadius.circular(14),
+    ),
+    child: const Icon(Icons.api,
+        color: Colors.purple, size: 22),
+  ),
+),
+const SizedBox(width: 8),
             // ✅ زر إضافة حجز يدوي (جديد)
             GestureDetector(
               onTap: () async {
