@@ -6,6 +6,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
 import 'add_edit_hall_screen.dart';
+import 'add_manual_booking_screen.dart';
 import 'edit_profile_screen.dart';
 import 'wallet_screen.dart';
 import 'notifications_screen.dart';
@@ -27,13 +28,12 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
   late Future<Map<String, dynamic>> _dataFuture;
   String _filter = 'all';
   int _currentTab = 0;
-  Timer? _ticker; // ⏰ لتحديث العد التنازلي
+  Timer? _ticker;
 
   @override
   void initState() {
     super.initState();
     _loadData();
-    // تحديث كل دقيقة لتحديث العد التنازلي
     _ticker = Timer.periodic(const Duration(minutes: 1), (_) {
       if (mounted) setState(() {});
     });
@@ -91,7 +91,7 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
     final userIds = <String>{};
     for (final b in allBookings) {
       final u = (b.data()['userId'] ?? '') as String;
-      if (u.isNotEmpty) userIds.add(u);
+      if (u.isNotEmpty && !u.startsWith('manual_')) userIds.add(u);
     }
     final Map<String, String> userMap = {};
     for (final u in userIds) {
@@ -202,11 +202,8 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
                 ),
               ),
             ),
-
-            // ── تنبيه بالحجوزات المنتظرة ──
             if (bookings.any((b) => b.data()['status'] == 'pending_attendance'))
               SliverToBoxAdapter(child: _buildPendingAlert(bookings)),
-
             const SliverToBoxAdapter(child: SizedBox(height: 30)),
           ],
         );
@@ -214,7 +211,6 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
     );
   }
 
-  // ⚠️ تنبيه بالحجوزات التي تحتاج لتأكيد الحضور
   Widget _buildPendingAlert(
       List<QueryDocumentSnapshot<Map<String, dynamic>>> bookings) {
     final pendingCount = bookings
@@ -239,7 +235,7 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
             children: [
               Container(
                 padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
+                decoration: const BoxDecoration(
                   color: Colors.orange,
                   shape: BoxShape.circle,
                 ),
@@ -368,7 +364,7 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
     );
   }
 
-  // ✅ شريط علوي مع زر الإشعارات وعدّاد
+  // ✅ شريط علوي مع أزرار الإشعارات + الحجز اليدوي + إضافة قاعة
   Widget _buildAppBar(String title) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
@@ -392,11 +388,34 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
                   fontWeight: FontWeight.bold)),
           const Spacer(),
 
-          // ✅ زر الإشعارات مع العداد
+          // ✅ زر الإشعارات
           _providerNotificationButton(),
 
           if (_currentTab == 0 || _currentTab == 1) ...[
             const SizedBox(width: 8),
+            // ✅ زر إضافة حجز يدوي (جديد)
+            GestureDetector(
+              onTap: () async {
+                final result = await Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const AddManualBookingScreen(),
+                  ),
+                );
+                if (result == true) _loadData();
+              },
+              child: Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: Colors.blue.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: const Icon(Icons.bookmark_add_outlined,
+                    color: Colors.blue, size: 22),
+              ),
+            ),
+            const SizedBox(width: 8),
+            // ✅ زر إضافة قاعة
             GestureDetector(
               onTap: () async {
                 final result = await Navigator.push(
@@ -423,7 +442,6 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
     );
   }
 
-  // ✅ زر الإشعارات مع العدّاد للمزود
   Widget _providerNotificationButton() {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) {
@@ -916,7 +934,6 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
     );
   }
 
-  // ── أيقونة المناسبة ──
   Map<String, dynamic> _eventTypeInfo(String eventType) {
     switch (eventType) {
       case 'حفل زفاف':
@@ -940,7 +957,6 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
     }
   }
 
-  // ⏰ حساب الوقت المتبقي
   String _getRemainingTime(Map<String, dynamic> data) {
     final expiresAt = data['expiresAt'] as Timestamp?;
     if (expiresAt == null) return 'غير محدد';
@@ -960,7 +976,10 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
   Widget _buildBookingCard(Map<String, dynamic> data, String docId,
       Map<String, String> userMap) {
     final hallName = data['hallName'] ?? 'قاعة';
-    final customerName = userMap[data['userId']] ?? 'زبون';
+    final isManual = data['isManual'] == true;
+    final customerName = isManual
+        ? (data['customerName'] ?? 'حجز يدوي')
+        : (userMap[data['userId']] ?? 'زبون');
     final total = data['totalPrice'] ?? 0;
     final net = data['providerNet'] ?? 0;
     final guests = data['guestsCount'] ?? 0;
@@ -985,8 +1004,7 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
         ? DateFormat('yyyy/MM/dd').format(eventDate)
         : 'غير محدد';
 
-    // ⏰ العد التنازلي (للحجوزات بانتظار الحضور فقط)
-    final showCountdown = status == 'pending_attendance';
+    final showCountdown = status == 'pending_attendance' && !isManual;
     final remainingTime = showCountdown ? _getRemainingTime(data) : '';
 
     return Container(
@@ -1000,9 +1018,12 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
             offset: const Offset(0, 5),
           ),
         ],
-        border: showCountdown
-            ? Border.all(color: Colors.orange.withValues(alpha: 0.4), width: 1.5)
-            : null,
+        border: isManual
+            ? Border.all(color: Colors.blue.withValues(alpha: 0.3), width: 1.5)
+            : (showCountdown
+                ? Border.all(
+                    color: Colors.orange.withValues(alpha: 0.4), width: 1.5)
+                : null),
       ),
       child: Column(
         children: [
@@ -1015,19 +1036,26 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
                   child: SizedBox(
                     width: 70,
                     height: 70,
-                    child: (image != null &&
-                            image.toString().isNotEmpty)
+                    child: (image != null && image.toString().isNotEmpty)
                         ? Image.network(image.toString(),
                             fit: BoxFit.cover,
                             errorBuilder: (_, __, ___) => Container(
                               color: primary.withValues(alpha: 0.15),
-                              child: const Icon(Icons.celebration,
-                                  color: primary, size: 30),
+                              child: Icon(
+                                  isManual
+                                      ? Icons.bookmark
+                                      : Icons.celebration,
+                                  color: primary,
+                                  size: 30),
                             ))
                         : Container(
                             color: primary.withValues(alpha: 0.15),
-                            child: const Icon(Icons.celebration,
-                                color: primary, size: 30),
+                            child: Icon(
+                                isManual
+                                    ? Icons.bookmark
+                                    : Icons.celebration,
+                                color: primary,
+                                size: 30),
                           ),
                   ),
                 ),
@@ -1044,12 +1072,33 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis),
                       const SizedBox(height: 4),
+                      // ✅ اسم العميل + شارة "يدوي"
                       Row(
                         mainAxisAlignment: MainAxisAlignment.end,
                         children: [
-                          Text(customerName,
-                              style: const TextStyle(
-                                  color: textLight, fontSize: 12)),
+                          if (isManual) ...[
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 6, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: Colors.blue.withValues(alpha: 0.15),
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: const Text('يدوي',
+                                  style: TextStyle(
+                                      color: Colors.blue,
+                                      fontSize: 9,
+                                      fontWeight: FontWeight.bold)),
+                            ),
+                            const SizedBox(width: 6),
+                          ],
+                          Flexible(
+                            child: Text(customerName,
+                                style: const TextStyle(
+                                    color: textLight, fontSize: 12),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis),
+                          ),
                           const SizedBox(width: 4),
                           const Icon(Icons.person_outline,
                               color: textLight, size: 13),
@@ -1084,7 +1133,6 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
             ),
           ),
 
-          // ⏰ شريط العد التنازلي
           if (showCountdown)
             Container(
               margin: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
@@ -1174,26 +1222,60 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
                   ],
                 ),
                 const SizedBox(height: 12),
-                Row(
-                  children: [
-                    Expanded(
-                      child: _infoItem(Icons.attach_money,
-                          'الإجمالي', '$total د.ل'),
-                    ),
-                    Expanded(
-                      child: _infoItem(Icons.payments_outlined,
-                          'صافي ربحك', '$net د.ل'),
-                    ),
-                  ],
-                ),
+                // ✅ لا نعرض المبالغ للحجوزات اليدوية
+                if (!isManual)
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _infoItem(Icons.attach_money,
+                            'الإجمالي', '$total د.ل'),
+                      ),
+                      Expanded(
+                        child: _infoItem(Icons.payments_outlined,
+                            'صافي ربحك', '$net د.ل'),
+                      ),
+                    ],
+                  ),
 
-                // ✅ أزرار الإجراءات حسب الحالة
-                if (status == 'pending')
-                  _buildNewBookingActions(docId),
-                if (status == 'pending_attendance')
-                  _buildCheckInActions(docId),
-                if (status == 'confirmed')
-                  _buildCompleteAction(docId, eventDate),
+                // ✅ الأزرار
+                if (!isManual) ...[
+                  if (status == 'pending')
+                    _buildNewBookingActions(docId),
+                  if (status == 'pending_attendance')
+                    _buildCheckInActions(docId),
+                  if (status == 'confirmed')
+                    _buildCompleteAction(docId, eventDate),
+                ] else ...[
+                  // ✅ زر حذف للحجوزات اليدوية
+                  Padding(
+                    padding: const EdgeInsets.only(top: 16),
+                    child: GestureDetector(
+                      onTap: () => _deleteManualBooking(docId),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(vertical: 10),
+                        decoration: BoxDecoration(
+                          color: Colors.red.withValues(alpha: 0.08),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                              color: Colors.redAccent.withValues(alpha: 0.3)),
+                        ),
+                        child: const Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.delete_outline,
+                                color: Colors.redAccent, size: 16),
+                            SizedBox(width: 6),
+                            Text('حذف الحجز اليدوي',
+                                style: TextStyle(
+                                    color: Colors.redAccent,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold)),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ],
             ),
           ),
@@ -1202,7 +1284,6 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
     );
   }
 
-  // ✅ أزرار الحجز الجديد (قبول / رفض)
   Widget _buildNewBookingActions(String docId) {
     return Padding(
       padding: const EdgeInsets.only(top: 16),
@@ -1267,7 +1348,6 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
     );
   }
 
-  // ✅ أزرار تأكيد الحضور (Check-in)
   Widget _buildCheckInActions(String docId) {
     return Padding(
       padding: const EdgeInsets.only(top: 16),
@@ -1339,7 +1419,6 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
     );
   }
 
-  // ✅ زر إتمام الحجز (بعد انتهاء المناسبة)
   Widget _buildCompleteAction(String docId, DateTime? eventDate) {
     final bool isEventPassed = eventDate != null &&
         eventDate.isBefore(DateTime.now());
@@ -1386,7 +1465,6 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
     );
   }
 
-  // ✅ تأكيد الحضور (Check-in)
   Future<void> _confirmAttendance(String docId) async {
     final ok = await showDialog<bool>(
       context: context,
@@ -1434,7 +1512,6 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
         'confirmedAt': FieldValue.serverTimestamp(),
       });
 
-      // إشعار للعميل
       try {
         final bookingDoc = await FirebaseFirestore.instance
             .collection('bookings')
@@ -1444,7 +1521,8 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
         final customerId = bookingData['userId'] ?? '';
         final hallName = bookingData['hallName'] ?? 'قاعة';
 
-        if (customerId.toString().isNotEmpty) {
+        if (customerId.toString().isNotEmpty &&
+            !customerId.toString().startsWith('manual_')) {
           await NotificationHelper.notifyCustomerConfirmed(
             customerId: customerId.toString(),
             hallName: hallName.toString(),
@@ -1541,7 +1619,7 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
               foregroundColor: Colors.white,
             ),
             onPressed: () => Navigator.pop(context, true),
-            child: Text('نعم'),
+            child: const Text('نعم'),
           ),
         ],
       ),
@@ -1554,7 +1632,6 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
           .doc(docId)
           .update({'status': newStatus});
 
-      // ✅ إرسال إشعار للزبون
       try {
         final bookingDoc = await FirebaseFirestore.instance
             .collection('bookings')
@@ -1564,7 +1641,8 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
         final customerId = bookingData['userId'] ?? '';
         final hallName = bookingData['hallName'] ?? 'قاعة';
 
-        if (customerId.toString().isNotEmpty) {
+        if (customerId.toString().isNotEmpty &&
+            !customerId.toString().startsWith('manual_')) {
           if (isConfirm) {
             await NotificationHelper.notifyCustomerConfirmed(
               customerId: customerId.toString(),
@@ -1589,6 +1667,60 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
               isConfirm ? '✅ تم تأكيد الحجز' : (isComplete ? '✅ تم إتمام الحجز' : '✅ تم رفض الحجز')),
           backgroundColor: Colors.green,
         ),
+      );
+      _loadData();
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+            content: Text('خطأ: $e'),
+            backgroundColor: Colors.redAccent),
+      );
+    }
+  }
+
+  // ✅ حذف الحجز اليدوي
+  Future<void> _deleteManualBooking(String docId) async {
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        backgroundColor: Colors.white,
+        title: const Text('حذف الحجز اليدوي',
+            textAlign: TextAlign.right,
+            style: TextStyle(color: textDark)),
+        content: const Text(
+          'هل أنت متأكد من حذف هذا الحجز اليدوي؟\n\n'
+          'سيتم فتح التاريخ مرة أخرى للحجز عبر التطبيق.',
+          textAlign: TextAlign.right,
+        ),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('إلغاء')),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.redAccent,
+              foregroundColor: Colors.white,
+            ),
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('نعم، حذف'),
+          ),
+        ],
+      ),
+    );
+    if (ok != true) return;
+
+    try {
+      await FirebaseFirestore.instance
+          .collection('bookings')
+          .doc(docId)
+          .delete();
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+            content: Text('✅ تم حذف الحجز اليدوي'),
+            backgroundColor: Colors.green),
       );
       _loadData();
     } catch (e) {
@@ -1773,7 +1905,7 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
 }
 
 // ═══════════════════════════════════════════════
-// شاشة حسابي الخاصة بالمزود (بدون تغييرات)
+// شاشة حسابي الخاصة بالمزود
 // ═══════════════════════════════════════════════
 class ProviderProfileScreen extends StatefulWidget {
   const ProviderProfileScreen({super.key});
@@ -1831,7 +1963,7 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen> {
     Navigator.pushAndRemoveUntil(
       context,
       MaterialPageRoute(
-          builder: (_) => FarahGlassLoginScreen()),
+          builder: (_) => const FarahGlassLoginScreen()),
       (route) => false,
     );
   }
@@ -1856,7 +1988,6 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen> {
           child: Column(
             children: [
               const SizedBox(height: 20),
-
               Container(
                 width: 110,
                 height: 110,
@@ -1869,14 +2000,12 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen> {
                     size: 55, color: Colors.white),
               ),
               const SizedBox(height: 16),
-
               Text(name,
                   style: const TextStyle(
                       color: textDark,
                       fontSize: 24,
                       fontWeight: FontWeight.bold)),
               const SizedBox(height: 10),
-
               Container(
                 padding: const EdgeInsets.symmetric(
                     horizontal: 18, vertical: 6),
@@ -1892,7 +2021,6 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen> {
                         fontWeight: FontWeight.bold)),
               ),
               const SizedBox(height: 24),
-
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: Container(
@@ -1906,7 +2034,6 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen> {
                 ),
               ),
               const SizedBox(height: 18),
-
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: Column(
@@ -1964,7 +2091,6 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen> {
                 ),
               ),
               const SizedBox(height: 22),
-
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: GestureDetector(
