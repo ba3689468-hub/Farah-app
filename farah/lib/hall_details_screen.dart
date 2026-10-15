@@ -34,7 +34,6 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
   static const Color textDark = AppColors.textPrimary;
   static const Color textLight = AppColors.textSecondary;
 
-  // ✅ عمولة التطبيق الثابتة
   static const double APP_COMMISSION = 60.0;
 
   DateTime? _selectedDate;
@@ -185,10 +184,8 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
             child: _buildInfoSection(name, city, rating, capacity, description),
           ),
 
-          // ── قسم الحجز ──
           SliverToBoxAdapter(child: _buildBookingCard()),
 
-          // ── ملخص الدفع + سياسة الإلغاء ──
           SliverToBoxAdapter(child: _buildPaymentSummaryCard()),
 
           SliverToBoxAdapter(child: _buildReviewsSection()),
@@ -201,9 +198,6 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
     );
   }
 
-  // ═══════════════════════════════════════════════════════════
-  // 🖼️ معرض الصور
-  // ═══════════════════════════════════════════════════════════
   List<String> _getImages(Map<String, dynamic> hall) {
     final gallery = hall['gallery'];
     if (gallery is List && gallery.isNotEmpty) return List<String>.from(gallery);
@@ -362,9 +356,6 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
     );
   }
 
-  // ═══════════════════════════════════════════════════════════
-  // 📋 المعلومات الأساسية
-  // ═══════════════════════════════════════════════════════════
   Widget _buildInfoSection(String name, String city, double rating, int capacity, String description) {
     return Container(
       margin: const EdgeInsets.all(16),
@@ -500,9 +491,6 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
     );
   }
 
-  // ═══════════════════════════════════════════════════════════
-  // 📅 بطاقة الحجز
-  // ═══════════════════════════════════════════════════════════
   Widget _buildBookingCard() {
     return Container(
       margin: const EdgeInsets.fromLTRB(16, 0, 16, 8),
@@ -633,9 +621,6 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
     );
   }
 
-  // ═══════════════════════════════════════════════════════════
-  // ✅ جديد: بطاقة ملخص الدفع + سياسة الإلغاء
-  // ═══════════════════════════════════════════════════════════
   Widget _buildPaymentSummaryCard() {
     return Container(
       margin: const EdgeInsets.fromLTRB(16, 8, 16, 8),
@@ -648,7 +633,6 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // ── العنوان ──
           const Row(
             children: [
               Icon(Icons.receipt_long, color: primary, size: 22),
@@ -659,7 +643,6 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
           ),
           const SizedBox(height: 14),
 
-          // ── سعر القاعة ──
           _paymentRow(
             icon: Icons.home_outlined,
             label: 'سعر القاعة (يُدفع في القاعة)',
@@ -668,7 +651,6 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
           ),
           const Divider(height: 20),
 
-          // ── عمولة التطبيق ──
           _paymentRow(
             icon: Icons.app_registration,
             label: 'رسم حجز التطبيق (يُدفع الآن)',
@@ -678,7 +660,6 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
           ),
           const SizedBox(height: 12),
 
-          // ── المطلوب دفعه الآن ──
           Container(
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
@@ -704,7 +685,6 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
           ),
           const SizedBox(height: 14),
 
-          // ── سياسة الإلغاء ──
           Container(
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
@@ -862,7 +842,8 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
   }
 
   // ═══════════════════════════════════════════════════════════
-  // 📅 التقويم
+  // 📅 التقويم — كل الأيام بيضاء، اليوم المختار أخضر،
+  // "محجوز" يظهر فقط عند اختيار يوم محجوز فعلياً
   // ═══════════════════════════════════════════════════════════
   Widget _buildVisualCalendar() {
     final firstDay = DateTime(_calendarMonth.year, _calendarMonth.month, 1);
@@ -883,7 +864,6 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
 
     for (int day = 1; day <= daysInMonth; day++) {
       final date = DateTime(_calendarMonth.year, _calendarMonth.month, day);
-      final isBooked = _isDateBooked(date);
       final isPast = date.isBefore(todayMidnight);
       final isSelected = _selectedDate != null &&
           _selectedDate!.year == date.year &&
@@ -895,31 +875,33 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
       if (isPast) {
         bg = Colors.grey.withValues(alpha: 0.08);
         fg = Colors.grey;
-      } else if (isBooked) {
-        bg = Colors.red.withValues(alpha: 0.12);
-        fg = Colors.red.shade700;
+      } else if (isSelected) {
+        bg = Colors.green;
+        fg = Colors.white;
       } else {
-        bg = Colors.green.withValues(alpha: 0.1);
-        fg = Colors.green.shade700;
+        bg = Colors.white;
+        fg = textDark;
       }
 
       cells.add(
         GestureDetector(
-          onTap: (isPast || isBooked)
+          onTap: isPast
               ? null
               : () => setState(() => _selectedDate = date),
           child: Container(
             margin: const EdgeInsets.all(2),
             decoration: BoxDecoration(
-              color: isSelected ? primary : bg,
+              color: bg,
               borderRadius: BorderRadius.circular(8),
-              border: isSelected ? Border.all(color: primaryDark, width: 2) : null,
+              border: isSelected
+                  ? Border.all(color: Colors.green.shade700, width: 2)
+                  : Border.all(color: Colors.black.withValues(alpha: 0.06), width: 1),
             ),
             child: Center(
               child: Text(
                 '$day',
                 style: TextStyle(
-                  color: isSelected ? Colors.white : fg,
+                  color: fg,
                   fontSize: 12,
                   fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
                 ),
@@ -985,36 +967,39 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
             childAspectRatio: 1,
             children: cells,
           ),
-          const SizedBox(height: 8),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              _legendItem(Colors.green.withValues(alpha: 0.5), 'متاح'),
-              const SizedBox(width: 12),
-              _legendItem(Colors.red.withValues(alpha: 0.5), 'محجوز'),
-              const SizedBox(width: 12),
-              _legendItem(primary, 'مختار'),
-            ],
-          ),
+
+          // ✅ عرض "محجوز" فقط عند اختيار يوم محجوز فعلياً
+          if (_selectedDate != null && _isDateBooked(_selectedDate!)) ...[
+            const SizedBox(height: 10),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+              decoration: BoxDecoration(
+                color: Colors.red.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.red.withValues(alpha: 0.5), width: 1.5),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.block, color: Colors.red, size: 20),
+                  const SizedBox(width: 8),
+                  Text(
+                    'محجوز — ${DateFormat('EEEE d MMMM yyyy', 'ar').format(_selectedDate!)}',
+                    style: const TextStyle(
+                      color: Colors.red,
+                      fontSize: 13,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ],
       ),
     );
   }
 
-  Widget _legendItem(Color color, String label) {
-    return Row(
-      children: [
-        Container(width: 10, height: 10,
-            decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(3))),
-        const SizedBox(width: 4),
-        Text(label, style: const TextStyle(color: textLight, fontSize: 10)),
-      ],
-    );
-  }
-
-  // ═══════════════════════════════════════════════════════════
-  // ⭐ التقييمات
-  // ═══════════════════════════════════════════════════════════
   Widget _buildReviewsSection() {
     final rating = (_hall['rating'] ?? 0).toDouble();
     final reviewsCount = _hall['reviewsCount'] ?? 0;
@@ -1204,9 +1189,6 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
     );
   }
 
-  // ═══════════════════════════════════════════════════════════
-  // 🏛️ قاعات مشابهة
-  // ═══════════════════════════════════════════════════════════
   Widget _buildSimilarHallsSection(String city) {
     return Padding(
       padding: const EdgeInsets.only(top: 16),
@@ -1321,9 +1303,6 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
     );
   }
 
-  // ═══════════════════════════════════════════════════════════
-  // 💰 شريط الحجز السفلي (محدث ليشمل العمولة)
-  // ═══════════════════════════════════════════════════════════
   Widget _buildBottomBar() {
     return Container(
       padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
@@ -1334,7 +1313,6 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
       child: SafeArea(
         child: Row(
           children: [
-            // ✅ عرض واضح: سعر القاعة + عمولة التطبيق
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -1395,9 +1373,6 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
     );
   }
 
-  // ═══════════════════════════════════════════════════════════
-  // 📅 اختيارات
-  // ═══════════════════════════════════════════════════════════
   Future<void> _pickDate() async {
     final now = DateTime.now();
     final picked = await showDatePicker(
@@ -1459,9 +1434,6 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
     );
   }
 
-  // ═══════════════════════════════════════════════════════════
-  // ✅ تنفيذ الحجز
-  // ═══════════════════════════════════════════════════════════
   Future<void> _confirmBooking() async {
     if (_selectedEventType == null) {
       _showError('الرجاء اختيار نوع المناسبة');
@@ -1654,9 +1626,6 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
     );
   }
 
-  // ═══════════════════════════════════════════════════════════
-  // الاتصال والاتجاهات والمشاركة
-  // ═══════════════════════════════════════════════════════════
   Future<void> _callProvider() async {
     final phone = _hall['providerPhone'] ?? _hall['phone'] ?? _hall['contactPhone'] ?? '';
     if (phone.toString().trim().isEmpty) {
