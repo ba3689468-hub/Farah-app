@@ -10,7 +10,18 @@ import 'features/add_review_screen.dart';
 class HallDetailsScreen extends StatefulWidget {
   final Map<String, dynamic> hallData;
   final String? hallId;
-  const HallDetailsScreen({super.key, required this.hallData, this.hallId});
+  final DateTime? prefilledDate;
+  final String? prefilledEventType;
+  final String? prefilledTimeSlot;
+
+  const HallDetailsScreen({
+    super.key,
+    required this.hallData,
+    this.hallId,
+    this.prefilledDate,
+    this.prefilledEventType,
+    this.prefilledTimeSlot,
+  });
 
   @override
   State<HallDetailsScreen> createState() => _HallDetailsScreenState();
@@ -26,13 +37,11 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
   int _currentImage = 0;
   late Map<String, dynamic> _hall;
 
-  // ═══════════════════════════════════════════════════
-  // 🔍 متغيرات فاحص التوفر (منع التسرب)
-  // ═══════════════════════════════════════════════════
+  // ── فاحص التوفر ──
   DateTime? _searchDate;
   String? _searchTimeSlot;
   bool _checkingAvailability = false;
-  bool? _isAvailable; // null = لم يتم الفحص بعد | true = متاحة | false = محجوزة
+  bool? _isAvailable;
 
   static const List<String> _timeSlots = [
     'الفترة الصباحية',
@@ -44,6 +53,9 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
   void initState() {
     super.initState();
     _hall = Map<String, dynamic>.from(widget.hallData);
+    // ✅ تعبئة فاحص التوفر مسبقاً إذا جاءت الفلاتر من الصفحة الرئيسية
+    _searchDate = widget.prefilledDate;
+    _searchTimeSlot = widget.prefilledTimeSlot;
   }
 
   @override
@@ -68,7 +80,6 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
       backgroundColor: AppColors.background,
       body: CustomScrollView(
         slivers: [
-          // ── معرض الصور ──
           SliverAppBar(
             expandedHeight: 300,
             pinned: true,
@@ -102,28 +113,15 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
               background: _buildImageGallery(images),
             ),
           ),
-
-          // ── المصغرات ──
           if (images.length > 1)
             SliverToBoxAdapter(child: _buildThumbnails(images)),
-
-          // ── المعلومات الأساسية ──
           SliverToBoxAdapter(
             child: _buildInfoSection(name, city, price, rating, capacity, description),
           ),
-
-          // 🔍 فاحص التوفر (منع التسرب)
           SliverToBoxAdapter(child: _buildAvailabilityChecker()),
-
-          // ── بطاقة المزود ──
           SliverToBoxAdapter(child: _buildProviderCard()),
-
-          // ── التقييمات ──
           SliverToBoxAdapter(child: _buildReviewsSection()),
-
-          // ── قاعات مشابهة ──
           SliverToBoxAdapter(child: _buildSimilarHallsSection(city)),
-
           const SliverToBoxAdapter(child: SizedBox(height: 100)),
         ],
       ),
@@ -132,7 +130,7 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
   }
 
   // ═══════════════════════════════════════════════════════════
-  // 🔍 بطاقة فاحص التوفر (منع التسرب)
+  // 🔍 بطاقة فاحص التوفر
   // ═══════════════════════════════════════════════════════════
   Widget _buildAvailabilityChecker() {
     return Container(
@@ -153,7 +151,6 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // ── العنوان ──
           Row(
             children: [
               Container(
@@ -169,37 +166,26 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      'تحقق من التوفر',
-                      style: TextStyle(
-                          color: textDark, fontSize: 17, fontWeight: FontWeight.bold),
-                    ),
+                    Text('تحقق من التوفر',
+                        style: TextStyle(color: textDark, fontSize: 17, fontWeight: FontWeight.bold)),
                     SizedBox(height: 2),
-                    Text(
-                      'اعرف إذا كانت القاعة متاحة في يومك',
-                      style: TextStyle(color: textLight, fontSize: 11),
-                    ),
+                    Text('اعرف إذا كانت القاعة متاحة في يومك',
+                        style: TextStyle(color: textLight, fontSize: 11)),
                   ],
                 ),
               ),
             ],
           ),
           const SizedBox(height: 16),
-
-          // ── اختيار التاريخ ──
           GestureDetector(
             onTap: _pickSearchDate,
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
               decoration: BoxDecoration(
-                color: _searchDate != null
-                    ? primary.withValues(alpha: 0.08)
-                    : AppColors.background,
+                color: _searchDate != null ? primary.withValues(alpha: 0.08) : AppColors.background,
                 borderRadius: BorderRadius.circular(14),
                 border: Border.all(
-                  color: _searchDate != null
-                      ? primary.withValues(alpha: 0.4)
-                      : Colors.transparent,
+                  color: _searchDate != null ? primary.withValues(alpha: 0.4) : Colors.transparent,
                   width: 1.5,
                 ),
               ),
@@ -225,21 +211,15 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
             ),
           ),
           const SizedBox(height: 10),
-
-          // ── اختيار الفترة الزمنية ──
           GestureDetector(
             onTap: _pickSearchTimeSlot,
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
               decoration: BoxDecoration(
-                color: _searchTimeSlot != null
-                    ? primary.withValues(alpha: 0.08)
-                    : AppColors.background,
+                color: _searchTimeSlot != null ? primary.withValues(alpha: 0.08) : AppColors.background,
                 borderRadius: BorderRadius.circular(14),
                 border: Border.all(
-                  color: _searchTimeSlot != null
-                      ? primary.withValues(alpha: 0.4)
-                      : Colors.transparent,
+                  color: _searchTimeSlot != null ? primary.withValues(alpha: 0.4) : Colors.transparent,
                   width: 1.5,
                 ),
               ),
@@ -263,8 +243,6 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
             ),
           ),
           const SizedBox(height: 14),
-
-          // ── زر التحقق ──
           SizedBox(
             width: double.infinity,
             height: 50,
@@ -278,37 +256,27 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
                 elevation: 0,
               ),
               child: _checkingAvailability
-                  ? const SizedBox(
-                      width: 22,
-                      height: 22,
-                      child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5),
-                    )
+                  ? const SizedBox(width: 22, height: 22,
+                      child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5))
                   : const Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Icon(Icons.search, color: Colors.white, size: 20),
                         SizedBox(width: 8),
-                        Text('تحقق الآن',
-                            style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
+                        Text('تحقق الآن', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
                       ],
                     ),
             ),
           ),
-
-          // ── نتيجة الفحص ──
           if (_isAvailable != null) ...[
             const SizedBox(height: 14),
             Container(
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
-                color: (_isAvailable!)
-                    ? Colors.green.withValues(alpha: 0.1)
-                    : Colors.red.withValues(alpha: 0.1),
+                color: _isAvailable! ? Colors.green.withValues(alpha: 0.1) : Colors.red.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(14),
                 border: Border.all(
-                  color: (_isAvailable!)
-                      ? Colors.green.withValues(alpha: 0.3)
-                      : Colors.red.withValues(alpha: 0.3),
+                  color: _isAvailable! ? Colors.green.withValues(alpha: 0.3) : Colors.red.withValues(alpha: 0.3),
                   width: 1.5,
                 ),
               ),
@@ -317,14 +285,10 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
                   Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: (_isAvailable!) ? Colors.green : Colors.red,
+                      color: _isAvailable! ? Colors.green : Colors.red,
                       shape: BoxShape.circle,
                     ),
-                    child: Icon(
-                      (_isAvailable!) ? Icons.check : Icons.close,
-                      color: Colors.white,
-                      size: 18,
-                    ),
+                    child: Icon(_isAvailable! ? Icons.check : Icons.close, color: Colors.white, size: 18),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
@@ -332,16 +296,16 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          (_isAvailable!) ? 'القاعة متاحة! ✅' : 'القاعة محجوزة ❌',
+                          _isAvailable! ? 'القاعة متاحة! ✅' : 'القاعة محجوزة ❌',
                           style: TextStyle(
-                            color: (_isAvailable!) ? Colors.green : Colors.red,
+                            color: _isAvailable! ? Colors.green : Colors.red,
                             fontSize: 15,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          (_isAvailable!)
+                          _isAvailable!
                               ? 'يمكنك الآن تأكيد الحجز والمتابعة.'
                               : 'هذه القاعة محجوزة في هذا اليوم والفترة. جرب تاريخاً آخر.',
                           style: const TextStyle(color: textLight, fontSize: 11),
@@ -353,8 +317,6 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
               ),
             ),
           ],
-
-          // ── تنبيه للعميل (منع التسرب) ──
           const SizedBox(height: 12),
           Container(
             padding: const EdgeInsets.all(10),
@@ -380,7 +342,6 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
     );
   }
 
-  // ── اختيار تاريخ الفحص ──
   Future<void> _pickSearchDate() async {
     final now = DateTime.now();
     final picked = await showDatePicker(
@@ -389,44 +350,33 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
       firstDate: now,
       lastDate: DateTime(now.year + 2),
       builder: (context, child) => Theme(
-        data: Theme.of(context).copyWith(
-          colorScheme: const ColorScheme.light(primary: primary),
-        ),
+        data: Theme.of(context).copyWith(colorScheme: const ColorScheme.light(primary: primary)),
         child: child!,
       ),
     );
     if (picked != null) {
       setState(() {
         _searchDate = picked;
-        _isAvailable = null; // إعادة تعيين النتيجة
+        _isAvailable = null;
       });
     }
   }
 
-  // ── اختيار فترة الفحص ──
   void _pickSearchTimeSlot() {
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
       builder: (context) => Container(
         padding: const EdgeInsets.all(20),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Container(
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: Colors.grey.withValues(alpha: 0.3),
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
+            Container(width: 40, height: 4,
+                decoration: BoxDecoration(color: Colors.grey.withValues(alpha: 0.3), borderRadius: BorderRadius.circular(2))),
             const SizedBox(height: 16),
             const Text('اختر الفترة الزمنية',
-                style: TextStyle(
-                    color: textDark, fontSize: 18, fontWeight: FontWeight.bold)),
+                style: TextStyle(color: textDark, fontSize: 18, fontWeight: FontWeight.bold)),
             const SizedBox(height: 16),
             ..._timeSlots.map((slot) {
               final isSelected = _searchTimeSlot == slot;
@@ -436,8 +386,7 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
                 'الفترة المسائية': Icons.nightlight_round_outlined,
               };
               return ListTile(
-                leading: Icon(icons[slot] ?? Icons.access_time,
-                    color: isSelected ? primary : textLight),
+                leading: Icon(icons[slot] ?? Icons.access_time, color: isSelected ? primary : textLight),
                 title: Text(slot,
                     style: TextStyle(
                         color: isSelected ? primary : textDark,
@@ -458,9 +407,6 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
     );
   }
 
-  // ═══════════════════════════════════════════════════════════
-  // 🔍 فحص التوفر في Firestore
-  // ═══════════════════════════════════════════════════════════
   Future<void> _checkAvailability() async {
     if (_searchDate == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -484,7 +430,6 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
     setState(() => _checkingAvailability = true);
 
     try {
-      // جلب جميع حجوزات هذه القاعة
       final bookings = await FirebaseFirestore.instance
           .collection('bookings')
           .where('hallId', isEqualTo: _hallId)
@@ -496,18 +441,13 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
       for (final doc in bookings.docs) {
         final data = doc.data();
         final status = data['status'] ?? '';
-
-        // تجاهل الحجوزات الملغية والمنتهية
         if (status == 'cancelled' || status == 'expired') continue;
 
         final eventDate = data['eventDate'] as Timestamp?;
         if (eventDate == null) continue;
 
         final d = eventDate.toDate();
-
-        // مقارنة التاريخ (يوم/شهر/سنة)
         if (d.year == targetDate.year && d.month == targetDate.month && d.day == targetDate.day) {
-          // مطابقة الفترة
           if (data['timeSlot'] == _searchTimeSlot) {
             isBooked = true;
             break;
@@ -529,19 +469,15 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
     }
   }
 
-  // ═══════════════════════════════════════════════════
+  // ═══════════════════════════════════════════════════════════
   // معرض الصور
-  // ═══════════════════════════════════════════════════
+  // ═══════════════════════════════════════════════════════════
 
   List<String> _getImages(Map<String, dynamic> hall) {
     final gallery = hall['gallery'];
-    if (gallery is List && gallery.isNotEmpty) {
-      return List<String>.from(gallery);
-    }
+    if (gallery is List && gallery.isNotEmpty) return List<String>.from(gallery);
     final single = hall['image'] ?? hall['coverImage'];
-    if (single != null && single.toString().isNotEmpty) {
-      return [single.toString()];
-    }
+    if (single != null && single.toString().isNotEmpty) return [single.toString()];
     return [];
   }
 
@@ -549,10 +485,7 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
     if (images.isEmpty) {
       return Container(
         color: primary.withValues(alpha: 0.3),
-        child: Center(
-          child: Icon(Icons.celebration,
-              size: 80, color: Colors.white.withValues(alpha: 0.6)),
-        ),
+        child: Center(child: Icon(Icons.celebration, size: 80, color: Colors.white.withValues(alpha: 0.6))),
       );
     }
     return Stack(
@@ -566,10 +499,7 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
             fit: BoxFit.cover,
             errorBuilder: (_, __, ___) => Container(
               color: primary.withValues(alpha: 0.3),
-              child: Center(
-                child: Icon(Icons.celebration,
-                    size: 80, color: Colors.white.withValues(alpha: 0.6)),
-              ),
+              child: Center(child: Icon(Icons.celebration, size: 80, color: Colors.white.withValues(alpha: 0.6))),
             ),
           ),
         ),
@@ -589,9 +519,7 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
         ),
         if (images.length > 1)
           Positioned(
-            bottom: 16,
-            left: 0,
-            right: 0,
+            bottom: 16, left: 0, right: 0,
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: List.generate(images.length, (i) {
@@ -599,8 +527,7 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
                 return AnimatedContainer(
                   duration: const Duration(milliseconds: 250),
                   margin: const EdgeInsets.symmetric(horizontal: 3),
-                  width: active ? 24 : 8,
-                  height: 8,
+                  width: active ? 24 : 8, height: 8,
                   decoration: BoxDecoration(
                     color: active ? Colors.white : Colors.white54,
                     borderRadius: BorderRadius.circular(10),
@@ -610,8 +537,7 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
             ),
           ),
         Positioned(
-          top: 90,
-          left: 16,
+          top: 90, left: 16,
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
@@ -619,15 +545,12 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
               borderRadius: BorderRadius.circular(12),
               boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.2), blurRadius: 8)],
             ),
-            child: Text(
-              '${_hall['price'] ?? 0} د.ل / ليلة',
-              style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.bold),
-            ),
+            child: Text('${_hall['price'] ?? 0} د.ل / ليلة',
+                style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.bold)),
           ),
         ),
         Positioned(
-          bottom: 16,
-          right: 16,
+          bottom: 16, right: 16,
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
@@ -640,17 +563,14 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
               children: [
                 const Icon(Icons.star, color: Colors.amber, size: 16),
                 const SizedBox(width: 4),
-                Text(
-                  (_hall['rating'] ?? 0).toStringAsFixed(1),
-                  style: const TextStyle(color: textDark, fontSize: 13, fontWeight: FontWeight.bold),
-                ),
+                Text((_hall['rating'] ?? 0).toStringAsFixed(1),
+                    style: const TextStyle(color: textDark, fontSize: 13, fontWeight: FontWeight.bold)),
               ],
             ),
           ),
         ),
         Positioned(
-          bottom: 16,
-          left: 16,
+          bottom: 16, left: 16,
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
@@ -662,10 +582,8 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
               children: [
                 const Icon(Icons.photo_library, color: Colors.white, size: 14),
                 const SizedBox(width: 4),
-                Text(
-                  '${_currentImage + 1}/${images.length}',
-                  style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
-                ),
+                Text('${_currentImage + 1}/${images.length}',
+                    style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
               ],
             ),
           ),
@@ -686,9 +604,8 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
         itemBuilder: (context, i) {
           final active = i == _currentImage;
           return GestureDetector(
-            onTap: () {
-              _pageCtrl.animateToPage(i, duration: const Duration(milliseconds: 300), curve: Curves.easeInOut);
-            },
+            onTap: () => _pageCtrl.animateToPage(i,
+                duration: const Duration(milliseconds: 300), curve: Curves.easeInOut),
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 200),
               width: 70,
@@ -714,9 +631,9 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
     );
   }
 
-  // ═══════════════════════════════════════════════════
+  // ═══════════════════════════════════════════════════════════
   // المعلومات الأساسية
-  // ═══════════════════════════════════════════════════
+  // ═══════════════════════════════════════════════════════════
 
   Widget _buildInfoSection(String name, String city, int price, double rating, int capacity, String description) {
     return Container(
@@ -725,19 +642,15 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(color: primary.withValues(alpha: 0.06), blurRadius: 20, offset: const Offset(0, 8)),
-        ],
+        boxShadow: [BoxShadow(color: primary.withValues(alpha: 0.06), blurRadius: 20, offset: const Offset(0, 8))],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Expanded(
-                child: Text(name,
-                    style: const TextStyle(color: textDark, fontSize: 24, fontWeight: FontWeight.bold)),
-              ),
+              Expanded(child: Text(name,
+                  style: const TextStyle(color: textDark, fontSize: 24, fontWeight: FontWeight.bold))),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
@@ -803,11 +716,7 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
             ],
           ),
           const SizedBox(height: 12),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: _buildAmenitiesFromData(),
-          ),
+          Wrap(spacing: 8, runSpacing: 8, children: _buildAmenitiesFromData()),
         ],
       ),
     );
@@ -861,9 +770,9 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
     );
   }
 
-  // ═══════════════════════════════════════════════════
+  // ═══════════════════════════════════════════════════════════
   // بطاقة المزود
-  // ═══════════════════════════════════════════════════
+  // ═══════════════════════════════════════════════════════════
 
   Widget _buildProviderCard() {
     final phone = _hall['providerPhone'] ?? _hall['phone'] ?? '';
@@ -880,8 +789,7 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
       child: Row(
         children: [
           Container(
-            width: 50,
-            height: 50,
+            width: 50, height: 50,
             decoration: BoxDecoration(
               gradient: const LinearGradient(colors: [primary, primaryDark]),
               borderRadius: BorderRadius.circular(14),
@@ -895,7 +803,8 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
               children: [
                 const Text('مزوّد الخدمة', style: TextStyle(color: textLight, fontSize: 11)),
                 const SizedBox(height: 3),
-                Text(phone.toString(), style: const TextStyle(color: textDark, fontSize: 15, fontWeight: FontWeight.bold)),
+                Text(phone.toString(),
+                    style: const TextStyle(color: textDark, fontSize: 15, fontWeight: FontWeight.bold)),
               ],
             ),
           ),
@@ -915,9 +824,9 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
     );
   }
 
-  // ═══════════════════════════════════════════════════
+  // ═══════════════════════════════════════════════════════════
   // التقييمات
-  // ═══════════════════════════════════════════════════
+  // ═══════════════════════════════════════════════════════════
 
   Widget _buildReviewsSection() {
     return Container(
@@ -962,11 +871,7 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
                     Row(
                       children: List.generate(5, (i) {
                         final rating = (_hall['rating'] ?? 0).toDouble();
-                        return Icon(
-                          i < rating ? Icons.star : Icons.star_border,
-                          color: Colors.amber,
-                          size: 14,
-                        );
+                        return Icon(i < rating ? Icons.star : Icons.star_border, color: Colors.amber, size: 14);
                       }),
                     ),
                     const SizedBox(height: 4),
@@ -998,12 +903,8 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
                 .snapshots(),
             builder: (context, snap) {
               if (snap.connectionState == ConnectionState.waiting) {
-                return const Center(
-                  child: Padding(
-                    padding: EdgeInsets.all(20),
-                    child: CircularProgressIndicator(color: primary),
-                  ),
-                );
+                return const Center(child: Padding(padding: EdgeInsets.all(20),
+                    child: CircularProgressIndicator(color: primary)));
               }
 
               final reviews = snap.data?.docs ?? [];
@@ -1015,10 +916,8 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
                     children: [
                       Icon(Icons.info_outline, color: textLight, size: 20),
                       SizedBox(width: 10),
-                      Expanded(
-                        child: Text('لا توجد مراجعات بعد. كن أول من يشارك تجربته!',
-                            style: TextStyle(color: textLight, fontSize: 12)),
-                      ),
+                      Expanded(child: Text('لا توجد مراجعات بعد. كن أول من يشارك تجربته!',
+                          style: TextStyle(color: textLight, fontSize: 12))),
                     ],
                   ),
                 );
@@ -1104,8 +1003,7 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
           Row(
             children: [
               Container(
-                width: 40,
-                height: 40,
+                width: 40, height: 40,
                 decoration: const BoxDecoration(
                   gradient: LinearGradient(colors: [primary, primaryDark]),
                   shape: BoxShape.circle,
@@ -1130,11 +1028,7 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
               ),
               Row(
                 children: List.generate(5, (i) {
-                  return Icon(
-                    i < rating ? Icons.star : Icons.star_border,
-                    color: Colors.amber,
-                    size: 14,
-                  );
+                  return Icon(i < rating ? Icons.star : Icons.star_border, color: Colors.amber, size: 14);
                 }),
               ),
             ],
@@ -1178,9 +1072,9 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
     );
   }
 
-  // ═══════════════════════════════════════════════════
+  // ═══════════════════════════════════════════════════════════
   // قاعات مشابهة
-  // ═══════════════════════════════════════════════════
+  // ═══════════════════════════════════════════════════════════
 
   Widget _buildSimilarHallsSection(String city) {
     return Padding(
@@ -1211,23 +1105,15 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
                   .snapshots(),
               builder: (context, snap) {
                 if (!snap.hasData) {
-                  return const Center(
-                    child: Padding(
-                      padding: EdgeInsets.all(20),
-                      child: CircularProgressIndicator(color: primary),
-                    ),
-                  );
+                  return const Center(child: Padding(padding: EdgeInsets.all(20),
+                      child: CircularProgressIndicator(color: primary)));
                 }
 
                 final halls = snap.data!.docs.where((doc) => doc.id != _hallId).toList();
                 if (halls.isEmpty) {
-                  return const Center(
-                    child: Padding(
-                      padding: EdgeInsets.all(20),
+                  return const Center(child: Padding(padding: EdgeInsets.all(20),
                       child: Text('لا توجد قاعات مشابهة في هذه المدينة',
-                          style: TextStyle(color: textLight, fontSize: 13)),
-                    ),
-                  );
+                          style: TextStyle(color: textLight, fontSize: 13))));
                 }
 
                 return ListView.separated(
@@ -1258,10 +1144,8 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
 
     return GestureDetector(
       onTap: () {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (_) => HallDetailsScreen(hallData: hall)),
-        );
+        Navigator.pushReplacement(context,
+            MaterialPageRoute(builder: (_) => HallDetailsScreen(hallData: hall)));
       },
       child: Container(
         width: 180,
@@ -1276,17 +1160,13 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
             ClipRRect(
               borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
               child: SizedBox(
-                height: 120,
-                width: 180,
+                height: 120, width: 180,
                 child: (image != null && image.toString().isNotEmpty)
-                    ? Image.network(
-                        image.toString(),
-                        fit: BoxFit.cover,
+                    ? Image.network(image.toString(), fit: BoxFit.cover,
                         errorBuilder: (_, __, ___) => Container(
                           color: primary.withValues(alpha: 0.2),
                           child: const Icon(Icons.celebration, color: Colors.white, size: 40),
-                        ),
-                      )
+                        ))
                     : Container(
                         color: primary.withValues(alpha: 0.2),
                         child: const Icon(Icons.celebration, color: Colors.white, size: 40),
@@ -1298,20 +1178,16 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(name,
-                      style: const TextStyle(color: textDark, fontSize: 13, fontWeight: FontWeight.bold),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis),
+                  Text(name, style: const TextStyle(color: textDark, fontSize: 13, fontWeight: FontWeight.bold),
+                      maxLines: 1, overflow: TextOverflow.ellipsis),
                   const SizedBox(height: 4),
                   Row(
                     children: [
                       const Icon(Icons.location_on_outlined, color: textLight, size: 11),
                       const SizedBox(width: 2),
                       Expanded(
-                        child: Text(city,
-                            style: const TextStyle(color: textLight, fontSize: 10),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis),
+                        child: Text(city, style: const TextStyle(color: textLight, fontSize: 10),
+                            maxLines: 1, overflow: TextOverflow.ellipsis),
                       ),
                     ],
                   ),
@@ -1319,8 +1195,7 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text('$price د.ل',
-                          style: const TextStyle(color: primary, fontSize: 12, fontWeight: FontWeight.bold)),
+                      Text('$price د.ل', style: const TextStyle(color: primary, fontSize: 12, fontWeight: FontWeight.bold)),
                       Row(
                         children: [
                           const Icon(Icons.star, color: Colors.amber, size: 11),
@@ -1339,12 +1214,11 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
     );
   }
 
-  // ═══════════════════════════════════════════════════
-  // شريط الحجز السفلي (مع حالة التعطيل)
-  // ═══════════════════════════════════════════════════
+  // ═══════════════════════════════════════════════════════════
+  // شريط الحجز السفلي
+  // ═══════════════════════════════════════════════════════════
 
   Widget _buildBookingBar(int price) {
-    // ⚠️ إذا تم الفحص وظهرت القاعة محجوزة، نُعطّل زر الحجز
     final bool isDisabled = _isAvailable == false;
 
     return Container(
@@ -1369,10 +1243,8 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
                     Icon(Icons.block, color: Colors.red, size: 16),
                     SizedBox(width: 6),
                     Expanded(
-                      child: Text(
-                        'هذه القاعة محجوزة في التاريخ/الفترة المختارة',
-                        style: TextStyle(color: Colors.red, fontSize: 11, fontWeight: FontWeight.bold),
-                      ),
+                      child: Text('هذه القاعة محجوزة في التاريخ/الفترة المختارة',
+                          style: TextStyle(color: Colors.red, fontSize: 11, fontWeight: FontWeight.bold)),
                     ),
                   ],
                 ),
@@ -1388,10 +1260,8 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
                     const Text('السعر يبدأ من', style: TextStyle(color: textLight, fontSize: 11)),
                     RichText(
                       text: TextSpan(children: [
-                        TextSpan(
-                          text: '$price ',
-                          style: const TextStyle(color: primary, fontSize: 20, fontWeight: FontWeight.bold),
-                        ),
+                        TextSpan(text: '$price ',
+                            style: const TextStyle(color: primary, fontSize: 20, fontWeight: FontWeight.bold)),
                         const TextSpan(text: 'د.ل', style: TextStyle(color: textDark, fontSize: 12)),
                       ]),
                     ),
@@ -1418,7 +1288,13 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (_) => BookingScreen(hallData: _hall, hallId: _hallId),
+                              builder: (_) => BookingScreen(
+                                hallData: _hall,
+                                hallId: _hallId,
+                                prefilledDate: widget.prefilledDate,
+                                prefilledEventType: widget.prefilledEventType,
+                                prefilledTimeSlot: widget.prefilledTimeSlot,
+                              ),
                             ),
                           );
                         },
@@ -1431,21 +1307,11 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
                       borderRadius: BorderRadius.circular(20),
                       boxShadow: isDisabled
                           ? []
-                          : [
-                              BoxShadow(
-                                color: primary.withValues(alpha: 0.35),
-                                blurRadius: 15,
-                                offset: const Offset(0, 6),
-                              ),
-                            ],
+                          : [BoxShadow(color: primary.withValues(alpha: 0.35), blurRadius: 15, offset: const Offset(0, 6))],
                     ),
                     child: Row(
                       children: [
-                        Icon(
-                          isDisabled ? Icons.block : Icons.calendar_month,
-                          color: Colors.white,
-                          size: 18,
-                        ),
+                        Icon(isDisabled ? Icons.block : Icons.calendar_month, color: Colors.white, size: 18),
                         const SizedBox(width: 8),
                         Text(
                           isDisabled ? 'محجوزة' : 'احجز الآن',
@@ -1463,9 +1329,9 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
     );
   }
 
-  // ═══════════════════════════════════════════════════
+  // ═══════════════════════════════════════════════════════════
   // الاتصال والاتجاهات والمشاركة
-  // ═══════════════════════════════════════════════════
+  // ═══════════════════════════════════════════════════════════
 
   Future<void> _callProvider() async {
     final phone = _hall['providerPhone'] ?? _hall['phone'] ?? _hall['contactPhone'] ?? '';
