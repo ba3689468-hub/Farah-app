@@ -49,6 +49,10 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
     'الفترة المسائية',
   ];
 
+  // ✅ هل جاء المستخدم من البحث؟
+  bool get _hasPrefilledDateOrTime =>
+      widget.prefilledDate != null || widget.prefilledTimeSlot != null;
+
   @override
   void initState() {
     super.initState();
@@ -118,7 +122,9 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
           SliverToBoxAdapter(
             child: _buildInfoSection(name, city, price, rating, capacity, description),
           ),
-          SliverToBoxAdapter(child: _buildAvailabilityChecker()),
+          // ✅ إخفاء بطاقة "تحقق من التوفر" إذا جاء المستخدم من البحث
+          if (!_hasPrefilledDateOrTime)
+            SliverToBoxAdapter(child: _buildAvailabilityChecker()),
           SliverToBoxAdapter(child: _buildProviderCard()),
           SliverToBoxAdapter(child: _buildReviewsSection()),
           SliverToBoxAdapter(child: _buildSimilarHallsSection(city)),
