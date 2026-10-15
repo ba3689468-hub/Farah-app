@@ -37,12 +37,17 @@ class _HallListScreenState extends State<HallListScreen> {
   String _userName = 'فرح';
 
   // ═══════════════════════════════════════════════════════════
-  // 🔍 فلاتر البحث المتقدم (المدينة + التاريخ + الفترة + المناسبة)
+  // 🔍 فلاتر البحث المتقدم
   // ═══════════════════════════════════════════════════════════
   String? _searchCity;
   DateTime? _searchDate;
   String? _searchTimeSlot;
   String? _searchEventType;
+
+  // ✅ قائمة النتائج المفلترة (للبحث في الصفحة الرئيسية)
+  Future<List<QueryDocumentSnapshot>>? _filteredHallsFuture;
+  bool _isAdvancedFiltering = false;
+  int _filteredCount = 0;
 
   static const List<String> _libyanCities = [
     'طرابلس', 'بنغازي', 'مصراتة', 'الزاوية', 'صبراتة', 'الخمس',
@@ -57,12 +62,7 @@ class _HallListScreenState extends State<HallListScreen> {
   ];
 
   static const List<String> _eventTypesList = [
-    'حفل زفاف',
-    'محضر',
-    'عقد قران',
-    'أسبوع',
-    'حفل تخرج',
-    'فضانية',
+    'حفل زفاف', 'محضر', 'عقد قران', 'أسبوع', 'حفل تخرج', 'فضانية',
   ];
 
   final PageController _bannersCtrl = PageController();
@@ -145,10 +145,15 @@ class _HallListScreenState extends State<HallListScreen> {
       slivers: [
         SliverToBoxAdapter(child: _buildHeader()),
         SliverToBoxAdapter(child: _buildAdvancedSearchBar()),
-        SliverToBoxAdapter(child: _buildHeroBannersCarousel()),
-        SliverToBoxAdapter(child: _buildCategoryIcons()),
+        if (_isAdvancedFiltering) SliverToBoxAdapter(child: _buildActiveFiltersBanner()),
+        if (!_isAdvancedFiltering) SliverToBoxAdapter(child: _buildHeroBannersCarousel()),
+        if (!_isAdvancedFiltering) SliverToBoxAdapter(child: _buildCategoryIcons()),
         SliverToBoxAdapter(child: _buildFeaturedTitle()),
-        SliverToBoxAdapter(child: _buildHallsSection()),
+        // ✅ عرض النتائج (مفلترة أو كل القاعات)
+        if (_isAdvancedFiltering)
+          _buildFilteredHallsSection()
+        else
+          SliverToBoxAdapter(child: _buildHallsSection()),
         const SliverToBoxAdapter(child: SizedBox(height: 30)),
       ],
     );
@@ -160,17 +165,11 @@ class _HallListScreenState extends State<HallListScreen> {
       child: Row(
         children: [
           _iconButton(Icons.account_balance_wallet_outlined, () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const WalletScreen()),
-            );
+            Navigator.push(context, MaterialPageRoute(builder: (_) => const WalletScreen()));
           }),
           const SizedBox(width: 8),
           _iconButton(Icons.notifications_outlined, () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const NotificationsScreen()),
-            );
+            Navigator.push(context, MaterialPageRoute(builder: (_) => const NotificationsScreen()));
           }),
           const Spacer(),
           Container(
@@ -200,10 +199,8 @@ class _HallListScreenState extends State<HallListScreen> {
     );
   }
 
-  Widget _iconButton(IconData icon, VoidCallback onTap, {bool hasBadge = false}) {
-    if (icon == Icons.notifications_outlined) {
-      return _notificationButton(onTap);
-    }
+  Widget _iconButton(IconData icon, VoidCallback onTap) {
+    if (icon == Icons.notifications_outlined) return _notificationButton(onTap);
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -259,8 +256,7 @@ class _HallListScreenState extends State<HallListScreen> {
               ),
               if (count > 0)
                 Positioned(
-                  top: -4,
-                  right: -4,
+                  top: -4, right: -4,
                   child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                     constraints: const BoxConstraints(minWidth: 20),
@@ -271,11 +267,7 @@ class _HallListScreenState extends State<HallListScreen> {
                     ),
                     child: Text(
                       count > 99 ? '99+' : '$count',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
-                      ),
+                      style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
                       textAlign: TextAlign.center,
                     ),
                   ),
@@ -288,7 +280,7 @@ class _HallListScreenState extends State<HallListScreen> {
   }
 
   // ═══════════════════════════════════════════════════════════
-  // 🔍 شريط البحث المتقدم (المدينة + التاريخ + الفترة + المناسبة)
+  // 🔍 شريط البحث المتطور
   // ═══════════════════════════════════════════════════════════
   Widget _buildAdvancedSearchBar() {
     return Padding(
@@ -299,31 +291,17 @@ class _HallListScreenState extends State<HallListScreen> {
           color: Colors.white,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(color: primary.withValues(alpha: 0.1), width: 1),
-          boxShadow: [
-            BoxShadow(
-              color: primary.withValues(alpha: 0.08),
-              blurRadius: 15,
-              offset: const Offset(0, 5),
-            ),
-          ],
+          boxShadow: [BoxShadow(color: primary.withValues(alpha: 0.08), blurRadius: 15, offset: const Offset(0, 5))],
         ),
         child: Column(
           children: [
             Row(
               children: [
-                Expanded(child: _buildSearchField(
-                  icon: Icons.location_city_outlined,
-                  label: 'المدينة',
-                  value: _searchCity,
-                  onTap: _pickSearchCity,
-                )),
+                Expanded(child: _buildSearchField(icon: Icons.location_city_outlined, label: 'المدينة', value: _searchCity, onTap: _pickSearchCity)),
                 const SizedBox(width: 8),
                 Expanded(child: _buildSearchField(
-                  icon: Icons.calendar_today_outlined,
-                  label: 'التاريخ',
-                  value: _searchDate != null
-                      ? '${_searchDate!.day}/${_searchDate!.month}/${_searchDate!.year}'
-                      : null,
+                  icon: Icons.calendar_today_outlined, label: 'التاريخ',
+                  value: _searchDate != null ? '${_searchDate!.day}/${_searchDate!.month}/${_searchDate!.year}' : null,
                   onTap: _pickSearchDate,
                 )),
               ],
@@ -331,46 +309,25 @@ class _HallListScreenState extends State<HallListScreen> {
             const SizedBox(height: 8),
             Row(
               children: [
-                Expanded(child: _buildSearchField(
-                  icon: Icons.access_time,
-                  label: 'الفترة',
-                  value: _searchTimeSlot,
-                  onTap: _pickSearchTimeSlot,
-                )),
+                Expanded(child: _buildSearchField(icon: Icons.access_time, label: 'الفترة', value: _searchTimeSlot, onTap: _pickSearchTimeSlot)),
                 const SizedBox(width: 8),
-                Expanded(child: _buildSearchField(
-                  icon: Icons.celebration_outlined,
-                  label: 'نوع المناسبة',
-                  value: _searchEventType,
-                  onTap: _pickSearchEventType,
-                )),
+                Expanded(child: _buildSearchField(icon: Icons.celebration_outlined, label: 'نوع المناسبة', value: _searchEventType, onTap: _pickSearchEventType)),
               ],
             ),
             const SizedBox(height: 10),
             Row(
               children: [
-                // زر مسح الفلاتر
-                if (_searchCity != null ||
-                    _searchDate != null ||
-                    _searchTimeSlot != null ||
-                    _searchEventType != null)
+                if (_isAdvancedFiltering || _searchCity != null || _searchDate != null || _searchTimeSlot != null || _searchEventType != null)
                   GestureDetector(
                     onTap: _clearSearchFilters,
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-                      decoration: BoxDecoration(
-                        color: Colors.red.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
+                      decoration: BoxDecoration(color: Colors.red.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(12)),
                       child: const Icon(Icons.close, color: Colors.redAccent, size: 18),
                     ),
                   ),
-                if (_searchCity != null ||
-                    _searchDate != null ||
-                    _searchTimeSlot != null ||
-                    _searchEventType != null)
+                if (_isAdvancedFiltering || _searchCity != null || _searchDate != null || _searchTimeSlot != null || _searchEventType != null)
                   const SizedBox(width: 8),
-                // زر البحث
                 Expanded(
                   child: GestureDetector(
                     onTap: _performAdvancedSearch,
@@ -379,27 +336,14 @@ class _HallListScreenState extends State<HallListScreen> {
                       decoration: BoxDecoration(
                         gradient: const LinearGradient(colors: [primary, primaryDark]),
                         borderRadius: BorderRadius.circular(14),
-                        boxShadow: [
-                          BoxShadow(
-                            color: primary.withValues(alpha: 0.3),
-                            blurRadius: 10,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
+                        boxShadow: [BoxShadow(color: primary.withValues(alpha: 0.3), blurRadius: 10, offset: const Offset(0, 4))],
                       ),
                       child: const Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Icon(Icons.search, color: Colors.white, size: 20),
                           SizedBox(width: 8),
-                          Text(
-                            'ابحث عن قاعة',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 14,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
+                          Text('ابحث عن قاعة', style: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold)),
                         ],
                       ),
                     ),
@@ -413,12 +357,7 @@ class _HallListScreenState extends State<HallListScreen> {
     );
   }
 
-  Widget _buildSearchField({
-    required IconData icon,
-    required String label,
-    required String? value,
-    required VoidCallback onTap,
-  }) {
+  Widget _buildSearchField({required IconData icon, required String label, required String? value, required VoidCallback onTap}) {
     final hasValue = value != null && value.isNotEmpty;
     return GestureDetector(
       onTap: onTap,
@@ -427,10 +366,7 @@ class _HallListScreenState extends State<HallListScreen> {
         decoration: BoxDecoration(
           color: hasValue ? primary.withValues(alpha: 0.08) : AppColors.background,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: hasValue ? primary.withValues(alpha: 0.4) : Colors.transparent,
-            width: 1.2,
-          ),
+          border: Border.all(color: hasValue ? primary.withValues(alpha: 0.4) : Colors.transparent, width: 1.2),
         ),
         child: Row(
           children: [
@@ -439,11 +375,7 @@ class _HallListScreenState extends State<HallListScreen> {
             Expanded(
               child: Text(
                 hasValue ? value : label,
-                style: TextStyle(
-                  color: hasValue ? textDark : textLight,
-                  fontSize: 12,
-                  fontWeight: hasValue ? FontWeight.bold : FontWeight.normal,
-                ),
+                style: TextStyle(color: hasValue ? textDark : textLight, fontSize: 12, fontWeight: hasValue ? FontWeight.bold : FontWeight.normal),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
@@ -455,92 +387,56 @@ class _HallListScreenState extends State<HallListScreen> {
     );
   }
 
-  void _pickSearchCity() {
-    _showPickerSheet(
-      title: 'اختر المدينة',
-      items: _libyanCities,
-      selectedItem: _searchCity,
-      icons: null,
-      onSelect: (val) => setState(() => _searchCity = val),
-    );
-  }
+  void _pickSearchCity() => _showPickerSheet(
+    title: 'اختر المدينة', items: _libyanCities, selectedItem: _searchCity, icons: null,
+    onSelect: (val) => setState(() => _searchCity = val),
+  );
 
   Future<void> _pickSearchDate() async {
     final now = DateTime.now();
     final picked = await showDatePicker(
-      context: context,
-      initialDate: _searchDate ?? now,
-      firstDate: now,
-      lastDate: DateTime(now.year + 2),
+      context: context, initialDate: _searchDate ?? now, firstDate: now, lastDate: DateTime(now.year + 2),
       builder: (context, child) => Theme(
-        data: Theme.of(context).copyWith(
-          colorScheme: const ColorScheme.light(primary: primary),
-        ),
+        data: Theme.of(context).copyWith(colorScheme: const ColorScheme.light(primary: primary)),
         child: child!,
       ),
     );
     if (picked != null) setState(() => _searchDate = picked);
   }
 
-  void _pickSearchTimeSlot() {
-    _showPickerSheet(
-      title: 'اختر الفترة الزمنية',
-      items: _timeSlotsList,
-      selectedItem: _searchTimeSlot,
-      icons: {
-        'الفترة الصباحية': Icons.wb_sunny_outlined,
-        'الفترة العصرية': Icons.wb_twilight_outlined,
-        'الفترة المسائية': Icons.nightlight_round_outlined,
-      },
-      onSelect: (val) => setState(() => _searchTimeSlot = val),
-    );
-  }
+  void _pickSearchTimeSlot() => _showPickerSheet(
+    title: 'اختر الفترة الزمنية', items: _timeSlotsList, selectedItem: _searchTimeSlot,
+    icons: {
+      'الفترة الصباحية': Icons.wb_sunny_outlined,
+      'الفترة العصرية': Icons.wb_twilight_outlined,
+      'الفترة المسائية': Icons.nightlight_round_outlined,
+    },
+    onSelect: (val) => setState(() => _searchTimeSlot = val),
+  );
 
-  void _pickSearchEventType() {
-    _showPickerSheet(
-      title: 'اختر نوع المناسبة',
-      items: _eventTypesList,
-      selectedItem: _searchEventType,
-      icons: {
-        'حفل زفاف': Icons.favorite,
-        'محضر': Icons.home_outlined,
-        'عقد قران': Icons.auto_stories_outlined,
-        'أسبوع': Icons.child_care_outlined,
-        'حفل تخرج': Icons.school_outlined,
-        'فضانية': Icons.diamond_outlined,
-      },
-      onSelect: (val) => setState(() => _searchEventType = val),
-    );
-  }
+  void _pickSearchEventType() => _showPickerSheet(
+    title: 'اختر نوع المناسبة', items: _eventTypesList, selectedItem: _searchEventType,
+    icons: {
+      'حفل زفاف': Icons.favorite, 'محضر': Icons.home_outlined,
+      'عقد قران': Icons.auto_stories_outlined, 'أسبوع': Icons.child_care_outlined,
+      'حفل تخرج': Icons.school_outlined, 'فضانية': Icons.diamond_outlined,
+    },
+    onSelect: (val) => setState(() => _searchEventType = val),
+  );
 
-  void _showPickerSheet({
-    required String title,
-    required List<String> items,
-    required String? selectedItem,
-    required Map<String, IconData>? icons,
-    required Function(String) onSelect,
-  }) {
+  void _showPickerSheet({required String title, required List<String> items, required String? selectedItem, required Map<String, IconData>? icons, required Function(String) onSelect}) {
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
       builder: (context) => Container(
         padding: const EdgeInsets.all(20),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Container(
-              width: 40, height: 4,
-              decoration: BoxDecoration(
-                color: Colors.grey.withValues(alpha: 0.3),
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
+            Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey.withValues(alpha: 0.3), borderRadius: BorderRadius.circular(2))),
             const SizedBox(height: 16),
-            Text(title,
-                style: const TextStyle(
-                    color: textDark, fontSize: 18, fontWeight: FontWeight.bold)),
+            Text(title, style: const TextStyle(color: textDark, fontSize: 18, fontWeight: FontWeight.bold)),
             const SizedBox(height: 16),
             Flexible(
               child: SingleChildScrollView(
@@ -549,37 +445,20 @@ class _HallListScreenState extends State<HallListScreen> {
                     final isSelected = selectedItem == item;
                     final itemIcon = icons?[item];
                     return ListTile(
-                      leading: itemIcon != null
-                          ? Icon(itemIcon, color: isSelected ? primary : textLight, size: 22)
-                          : null,
-                      title: Text(
-                        item,
-                        style: TextStyle(
-                          color: isSelected ? primary : textDark,
-                          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                        ),
-                      ),
+                      leading: itemIcon != null ? Icon(itemIcon, color: isSelected ? primary : textLight, size: 22) : null,
+                      title: Text(item, style: TextStyle(color: isSelected ? primary : textDark, fontWeight: isSelected ? FontWeight.bold : FontWeight.normal)),
                       trailing: isSelected ? const Icon(Icons.check, color: primary) : null,
-                      onTap: () {
-                        onSelect(item);
-                        Navigator.pop(context);
-                      },
+                      onTap: () { onSelect(item); Navigator.pop(context); },
                     );
                   }).toList(),
                 ),
               ),
             ),
-            const SizedBox(height: 10),
-            // زر "مسح الاختيار"
             if (selectedItem != null)
               TextButton.icon(
-                onPressed: () {
-                  onSelect('');
-                  Navigator.pop(context);
-                },
+                onPressed: () { onSelect(''); Navigator.pop(context); },
                 icon: const Icon(Icons.close, color: Colors.redAccent, size: 18),
-                label: const Text('مسح الاختيار',
-                    style: TextStyle(color: Colors.redAccent)),
+                label: const Text('مسح الاختيار', style: TextStyle(color: Colors.redAccent)),
               ),
           ],
         ),
@@ -593,35 +472,191 @@ class _HallListScreenState extends State<HallListScreen> {
       _searchDate = null;
       _searchTimeSlot = null;
       _searchEventType = null;
+      _isAdvancedFiltering = false;
+      _filteredHallsFuture = null;
+      _filteredCount = 0;
     });
   }
 
-  void _performAdvancedSearch() {
-    // التحقق: يجب اختيار فلتر واحد على الأقل
-    if (_searchCity == null &&
-        _searchDate == null &&
-        _searchTimeSlot == null &&
-        _searchEventType == null) {
+  // ═══════════════════════════════════════════════════════════
+  // ✅ البحث المتقدم — يعرض النتائج في الصفحة نفسها
+  // ═══════════════════════════════════════════════════════════
+  Future<void> _performAdvancedSearch() async {
+    if (_searchCity == null && _searchDate == null && _searchTimeSlot == null && _searchEventType == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('الرجاء اختيار فلتر واحد على الأقل للبحث'),
-          backgroundColor: Colors.orange,
-        ),
+        const SnackBar(content: Text('الرجاء اختيار فلتر واحد على الأقل'), backgroundColor: Colors.orange),
       );
       return;
     }
 
-    // الانتقال إلى شاشة الاستكشاف مع تمرير الفلاتر
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => ExploreScreen(
-          initialCity: _searchCity,
-          initialDate: _searchDate,
-          initialTimeSlot: _searchTimeSlot,
-          initialEventType: _searchEventType,
-        ),
+    setState(() => _isAdvancedFiltering = true);
+
+    try {
+      // 1. جلب القاعات حسب المدينة
+      Query hallQuery = FirebaseFirestore.instance.collection('halls');
+      if (_searchCity != null) hallQuery = hallQuery.where('city', isEqualTo: _searchCity);
+      final hallsSnap = await hallQuery.get();
+
+      // 2. جلب الحجوزات في التاريخ المختار
+      final Set<String> bookedHallIds = {};
+      if (_searchDate != null) {
+        final startOfDay = DateTime(_searchDate!.year, _searchDate!.month, _searchDate!.day);
+        final endOfDay = startOfDay.add(const Duration(days: 1));
+        final bookingsSnap = await FirebaseFirestore.instance
+            .collection('bookings')
+            .where('eventDate', isGreaterThanOrEqualTo: Timestamp.fromDate(startOfDay))
+            .where('eventDate', isLessThan: Timestamp.fromDate(endOfDay))
+            .get();
+
+        for (final doc in bookingsSnap.docs) {
+          final data = doc.data() as Map<String, dynamic>;
+          final status = data['status'] ?? '';
+          if (status == 'cancelled' || status == 'expired') continue;
+          if (_searchTimeSlot != null) {
+            if (data['timeSlot'] == _searchTimeSlot) bookedHallIds.add(data['hallId'] ?? '');
+          } else {
+            bookedHallIds.add(data['hallId'] ?? '');
+          }
+        }
+      }
+
+      // 3. استثناء القاعات المحجوزة
+      var filteredHalls = hallsSnap.docs.where((doc) => !bookedHallIds.contains(doc.id)).toList();
+
+      // 4. فلترة حسب نوع المناسبة
+      if (_searchEventType != null) {
+        filteredHalls = filteredHalls.where((doc) {
+          final data = doc.data() as Map<String, dynamic>;
+          final eventTypes = data['eventTypes'];
+          if (eventTypes is List && eventTypes.isNotEmpty) return eventTypes.contains(_searchEventType);
+          return true;
+        }).toList();
+      }
+
+      if (mounted) {
+        setState(() {
+          _filteredHallsFuture = Future.value(filteredHalls);
+          _filteredCount = filteredHalls.length;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() { _filteredHallsFuture = Future.value([]); _filteredCount = 0; });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('خطأ في البحث: $e'), backgroundColor: Colors.red),
+        );
+      }
+    }
+  }
+
+  // ── بانر الفلاتر النشطة ──
+  Widget _buildActiveFiltersBanner() {
+    return Container(
+      margin: const EdgeInsets.fromLTRB(20, 8, 20, 12),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: primary.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: primary.withValues(alpha: 0.25)),
       ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.filter_alt, color: primary, size: 18),
+              const SizedBox(width: 8),
+              Text('تم العثور على $_filteredCount قاعة',
+                  style: const TextStyle(color: textDark, fontSize: 13, fontWeight: FontWeight.bold)),
+              const Spacer(),
+              GestureDetector(
+                onTap: _clearSearchFilters,
+                child: const Text('إلغاء',
+                    style: TextStyle(color: primary, fontSize: 12, fontWeight: FontWeight.bold, decoration: TextDecoration.underline)),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 6, runSpacing: 6,
+            children: [
+              if (_searchCity != null) _buildFilterTag(Icons.location_city_outlined, _searchCity!),
+              if (_searchDate != null) _buildFilterTag(Icons.calendar_today_outlined, '${_searchDate!.day}/${_searchDate!.month}'),
+              if (_searchTimeSlot != null) _buildFilterTag(Icons.access_time, _searchTimeSlot!),
+              if (_searchEventType != null) _buildFilterTag(Icons.celebration_outlined, _searchEventType!),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFilterTag(IconData icon, String label) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(10)),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, color: primary, size: 12),
+          const SizedBox(width: 4),
+          Text(label, style: const TextStyle(color: textDark, fontSize: 11, fontWeight: FontWeight.w500)),
+        ],
+      ),
+    );
+  }
+
+  // ── قسم عرض النتائج المفلترة ──
+  Widget _buildFilteredHallsSection() {
+    if (_filteredHallsFuture == null) return const SliverToBoxAdapter(child: SizedBox());
+    return FutureBuilder<List<QueryDocumentSnapshot>>(
+      future: _filteredHallsFuture,
+      builder: (context, snap) {
+        if (snap.connectionState == ConnectionState.waiting) {
+          return const SliverToBoxAdapter(
+            child: Padding(padding: EdgeInsets.all(40), child: Center(child: CircularProgressIndicator(color: primary))),
+          );
+        }
+
+        final docs = snap.data ?? [];
+        if (docs.isEmpty) {
+          return SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.all(40),
+              child: Column(
+                children: [
+                  Icon(Icons.search_off, size: 70, color: primary.withValues(alpha: 0.3)),
+                  const SizedBox(height: 14),
+                  const Text('لا توجد قاعات متاحة', style: TextStyle(color: textDark, fontSize: 15, fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 8),
+                  const Text('جرب تغيير الفلاتر', style: TextStyle(color: textLight, fontSize: 12)),
+                ],
+              ),
+            ),
+          );
+        }
+
+        return SliverPadding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          sliver: SliverList(
+            delegate: SliverChildBuilderDelegate(
+              (context, i) {
+                final data = docs[i].data() as Map<String, dynamic>;
+                data['_id'] = docs[i].id;
+                // ✅ تمرير الفلاتر إلى شاشة التفاصيل
+                data['_prefilledDate'] = _searchDate;
+                data['_prefilledEventType'] = _searchEventType;
+                data['_prefilledTimeSlot'] = _searchTimeSlot;
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 14),
+                  child: _buildHallVerticalCard(data, prefilled: true),
+                );
+              },
+              childCount: docs.length,
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -691,8 +726,7 @@ class _HallListScreenState extends State<HallListScreen> {
                 return AnimatedContainer(
                   duration: const Duration(milliseconds: 300),
                   margin: const EdgeInsets.symmetric(horizontal: 3),
-                  width: active ? 20 : 6,
-                  height: 6,
+                  width: active ? 20 : 6, height: 6,
                   decoration: BoxDecoration(
                     color: active ? Colors.white : Colors.white.withValues(alpha: 0.5),
                     borderRadius: BorderRadius.circular(3),
@@ -729,11 +763,8 @@ class _HallListScreenState extends State<HallListScreen> {
                     borderRadius: BorderRadius.circular(22),
                     border: Border.all(color: color.withValues(alpha: 0.25), width: 1.5),
                   ),
-                  child: Image.asset(
-                    cat['image'] as String,
-                    fit: BoxFit.contain,
-                    errorBuilder: (_, __, ___) => Icon(Icons.image_not_supported, color: color, size: 28),
-                  ),
+                  child: Image.asset(cat['image'] as String, fit: BoxFit.contain,
+                      errorBuilder: (_, __, ___) => Icon(Icons.image_not_supported, color: color, size: 28)),
                 ),
                 const SizedBox(height: 8),
                 Text(cat['name'] as String, style: const TextStyle(color: textDark, fontSize: 12, fontWeight: FontWeight.w600)),
@@ -750,20 +781,24 @@ class _HallListScreenState extends State<HallListScreen> {
       padding: const EdgeInsets.fromLTRB(20, 20, 20, 14),
       child: Row(
         children: [
-          GestureDetector(
-            onTap: () => setState(() => _isGrid = !_isGrid),
-            child: Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: primary.withValues(alpha: 0.15), width: 1),
+          if (!_isAdvancedFiltering)
+            GestureDetector(
+              onTap: () => setState(() => _isGrid = !_isGrid),
+              child: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: primary.withValues(alpha: 0.15), width: 1),
+                ),
+                child: Icon(_isGrid ? Icons.view_list : Icons.grid_view, color: primary, size: 18),
               ),
-              child: Icon(_isGrid ? Icons.view_list : Icons.grid_view, color: primary, size: 18),
             ),
-          ),
           const Spacer(),
-          const Text('قاعات مميزة', style: TextStyle(color: textDark, fontSize: 18, fontWeight: FontWeight.bold)),
+          Text(
+            _isAdvancedFiltering ? 'نتائج البحث' : 'قاعات مميزة',
+            style: const TextStyle(color: textDark, fontSize: 18, fontWeight: FontWeight.bold),
+          ),
         ],
       ),
     );
@@ -825,7 +860,7 @@ class _HallListScreenState extends State<HallListScreen> {
             children: docs.map((doc) {
               final data = doc.data() as Map<String, dynamic>;
               data['_id'] = doc.id;
-              return Padding(padding: const EdgeInsets.only(bottom: 14), child: _buildHallVerticalCard(data));
+              return Padding(padding: const EdgeInsets.only(bottom: 14), child: _buildHallVerticalCard(data, prefilled: false));
             }).toList(),
           ),
         );
@@ -836,10 +871,7 @@ class _HallListScreenState extends State<HallListScreen> {
   Widget _favoriteButton(Map<String, dynamic> hall) {
     final id = hall['_id'] as String? ?? hall['id'] as String? ?? '';
     return StreamBuilder<DocumentSnapshot>(
-      stream: FirebaseFirestore.instance
-          .collection('users')
-          .doc(FirebaseAuth.instance.currentUser?.uid)
-          .snapshots(),
+      stream: FirebaseFirestore.instance.collection('users').doc(FirebaseAuth.instance.currentUser?.uid).snapshots(),
       builder: (context, snap) {
         final data = snap.data?.data() as Map<String, dynamic>?;
         final favs = List<String>.from(data?['favorites'] ?? []);
@@ -849,32 +881,20 @@ class _HallListScreenState extends State<HallListScreen> {
             final user = FirebaseAuth.instance.currentUser;
             if (user == null) return;
             if (isFav) {
-              await FirebaseFirestore.instance.collection('users').doc(user.uid).update({
-                'favorites': FieldValue.arrayRemove([id]),
-              });
+              await FirebaseFirestore.instance.collection('users').doc(user.uid).update({'favorites': FieldValue.arrayRemove([id])});
             } else {
-              await FirebaseFirestore.instance.collection('users').doc(user.uid).update({
-                'favorites': FieldValue.arrayUnion([id]),
-              });
+              await FirebaseFirestore.instance.collection('users').doc(user.uid).update({'favorites': FieldValue.arrayUnion([id])});
             }
             if (mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(isFav ? 'تم الإزالة من المفضلة' : 'تمت الإضافة للمفضلة'),
-                  duration: const Duration(seconds: 1),
-                ),
+                SnackBar(content: Text(isFav ? 'تم الإزالة من المفضلة' : 'تمت الإضافة للمفضلة'), duration: const Duration(seconds: 1)),
               );
             }
           },
           child: Container(
             padding: const EdgeInsets.all(6),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              shape: BoxShape.circle,
-              boxShadow: [
-                BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 6),
-              ],
-            ),
+            decoration: BoxDecoration(color: Colors.white, shape: BoxShape.circle,
+                boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 6)]),
             child: Icon(isFav ? Icons.favorite : Icons.favorite_border, color: Colors.redAccent, size: 20),
           ),
         );
@@ -882,7 +902,8 @@ class _HallListScreenState extends State<HallListScreen> {
     );
   }
 
-  Widget _buildHallVerticalCard(Map<String, dynamic> hall) {
+  // ✅ بطاقة القاعة العمودية — تدعم تمرير الفلاتر
+  Widget _buildHallVerticalCard(Map<String, dynamic> hall, {bool prefilled = false}) {
     final name = hall['name'] ?? 'قاعة';
     final city = hall['city'] ?? 'غير محدد';
     final price = hall['price'] ?? 0;
@@ -890,7 +911,17 @@ class _HallListScreenState extends State<HallListScreen> {
     final image = hall['image'] ?? hall['coverImage'];
 
     return GestureDetector(
-      onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => HallDetailsScreen(hallData: hall))),
+      onTap: () => Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => HallDetailsScreen(
+            hallData: hall,
+            prefilledDate: prefilled ? _searchDate : null,
+            prefilledEventType: prefilled ? _searchEventType : null,
+            prefilledTimeSlot: prefilled ? _searchTimeSlot : null,
+          ),
+        ),
+      ),
       child: Container(
         decoration: BoxDecoration(
           color: Colors.white,
@@ -938,9 +969,7 @@ class _HallListScreenState extends State<HallListScreen> {
                 children: [
                   Row(
                     children: [
-                      Expanded(
-                        child: Text(name, style: const TextStyle(color: textDark, fontSize: 17, fontWeight: FontWeight.bold), maxLines: 1, overflow: TextOverflow.ellipsis),
-                      ),
+                      Expanded(child: Text(name, style: const TextStyle(color: textDark, fontSize: 17, fontWeight: FontWeight.bold), maxLines: 1, overflow: TextOverflow.ellipsis)),
                       Row(children: [
                         const Icon(Icons.star, color: Colors.amber, size: 16),
                         const SizedBox(width: 3),
@@ -973,11 +1002,8 @@ class _HallListScreenState extends State<HallListScreen> {
     return GestureDetector(
       onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => HallDetailsScreen(hallData: hall))),
       child: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [BoxShadow(color: primary.withValues(alpha: 0.06), blurRadius: 12, offset: const Offset(0, 4))],
-        ),
+        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16),
+            boxShadow: [BoxShadow(color: primary.withValues(alpha: 0.06), blurRadius: 12, offset: const Offset(0, 4))]),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -988,8 +1014,7 @@ class _HallListScreenState extends State<HallListScreen> {
                   SizedBox(
                     height: 110, width: double.infinity,
                     child: image != null
-                        ? Image.network(image, fit: BoxFit.cover,
-                            errorBuilder: (_, __, ___) => Container(color: primary.withValues(alpha: 0.2), child: const Icon(Icons.celebration, color: Colors.white, size: 40)))
+                        ? Image.network(image, fit: BoxFit.cover, errorBuilder: (_, __, ___) => Container(color: primary.withValues(alpha: 0.2), child: const Icon(Icons.celebration, color: Colors.white, size: 40)))
                         : Container(color: primary.withValues(alpha: 0.2), child: const Icon(Icons.celebration, color: Colors.white, size: 40)),
                   ),
                   Positioned(top: 8, right: 8, child: _favoriteButton(hall)),
@@ -1052,11 +1077,8 @@ class _HallListScreenState extends State<HallListScreen> {
     return Container(
       margin: const EdgeInsets.fromLTRB(12, 0, 12, 12),
       padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(28),
-        boxShadow: [BoxShadow(color: primary.withValues(alpha: 0.12), blurRadius: 25, offset: const Offset(0, 8))],
-      ),
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(28),
+          boxShadow: [BoxShadow(color: primary.withValues(alpha: 0.12), blurRadius: 25, offset: const Offset(0, 8))]),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: List.generate(items.length, (i) {
@@ -1133,11 +1155,7 @@ class _SimpleProfileScreenState extends State<SimpleProfileScreen> {
     if (ok != true) return;
     await FirebaseAuth.instance.signOut();
     if (!mounted) return;
-    Navigator.pushAndRemoveUntil(
-      context,
-      MaterialPageRoute(builder: (_) => const FarahGlassLoginScreen()),
-      (route) => false,
-    );
+    Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (_) => const FarahGlassLoginScreen()), (route) => false);
   }
 
   @override
@@ -1148,9 +1166,7 @@ class _SimpleProfileScreenState extends State<SimpleProfileScreen> {
         if (snap.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator(color: primary));
         }
-        if (!snap.hasData || !snap.data!.exists) {
-          return const Center(child: Text('تعذر تحميل البيانات'));
-        }
+        if (!snap.hasData || !snap.data!.exists) return const Center(child: Text('تعذر تحميل البيانات'));
         final user = snap.data!.data() as Map<String, dynamic>;
         final name = user['fullName'] ?? 'مستخدم';
         final phone = user['phone'] ?? '';
@@ -1163,10 +1179,7 @@ class _SimpleProfileScreenState extends State<SimpleProfileScreen> {
               const SizedBox(height: 20),
               Container(
                 width: 110, height: 110,
-                decoration: const BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: LinearGradient(colors: [primary, primaryDark]),
-                ),
+                decoration: const BoxDecoration(shape: BoxShape.circle, gradient: LinearGradient(colors: [primary, primaryDark])),
                 child: Icon(isProvider ? Icons.storefront : Icons.person, size: 55, color: Colors.white),
               ),
               const SizedBox(height: 16),
@@ -1174,12 +1187,8 @@ class _SimpleProfileScreenState extends State<SimpleProfileScreen> {
               const SizedBox(height: 10),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 6),
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(colors: [primary, primaryDark]),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Text(isProvider ? 'مزوّد خدمة' : 'زبون',
-                    style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
+                decoration: BoxDecoration(gradient: const LinearGradient(colors: [primary, primaryDark]), borderRadius: BorderRadius.circular(20)),
+                child: Text(isProvider ? 'مزوّد خدمة' : 'زبون', style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
               ),
               const SizedBox(height: 24),
               Padding(
@@ -1187,11 +1196,7 @@ class _SimpleProfileScreenState extends State<SimpleProfileScreen> {
                 child: Container(
                   padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20)),
-                  child: Column(
-                    children: [
-                      _infoRow(Icons.phone_outlined, 'رقم الهاتف', phone.isEmpty ? 'غير محدد' : phone),
-                    ],
-                  ),
+                  child: _infoRow(Icons.phone_outlined, 'رقم الهاتف', phone.isEmpty ? 'غير محدد' : phone),
                 ),
               ),
               const SizedBox(height: 18),
@@ -1200,13 +1205,8 @@ class _SimpleProfileScreenState extends State<SimpleProfileScreen> {
                 child: Column(
                   children: [
                     if (isProvider) ...[
-                      _menuItem(Icons.dashboard_outlined, 'لوحة المزود',
-                          'إدارة حجوزاتك وأرباحك', () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (_) => const ProviderDashboardScreen()),
-                        );
+                      _menuItem(Icons.dashboard_outlined, 'لوحة المزود', 'إدارة حجوزاتك وأرباحك', () {
+                        Navigator.push(context, MaterialPageRoute(builder: (_) => const ProviderDashboardScreen()));
                       }),
                       const SizedBox(height: 10),
                     ],
@@ -1215,30 +1215,18 @@ class _SimpleProfileScreenState extends State<SimpleProfileScreen> {
                     _menuItem(Icons.favorite_border, 'المفضلة', 'القاعات المحفوظة', () {}),
                     const SizedBox(height: 10),
                     _menuItem(Icons.account_balance_wallet, 'محفظتي', 'رصيدك وطرق الدفع', () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (_) => const WalletScreen()),
-                      );
+                      Navigator.push(context, MaterialPageRoute(builder: (_) => const WalletScreen()));
                     }),
                     const SizedBox(height: 10),
                     _menuItem(Icons.notifications_outlined, 'الإشعارات', 'تخصيص التنبيهات', () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (_) => const NotificationsScreen()),
-                      );
+                      Navigator.push(context, MaterialPageRoute(builder: (_) => const NotificationsScreen()));
                     }),
                     const SizedBox(height: 10),
                     _menuItem(Icons.edit_outlined, 'تعديل الملف الشخصي', 'الاسم وكلمة المرور', () async {
-                      final result = await Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (_) => const EditProfileScreen()),
-                      );
+                      final result = await Navigator.push(context, MaterialPageRoute(builder: (_) => const EditProfileScreen()));
                       if (result == true && mounted) {
                         setState(() {
-                          _userFuture = FirebaseFirestore.instance
-                              .collection('users')
-                              .doc(FirebaseAuth.instance.currentUser?.uid)
-                              .get();
+                          _userFuture = FirebaseFirestore.instance.collection('users').doc(FirebaseAuth.instance.currentUser?.uid).get();
                         });
                       }
                     }),
@@ -1289,14 +1277,9 @@ class _SimpleProfileScreenState extends State<SimpleProfileScreen> {
   Widget _infoRow(IconData icon, String label, String value) {
     return Row(
       children: [
-        Container(
-          width: 42, height: 42,
-          decoration: BoxDecoration(
-            gradient: const LinearGradient(colors: [primary, primaryDark]),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Icon(icon, color: Colors.white, size: 20),
-        ),
+        Container(width: 42, height: 42,
+            decoration: BoxDecoration(gradient: const LinearGradient(colors: [primary, primaryDark]), borderRadius: BorderRadius.circular(12)),
+            child: Icon(icon, color: Colors.white, size: 20)),
         const SizedBox(width: 14),
         Expanded(
           child: Column(
@@ -1320,17 +1303,12 @@ class _SimpleProfileScreenState extends State<SimpleProfileScreen> {
         decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(18)),
         child: Row(
           children: [
-            Container(
-              width: 46, height: 46,
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [primary.withValues(alpha: 0.9), primaryDark],
-                  begin: Alignment.topLeft, end: Alignment.bottomRight,
+            Container(width: 46, height: 46,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(colors: [primary.withValues(alpha: 0.9), primaryDark], begin: Alignment.topLeft, end: Alignment.bottomRight),
+                  borderRadius: BorderRadius.circular(14),
                 ),
-                borderRadius: BorderRadius.circular(14),
-              ),
-              child: Icon(icon, color: Colors.white, size: 22),
-            ),
+                child: Icon(icon, color: Colors.white, size: 22)),
             const SizedBox(width: 14),
             Expanded(
               child: Column(
