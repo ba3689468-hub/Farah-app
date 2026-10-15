@@ -36,6 +36,35 @@ class _HallListScreenState extends State<HallListScreen> {
   late Future<QuerySnapshot> _hallsFuture;
   String _userName = 'فرح';
 
+  // ═══════════════════════════════════════════════════════════
+  // 🔍 فلاتر البحث المتقدم (المدينة + التاريخ + الفترة + المناسبة)
+  // ═══════════════════════════════════════════════════════════
+  String? _searchCity;
+  DateTime? _searchDate;
+  String? _searchTimeSlot;
+  String? _searchEventType;
+
+  static const List<String> _libyanCities = [
+    'طرابلس', 'بنغازي', 'مصراتة', 'الزاوية', 'صبراتة', 'الخمس',
+    'زليتن', 'سرت', 'سبها', 'درنة', 'طبرق', 'الأبيض',
+    'غريان', 'ترهونة', 'بني وليد', 'أجدابيا',
+  ];
+
+  static const List<String> _timeSlotsList = [
+    'الفترة الصباحية',
+    'الفترة العصرية',
+    'الفترة المسائية',
+  ];
+
+  static const List<String> _eventTypesList = [
+    'حفل زفاف',
+    'محضر',
+    'عقد قران',
+    'أسبوع',
+    'حفل تخرج',
+    'فضانية',
+  ];
+
   final PageController _bannersCtrl = PageController();
   int _currentBanner = 0;
   Timer? _bannerTimer;
@@ -115,7 +144,7 @@ class _HallListScreenState extends State<HallListScreen> {
     return CustomScrollView(
       slivers: [
         SliverToBoxAdapter(child: _buildHeader()),
-        SliverToBoxAdapter(child: _buildSearchBar()),
+        SliverToBoxAdapter(child: _buildAdvancedSearchBar()),
         SliverToBoxAdapter(child: _buildHeroBannersCarousel()),
         SliverToBoxAdapter(child: _buildCategoryIcons()),
         SliverToBoxAdapter(child: _buildFeaturedTitle()),
@@ -171,7 +200,6 @@ class _HallListScreenState extends State<HallListScreen> {
     );
   }
 
-  // ✅ زر أيقوني موحّد
   Widget _iconButton(IconData icon, VoidCallback onTap, {bool hasBadge = false}) {
     if (icon == Icons.notifications_outlined) {
       return _notificationButton(onTap);
@@ -190,7 +218,6 @@ class _HallListScreenState extends State<HallListScreen> {
     );
   }
 
-  // ✅ زر الإشعارات مع عدّاد الإشعارات غير المقروءة
   Widget _notificationButton(VoidCallback onTap) {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) {
@@ -260,67 +287,340 @@ class _HallListScreenState extends State<HallListScreen> {
     );
   }
 
-  Widget _buildSearchBar() {
+  // ═══════════════════════════════════════════════════════════
+  // 🔍 شريط البحث المتقدم (المدينة + التاريخ + الفترة + المناسبة)
+  // ═══════════════════════════════════════════════════════════
+  Widget _buildAdvancedSearchBar() {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 12, 20, 12),
-      child: Row(
-        children: [
-          Expanded(
-            child: Container(
-              height: 50,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(25),
-                border: Border.all(color: primary.withValues(alpha: 0.1), width: 1),
-              ),
-              child: Row(
-                children: [
-                  const SizedBox(width: 16),
-                  const Icon(Icons.search, color: primary, size: 22),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: TextField(
-                      controller: _searchCtrl,
-                      textAlign: TextAlign.right,
-                      onChanged: (v) => setState(() {}),
-                      decoration: const InputDecoration(
-                        hintText: 'ابحث عن قاعة أو مدينة...',
-                        hintStyle: TextStyle(color: textLight, fontSize: 13),
-                        border: InputBorder.none,
-                        enabledBorder: InputBorder.none,
-                        focusedBorder: InputBorder.none,
-                        isDense: true,
-                        contentPadding: EdgeInsets.zero,
+      padding: const EdgeInsets.fromLTRB(20, 12, 20, 8),
+      child: Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: primary.withValues(alpha: 0.1), width: 1),
+          boxShadow: [
+            BoxShadow(
+              color: primary.withValues(alpha: 0.08),
+              blurRadius: 15,
+              offset: const Offset(0, 5),
+            ),
+          ],
+        ),
+        child: Column(
+          children: [
+            Row(
+              children: [
+                Expanded(child: _buildSearchField(
+                  icon: Icons.location_city_outlined,
+                  label: 'المدينة',
+                  value: _searchCity,
+                  onTap: _pickSearchCity,
+                )),
+                const SizedBox(width: 8),
+                Expanded(child: _buildSearchField(
+                  icon: Icons.calendar_today_outlined,
+                  label: 'التاريخ',
+                  value: _searchDate != null
+                      ? '${_searchDate!.day}/${_searchDate!.month}/${_searchDate!.year}'
+                      : null,
+                  onTap: _pickSearchDate,
+                )),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Expanded(child: _buildSearchField(
+                  icon: Icons.access_time,
+                  label: 'الفترة',
+                  value: _searchTimeSlot,
+                  onTap: _pickSearchTimeSlot,
+                )),
+                const SizedBox(width: 8),
+                Expanded(child: _buildSearchField(
+                  icon: Icons.celebration_outlined,
+                  label: 'نوع المناسبة',
+                  value: _searchEventType,
+                  onTap: _pickSearchEventType,
+                )),
+              ],
+            ),
+            const SizedBox(height: 10),
+            Row(
+              children: [
+                // زر مسح الفلاتر
+                if (_searchCity != null ||
+                    _searchDate != null ||
+                    _searchTimeSlot != null ||
+                    _searchEventType != null)
+                  GestureDetector(
+                    onTap: _clearSearchFilters,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                      decoration: BoxDecoration(
+                        color: Colors.red.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Icon(Icons.close, color: Colors.redAccent, size: 18),
+                    ),
+                  ),
+                if (_searchCity != null ||
+                    _searchDate != null ||
+                    _searchTimeSlot != null ||
+                    _searchEventType != null)
+                  const SizedBox(width: 8),
+                // زر البحث
+                Expanded(
+                  child: GestureDetector(
+                    onTap: _performAdvancedSearch,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(vertical: 13),
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(colors: [primary, primaryDark]),
+                        borderRadius: BorderRadius.circular(14),
+                        boxShadow: [
+                          BoxShadow(
+                            color: primary.withValues(alpha: 0.3),
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: const Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.search, color: Colors.white, size: 20),
+                          SizedBox(width: 8),
+                          Text(
+                            'ابحث عن قاعة',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ),
-                  const SizedBox(width: 16),
-                ],
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSearchField({
+    required IconData icon,
+    required String label,
+    required String? value,
+    required VoidCallback onTap,
+  }) {
+    final hasValue = value != null && value.isNotEmpty;
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+        decoration: BoxDecoration(
+          color: hasValue ? primary.withValues(alpha: 0.08) : AppColors.background,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: hasValue ? primary.withValues(alpha: 0.4) : Colors.transparent,
+            width: 1.2,
+          ),
+        ),
+        child: Row(
+          children: [
+            Icon(icon, color: primary, size: 16),
+            const SizedBox(width: 6),
+            Expanded(
+              child: Text(
+                hasValue ? value : label,
+                style: TextStyle(
+                  color: hasValue ? textDark : textLight,
+                  fontSize: 12,
+                  fontWeight: hasValue ? FontWeight.bold : FontWeight.normal,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
               ),
             ),
-          ),
-          const SizedBox(width: 10),
-          GestureDetector(
-            onTap: _showFilterSheet,
-            child: Container(
-              width: 50, height: 50,
+            const Icon(Icons.keyboard_arrow_down, color: textLight, size: 14),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _pickSearchCity() {
+    _showPickerSheet(
+      title: 'اختر المدينة',
+      items: _libyanCities,
+      selectedItem: _searchCity,
+      icons: null,
+      onSelect: (val) => setState(() => _searchCity = val),
+    );
+  }
+
+  Future<void> _pickSearchDate() async {
+    final now = DateTime.now();
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _searchDate ?? now,
+      firstDate: now,
+      lastDate: DateTime(now.year + 2),
+      builder: (context, child) => Theme(
+        data: Theme.of(context).copyWith(
+          colorScheme: const ColorScheme.light(primary: primary),
+        ),
+        child: child!,
+      ),
+    );
+    if (picked != null) setState(() => _searchDate = picked);
+  }
+
+  void _pickSearchTimeSlot() {
+    _showPickerSheet(
+      title: 'اختر الفترة الزمنية',
+      items: _timeSlotsList,
+      selectedItem: _searchTimeSlot,
+      icons: {
+        'الفترة الصباحية': Icons.wb_sunny_outlined,
+        'الفترة العصرية': Icons.wb_twilight_outlined,
+        'الفترة المسائية': Icons.nightlight_round_outlined,
+      },
+      onSelect: (val) => setState(() => _searchTimeSlot = val),
+    );
+  }
+
+  void _pickSearchEventType() {
+    _showPickerSheet(
+      title: 'اختر نوع المناسبة',
+      items: _eventTypesList,
+      selectedItem: _searchEventType,
+      icons: {
+        'حفل زفاف': Icons.favorite,
+        'محضر': Icons.home_outlined,
+        'عقد قران': Icons.auto_stories_outlined,
+        'أسبوع': Icons.child_care_outlined,
+        'حفل تخرج': Icons.school_outlined,
+        'فضانية': Icons.diamond_outlined,
+      },
+      onSelect: (val) => setState(() => _searchEventType = val),
+    );
+  }
+
+  void _showPickerSheet({
+    required String title,
+    required List<String> items,
+    required String? selectedItem,
+    required Map<String, IconData>? icons,
+    required Function(String) onSelect,
+  }) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+      builder: (context) => Container(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 40, height: 4,
               decoration: BoxDecoration(
-                gradient: const LinearGradient(colors: [primary, primaryDark], begin: Alignment.topLeft, end: Alignment.bottomRight),
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Stack(
-                children: [
-                  const Center(child: Icon(Icons.tune, color: Colors.white, size: 22)),
-                  if (_minRating > 0 || _priceRange.start > 0 || _priceRange.end < 50000 || _onlyAvailable || _selectedType != 'الكل' || _selectedCity != 'الكل')
-                    Positioned(
-                      top: 10, right: 10,
-                      child: Container(width: 10, height: 10, decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle)),
-                    ),
-                ],
+                color: Colors.grey.withValues(alpha: 0.3),
+                borderRadius: BorderRadius.circular(2),
               ),
             ),
-          ),
-        ],
+            const SizedBox(height: 16),
+            Text(title,
+                style: const TextStyle(
+                    color: textDark, fontSize: 18, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 16),
+            Flexible(
+              child: SingleChildScrollView(
+                child: Column(
+                  children: items.map((item) {
+                    final isSelected = selectedItem == item;
+                    final itemIcon = icons?[item];
+                    return ListTile(
+                      leading: itemIcon != null
+                          ? Icon(itemIcon, color: isSelected ? primary : textLight, size: 22)
+                          : null,
+                      title: Text(
+                        item,
+                        style: TextStyle(
+                          color: isSelected ? primary : textDark,
+                          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                        ),
+                      ),
+                      trailing: isSelected ? const Icon(Icons.check, color: primary) : null,
+                      onTap: () {
+                        onSelect(item);
+                        Navigator.pop(context);
+                      },
+                    );
+                  }).toList(),
+                ),
+              ),
+            ),
+            const SizedBox(height: 10),
+            // زر "مسح الاختيار"
+            if (selectedItem != null)
+              TextButton.icon(
+                onPressed: () {
+                  onSelect('');
+                  Navigator.pop(context);
+                },
+                icon: const Icon(Icons.close, color: Colors.redAccent, size: 18),
+                label: const Text('مسح الاختيار',
+                    style: TextStyle(color: Colors.redAccent)),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _clearSearchFilters() {
+    setState(() {
+      _searchCity = null;
+      _searchDate = null;
+      _searchTimeSlot = null;
+      _searchEventType = null;
+    });
+  }
+
+  void _performAdvancedSearch() {
+    // التحقق: يجب اختيار فلتر واحد على الأقل
+    if (_searchCity == null &&
+        _searchDate == null &&
+        _searchTimeSlot == null &&
+        _searchEventType == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('الرجاء اختيار فلتر واحد على الأقل للبحث'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
+    // الانتقال إلى شاشة الاستكشاف مع تمرير الفلاتر
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => ExploreScreen(
+          initialCity: _searchCity,
+          initialDate: _searchDate,
+          initialTimeSlot: _searchTimeSlot,
+          initialEventType: _searchEventType,
+        ),
       ),
     );
   }
@@ -784,154 +1084,6 @@ class _HallListScreenState extends State<HallListScreen> {
           );
         }),
       ),
-    );
-  }
-
-  void _showFilterSheet() {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (ctx) {
-        RangeValues tempRange = _priceRange;
-        double tempRating = _minRating;
-        String tempType = _selectedType;
-        String tempCity = _selectedCity;
-        bool tempAvail = _onlyAvailable;
-
-        return StatefulBuilder(
-          builder: (ctx, setSheet) => Container(
-            padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
-            decoration: const BoxDecoration(color: Colors.white, borderRadius: BorderRadius.vertical(top: Radius.circular(28))),
-            child: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Center(child: Container(width: 50, height: 4, decoration: BoxDecoration(color: Colors.black12, borderRadius: BorderRadius.circular(2)))),
-                  const SizedBox(height: 18),
-                  Row(
-                    children: [
-                      const Text('الفلترة', style: TextStyle(color: textDark, fontSize: 20, fontWeight: FontWeight.bold)),
-                      const Spacer(),
-                      GestureDetector(
-                        onTap: () {
-                          setSheet(() {
-                            tempRange = const RangeValues(0, 50000);
-                            tempRating = 0;
-                            tempType = 'الكل';
-                            tempCity = 'الكل';
-                            tempAvail = false;
-                          });
-                        },
-                        child: const Text('إعادة تعيين', style: TextStyle(color: primary, fontSize: 13, fontWeight: FontWeight.bold)),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 20),
-                  const Text('المدينة', style: TextStyle(color: textDark, fontSize: 14, fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 10),
-                  Wrap(
-                    spacing: 8, runSpacing: 8,
-                    children: _cities.map((city) {
-                      final active = city == tempCity;
-                      return GestureDetector(
-                        onTap: () => setSheet(() => tempCity = city),
-                        child: AnimatedContainer(
-                          duration: const Duration(milliseconds: 200),
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                          decoration: BoxDecoration(
-                            gradient: active ? const LinearGradient(colors: [primary, primaryDark]) : null,
-                            color: active ? null : AppColors.softBackground,
-                            borderRadius: BorderRadius.circular(20),
-                            border: Border.all(color: active ? Colors.transparent : primary.withValues(alpha: 0.15)),
-                          ),
-                          child: Text(city, style: TextStyle(color: active ? Colors.white : textDark, fontSize: 12, fontWeight: FontWeight.w600)),
-                        ),
-                      );
-                    }).toList(),
-                  ),
-                  const SizedBox(height: 18),
-                  const Text('نطاق السعر (د.ل)', style: TextStyle(color: textDark, fontSize: 14, fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 8),
-                  RangeSlider(
-                    values: tempRange, min: 0, max: 50000, divisions: 50,
-                    activeColor: primary,
-                    inactiveColor: primary.withValues(alpha: 0.15),
-                    labels: RangeLabels('${tempRange.start.round()}', '${tempRange.end.round()}'),
-                    onChanged: (v) => setSheet(() => tempRange = v),
-                  ),
-                  const SizedBox(height: 12),
-                  const Text('التقييم', style: TextStyle(color: textDark, fontSize: 14, fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 8),
-                  Row(
-                    children: List.generate(5, (i) {
-                      final filled = i < tempRating.round();
-                      return GestureDetector(
-                        onTap: () => setSheet(() => tempRating = (i + 1).toDouble()),
-                        child: Padding(padding: const EdgeInsets.only(right: 6), child: Icon(filled ? Icons.star : Icons.star_border, color: Colors.amber, size: 30)),
-                      );
-                    }),
-                  ),
-                  const SizedBox(height: 18),
-                  const Text('نوع القاعة', style: TextStyle(color: textDark, fontSize: 14, fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 10),
-                  Wrap(
-                    spacing: 8, runSpacing: 8,
-                    children: ['الكل', 'قاعات أفراح', 'قاعات مؤتمرات', 'استراحات'].map((t) {
-                      final active = t == tempType;
-                      return GestureDetector(
-                        onTap: () => setSheet(() => tempType = t),
-                        child: AnimatedContainer(
-                          duration: const Duration(milliseconds: 200),
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                          decoration: BoxDecoration(
-                            gradient: active ? const LinearGradient(colors: [primary, primaryDark]) : null,
-                            color: active ? null : AppColors.softBackground,
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: Text(t, style: TextStyle(color: active ? Colors.white : textDark, fontSize: 12, fontWeight: FontWeight.w600)),
-                        ),
-                      );
-                    }).toList(),
-                  ),
-                  const SizedBox(height: 18),
-                  Row(
-                    children: [
-                      Switch(value: tempAvail, activeColor: primary, onChanged: (v) => setSheet(() => tempAvail = v)),
-                      const SizedBox(width: 8),
-                      const Text('متاح الآن فقط', style: TextStyle(color: textDark, fontSize: 14, fontWeight: FontWeight.w600)),
-                    ],
-                  ),
-                  const SizedBox(height: 20),
-                  SizedBox(
-                    width: double.infinity, height: 54,
-                    child: ElevatedButton(
-                      onPressed: () {
-                        setState(() {
-                          _priceRange = tempRange;
-                          _minRating = tempRating;
-                          _selectedType = tempType;
-                          _selectedCity = tempCity;
-                          _onlyAvailable = tempAvail;
-                        });
-                        Navigator.pop(ctx);
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: primary,
-                        foregroundColor: Colors.white,
-                        elevation: 0,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-                      ),
-                      child: const Text('تطبيق الفلترة', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        );
-      },
     );
   }
 }
