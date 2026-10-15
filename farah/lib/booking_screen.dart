@@ -8,7 +8,18 @@ import 'package:intl/intl.dart';
 class BookingScreen extends StatefulWidget {
   final Map<String, dynamic> hallData;
   final String? hallId;
-  const BookingScreen({super.key, required this.hallData, this.hallId});
+  final DateTime? prefilledDate;
+  final String? prefilledEventType;
+  final String? prefilledTimeSlot;
+
+  const BookingScreen({
+    super.key,
+    required this.hallData,
+    this.hallId,
+    this.prefilledDate,
+    this.prefilledEventType,
+    this.prefilledTimeSlot,
+  });
 
   @override
   State<BookingScreen> createState() => _BookingScreenState();
@@ -27,7 +38,12 @@ class _BookingScreenState extends State<BookingScreen> {
   final List<String> _selectedServices = [];
   bool _loading = false;
 
-  // ✅ المناسبات مع أيقونات محدثة + "فضانية"
+  // ✅ هل الفلاتر معبأة مسبقاً؟
+  bool get _hasPrefilled =>
+      widget.prefilledDate != null ||
+      widget.prefilledEventType != null ||
+      widget.prefilledTimeSlot != null;
+
   final List<Map<String, dynamic>> _eventTypes = const [
     {'name': 'حفل زفاف', 'icon': Icons.favorite, 'color': Color(0xFFE91E63)},
     {'name': 'محضر', 'icon': Icons.home_outlined, 'color': Color(0xFF9C27B0)},
@@ -68,6 +84,15 @@ class _BookingScreenState extends State<BookingScreen> {
   ];
 
   @override
+  void initState() {
+    super.initState();
+    // ✅ تعبئة القيم المسبقة من البحث
+    _selectedDate = widget.prefilledDate;
+    _selectedEventType = widget.prefilledEventType;
+    _selectedTimeSlot = widget.prefilledTimeSlot;
+  }
+
+  @override
   Widget build(BuildContext context) {
     final hall = widget.hallData;
     final name = hall['name'] ?? 'صالة';
@@ -81,8 +106,7 @@ class _BookingScreenState extends State<BookingScreen> {
         backgroundColor: primary,
         foregroundColor: Colors.white,
         elevation: 0,
-        title: const Text('حجز القاعة',
-            style: TextStyle(fontWeight: FontWeight.bold)),
+        title: const Text('حجز القاعة', style: TextStyle(fontWeight: FontWeight.bold)),
         centerTitle: true,
       ),
       body: SingleChildScrollView(
@@ -90,9 +114,14 @@ class _BookingScreenState extends State<BookingScreen> {
           children: [
             _buildHallSummary(name, basePrice),
             const SizedBox(height: 8),
-            _buildEventTypeSection(),
-            _buildCalendarSection(),
-            _buildTimeSlotSection(),
+            // ✅ إذا كانت الفلاتر معبأة، نعرض بطاقة الملخص بدلاً من الأقسام
+            if (_hasPrefilled)
+              _buildPrefilledSummary()
+            else ...[
+              _buildEventTypeSection(),
+              _buildCalendarSection(),
+              _buildTimeSlotSection(),
+            ],
             _buildGuestsSection(),
             _buildServicesSection(),
             const SizedBox(height: 100),
@@ -103,6 +132,125 @@ class _BookingScreenState extends State<BookingScreen> {
     );
   }
 
+  // ═══════════════════════════════════════════════════════════
+  // ✅ بطاقة الملخص للفلاتر المعبأة مسبقاً
+  // ═══════════════════════════════════════════════════════════
+  Widget _buildPrefilledSummary() {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(18),
+        boxShadow: [
+          BoxShadow(color: primary.withValues(alpha: 0.06), blurRadius: 15, offset: const Offset(0, 5)),
+        ],
+        border: Border.all(color: primary.withValues(alpha: 0.25), width: 1.5),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(colors: [primary, primaryDark]),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Icon(Icons.check_circle, color: Colors.white, size: 18),
+              ),
+              const SizedBox(width: 10),
+              const Expanded(
+                child: Text(
+                  'تفاصيل حجزك',
+                  style: TextStyle(color: textDark, fontSize: 16, fontWeight: FontWeight.bold),
+                ),
+              ),
+              GestureDetector(
+                onTap: () => Navigator.pop(context),
+                child: const Text(
+                  'تعديل',
+                  style: TextStyle(
+                    color: primary,
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                    decoration: TextDecoration.underline,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          if (widget.prefilledEventType != null)
+            _buildSummaryRow(Icons.celebration_outlined, 'نوع المناسبة', widget.prefilledEventType!),
+          if (widget.prefilledDate != null)
+            _buildSummaryRow(
+              Icons.calendar_today_outlined,
+              'التاريخ',
+              DateFormat('EEEE، d MMMM yyyy', 'ar').format(widget.prefilledDate!),
+            ),
+          if (widget.prefilledTimeSlot != null)
+            _buildSummaryRow(Icons.access_time, 'الفترة الزمنية', widget.prefilledTimeSlot!),
+          const SizedBox(height: 8),
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: Colors.amber.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: const Row(
+              children: [
+                Icon(Icons.info_outline, color: Colors.orange, size: 16),
+                SizedBox(width: 6),
+                Expanded(
+                  child: Text(
+                    'يمكنك الآن إضافة عدد الضيوف والخدمات الإضافية، ثم تأكيد الحجز.',
+                    style: TextStyle(color: Colors.orange, fontSize: 11),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSummaryRow(IconData icon, String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(6),
+            decoration: BoxDecoration(
+              color: primary.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(icon, color: primary, size: 16),
+          ),
+          const SizedBox(width: 10),
+          Text(label, style: const TextStyle(color: textLight, fontSize: 12)),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              value,
+              style: const TextStyle(color: textDark, fontSize: 13, fontWeight: FontWeight.bold),
+              textAlign: TextAlign.left,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ═══════════════════════════════════════════════════════════
+  // باقي الكود (Hall Summary + Event Type + Calendar + Time Slot + Guests + Services + Confirm Bar)
+  // ═══════════════════════════════════════════════════════════
+
   Widget _buildHallSummary(String name, int basePrice) {
     return Container(
       margin: const EdgeInsets.all(16),
@@ -110,19 +258,12 @@ class _BookingScreenState extends State<BookingScreen> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(18),
-        boxShadow: [
-          BoxShadow(
-            color: primary.withValues(alpha: 0.06),
-            blurRadius: 15,
-            offset: const Offset(0, 5),
-          ),
-        ],
+        boxShadow: [BoxShadow(color: primary.withValues(alpha: 0.06), blurRadius: 15, offset: const Offset(0, 5))],
       ),
       child: Row(
         children: [
           Container(
-            width: 60,
-            height: 60,
+            width: 60, height: 60,
             decoration: BoxDecoration(
               gradient: const LinearGradient(colors: [primary, primaryDark]),
               borderRadius: BorderRadius.circular(14),
@@ -134,14 +275,10 @@ class _BookingScreenState extends State<BookingScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('أنت تحجز في',
-                    style: TextStyle(color: textLight, fontSize: 11)),
+                const Text('أنت تحجز في', style: TextStyle(color: textLight, fontSize: 11)),
                 const SizedBox(height: 3),
                 Text(name,
-                    style: const TextStyle(
-                        color: textDark,
-                        fontSize: 17,
-                        fontWeight: FontWeight.bold),
+                    style: const TextStyle(color: textDark, fontSize: 17, fontWeight: FontWeight.bold),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis),
               ],
@@ -149,15 +286,9 @@ class _BookingScreenState extends State<BookingScreen> {
           ),
           RichText(
             text: TextSpan(children: [
-              TextSpan(
-                  text: '$basePrice ',
-                  style: const TextStyle(
-                      color: primary,
-                      fontSize: 17,
-                      fontWeight: FontWeight.bold)),
-              const TextSpan(
-                  text: 'د.ل',
-                  style: TextStyle(color: textDark, fontSize: 11)),
+              TextSpan(text: '$basePrice ',
+                  style: const TextStyle(color: primary, fontSize: 17, fontWeight: FontWeight.bold)),
+              const TextSpan(text: 'د.ل', style: TextStyle(color: textDark, fontSize: 11)),
             ]),
           ),
         ],
@@ -191,8 +322,7 @@ class _BookingScreenState extends State<BookingScreen> {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(type['icon'] as IconData,
-                      color: selected ? color : textLight, size: 18),
+                  Icon(type['icon'] as IconData, color: selected ? color : textLight, size: 18),
                   const SizedBox(width: 6),
                   Text(
                     type['name'] as String,
@@ -225,18 +355,13 @@ class _BookingScreenState extends State<BookingScreen> {
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(
-                color: primary.withValues(alpha: 0.15),
-                width: 1,
-              ),
+              border: Border.all(color: primary.withValues(alpha: 0.15), width: 1),
             ),
             child: CalendarDatePicker(
               initialDate: _selectedDate ?? now,
               firstDate: firstDate,
               lastDate: lastDate,
-              onDateChanged: (date) {
-                setState(() => _selectedDate = date);
-              },
+              onDateChanged: (date) => setState(() => _selectedDate = date),
             ),
           ),
           if (_selectedDate != null) ...[
@@ -254,11 +379,7 @@ class _BookingScreenState extends State<BookingScreen> {
                   Expanded(
                     child: Text(
                       'التاريخ المختار: ${DateFormat('EEEE، d MMMM yyyy', 'ar').format(_selectedDate!)}',
-                      style: const TextStyle(
-                        color: textDark,
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                      ),
+                      style: const TextStyle(color: textDark, fontSize: 13, fontWeight: FontWeight.w600),
                     ),
                   ),
                 ],
@@ -296,56 +417,36 @@ class _BookingScreenState extends State<BookingScreen> {
                 child: Row(
                   children: [
                     Container(
-                      width: 44,
-                      height: 44,
+                      width: 44, height: 44,
                       decoration: BoxDecoration(
                         color: selected ? color : color.withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      child: Icon(
-                        slot['icon'] as IconData,
-                        color: selected ? Colors.white : color,
-                        size: 22,
-                      ),
+                      child: Icon(slot['icon'] as IconData, color: selected ? Colors.white : color, size: 22),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            slot['name'] as String,
-                            style: TextStyle(
-                              color: selected ? color : textDark,
-                              fontSize: 15,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
+                          Text(slot['name'] as String,
+                              style: TextStyle(color: selected ? color : textDark, fontSize: 15, fontWeight: FontWeight.bold)),
                           const SizedBox(height: 2),
-                          Text(
-                            slot['time'] as String,
-                            style: const TextStyle(
-                                color: textLight, fontSize: 12),
-                          ),
+                          Text(slot['time'] as String, style: const TextStyle(color: textLight, fontSize: 12)),
                         ],
                       ),
                     ),
                     Container(
-                      width: 24,
-                      height: 24,
+                      width: 24, height: 24,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         border: Border.all(
-                          color: selected
-                              ? color
-                              : Colors.black.withValues(alpha: 0.2),
+                          color: selected ? color : Colors.black.withValues(alpha: 0.2),
                           width: 2,
                         ),
                         color: selected ? color : Colors.transparent,
                       ),
-                      child: selected
-                          ? const Icon(Icons.check, color: Colors.white, size: 16)
-                          : null,
+                      child: selected ? const Icon(Icons.check, color: Colors.white, size: 16) : null,
                     ),
                   ],
                 ),
@@ -366,17 +467,14 @@ class _BookingScreenState extends State<BookingScreen> {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-              color: Colors.black.withValues(alpha: 0.08), width: 1),
+          border: Border.all(color: Colors.black.withValues(alpha: 0.08), width: 1),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             _counterBtn(
               icon: Icons.remove,
-              onTap: _guestsCount > 10
-                  ? () => setState(() => _guestsCount -= 10)
-                  : null,
+              onTap: _guestsCount > 10 ? () => setState(() => _guestsCount -= 10) : null,
             ),
             Container(
               margin: const EdgeInsets.symmetric(horizontal: 20),
@@ -388,20 +486,14 @@ class _BookingScreenState extends State<BookingScreen> {
               child: Column(
                 children: [
                   Text('$_guestsCount',
-                      style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 28,
-                          fontWeight: FontWeight.bold)),
-                  const Text('ضيف',
-                      style: TextStyle(color: Colors.white70, fontSize: 11)),
+                      style: const TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.bold)),
+                  const Text('ضيف', style: TextStyle(color: Colors.white70, fontSize: 11)),
                 ],
               ),
             ),
             _counterBtn(
               icon: Icons.add,
-              onTap: _guestsCount < 1000
-                  ? () => setState(() => _guestsCount += 10)
-                  : null,
+              onTap: _guestsCount < 1000 ? () => setState(() => _guestsCount += 10) : null,
             ),
           ],
         ),
@@ -414,12 +506,9 @@ class _BookingScreenState extends State<BookingScreen> {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        width: 50,
-        height: 50,
+        width: 50, height: 50,
         decoration: BoxDecoration(
-          color: enabled
-              ? primary.withValues(alpha: 0.1)
-              : Colors.grey.withValues(alpha: 0.1),
+          color: enabled ? primary.withValues(alpha: 0.1) : Colors.grey.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(14),
         ),
         child: Icon(icon, color: enabled ? primary : Colors.black26, size: 24),
@@ -457,42 +546,26 @@ class _BookingScreenState extends State<BookingScreen> {
               child: Row(
                 children: [
                   Container(
-                    width: 40,
-                    height: 40,
+                    width: 40, height: 40,
                     decoration: BoxDecoration(
                       color: selected ? primary : Colors.white,
                       borderRadius: BorderRadius.circular(10),
-                      border: Border.all(
-                          color: primary.withValues(alpha: 0.2), width: 1),
+                      border: Border.all(color: primary.withValues(alpha: 0.2), width: 1),
                     ),
                     child: Icon(service['icon'] as IconData,
                         color: selected ? Colors.white : primary, size: 20),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
-                    child: Text(
-                      service['name'] as String,
-                      style: TextStyle(
-                        color: textDark,
-                        fontSize: 13,
-                        fontWeight: selected ? FontWeight.bold : FontWeight.w500,
-                      ),
-                    ),
+                    child: Text(service['name'] as String,
+                        style: TextStyle(color: textDark, fontSize: 13,
+                            fontWeight: selected ? FontWeight.bold : FontWeight.w500)),
                   ),
-                  Text(
-                    '${service['price']} د.ل',
-                    style: TextStyle(
-                      color: selected ? primary : textDark,
-                      fontSize: 13,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
+                  Text('${service['price']} د.ل',
+                      style: TextStyle(color: selected ? primary : textDark, fontSize: 13, fontWeight: FontWeight.bold)),
                   const SizedBox(width: 8),
-                  Icon(
-                    selected ? Icons.check_circle : Icons.radio_button_unchecked,
-                    color: selected ? primary : Colors.black26,
-                    size: 20,
-                  ),
+                  Icon(selected ? Icons.check_circle : Icons.radio_button_unchecked,
+                      color: selected ? primary : Colors.black26, size: 20),
                 ],
               ),
             ),
@@ -514,13 +587,7 @@ class _BookingScreenState extends State<BookingScreen> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(18),
-        boxShadow: [
-          BoxShadow(
-            color: primary.withValues(alpha: 0.06),
-            blurRadius: 15,
-            offset: const Offset(0, 5),
-          ),
-        ],
+        boxShadow: [BoxShadow(color: primary.withValues(alpha: 0.06), blurRadius: 15, offset: const Offset(0, 5))],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -536,18 +603,10 @@ class _BookingScreenState extends State<BookingScreen> {
                 child: Icon(icon, color: primary, size: 18),
               ),
               const SizedBox(width: 10),
-              Text(
-                title,
-                style: const TextStyle(
-                  color: textDark,
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
+              Text(title, style: const TextStyle(color: textDark, fontSize: 16, fontWeight: FontWeight.bold)),
               if (subtitle != null) ...[
                 const SizedBox(width: 6),
-                Text(subtitle,
-                    style: const TextStyle(color: textLight, fontSize: 11)),
+                Text(subtitle, style: const TextStyle(color: textLight, fontSize: 11)),
               ],
             ],
           ),
@@ -576,13 +635,7 @@ class _BookingScreenState extends State<BookingScreen> {
       padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
       decoration: BoxDecoration(
         color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: primary.withValues(alpha: 0.08),
-            blurRadius: 20,
-            offset: const Offset(0, -6),
-          ),
-        ],
+        boxShadow: [BoxShadow(color: primary.withValues(alpha: 0.08), blurRadius: 20, offset: const Offset(0, -6))],
       ),
       child: SafeArea(
         child: Column(
@@ -592,21 +645,12 @@ class _BookingScreenState extends State<BookingScreen> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 const Text('الإجمالي',
-                    style: TextStyle(
-                        color: textDark,
-                        fontSize: 15,
-                        fontWeight: FontWeight.bold)),
+                    style: TextStyle(color: textDark, fontSize: 15, fontWeight: FontWeight.bold)),
                 RichText(
                   text: TextSpan(children: [
-                    TextSpan(
-                        text: '$total ',
-                        style: const TextStyle(
-                            color: primary,
-                            fontSize: 22,
-                            fontWeight: FontWeight.bold)),
-                    const TextSpan(
-                        text: 'د.ل',
-                        style: TextStyle(color: textDark, fontSize: 13)),
+                    TextSpan(text: '$total ',
+                        style: const TextStyle(color: primary, fontSize: 22, fontWeight: FontWeight.bold)),
+                    const TextSpan(text: 'د.ل', style: TextStyle(color: textDark, fontSize: 13)),
                   ]),
                 ),
               ],
@@ -621,20 +665,14 @@ class _BookingScreenState extends State<BookingScreen> {
                   backgroundColor: primary,
                   foregroundColor: Colors.white,
                   disabledBackgroundColor: primary.withValues(alpha: 0.5),
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20)),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
                   elevation: 0,
                 ),
                 child: _loading
-                    ? const SizedBox(
-                        width: 22,
-                        height: 22,
-                        child: CircularProgressIndicator(
-                            color: Colors.white, strokeWidth: 2.5),
-                      )
+                    ? const SizedBox(width: 22, height: 22,
+                        child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5))
                     : const Text('تأكيد الحجز',
-                        style: TextStyle(
-                            fontSize: 16, fontWeight: FontWeight.bold)),
+                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
               ),
             ),
           ],
@@ -644,7 +682,6 @@ class _BookingScreenState extends State<BookingScreen> {
   }
 
   Future<void> _confirmBooking(int basePrice) async {
-    // ── التحققات ──
     if (_selectedEventType == null) {
       _showError('الرجاء اختيار نوع المناسبة');
       return;
@@ -664,7 +701,6 @@ class _BookingScreenState extends State<BookingScreen> {
       return;
     }
 
-    // ── نافذة الدفع ──
     final bool? shouldPay = await showDialog<bool>(
       context: context,
       barrierDismissible: false,
@@ -675,18 +711,15 @@ class _BookingScreenState extends State<BookingScreen> {
           children: [
             Icon(Icons.payment, color: primary, size: 28),
             SizedBox(width: 10),
-            Text('دفع رسم الحجز',
-                style: TextStyle(color: textDark, fontSize: 18)),
+            Text('دفع رسم الحجز', style: TextStyle(color: textDark, fontSize: 18)),
           ],
         ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'لإتمام الحجز المبدئي، يجب دفع رسم حجز قدره:',
-              style: TextStyle(color: textDark, fontSize: 14),
-            ),
+            const Text('لإتمام الحجز المبدئي، يجب دفع رسم حجز قدره:',
+                style: TextStyle(color: textDark, fontSize: 14)),
             const SizedBox(height: 12),
             Container(
               padding: const EdgeInsets.all(12),
@@ -695,13 +728,8 @@ class _BookingScreenState extends State<BookingScreen> {
                 borderRadius: BorderRadius.circular(12),
               ),
               child: const Center(
-                child: Text(
-                  '60 دينار ليبي',
-                  style: TextStyle(
-                      color: primary,
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold),
-                ),
+                child: Text('60 دينار ليبي',
+                    style: TextStyle(color: primary, fontSize: 22, fontWeight: FontWeight.bold)),
               ),
             ),
             const SizedBox(height: 12),
@@ -721,10 +749,8 @@ class _BookingScreenState extends State<BookingScreen> {
                   Icon(Icons.info_outline, color: Colors.orange, size: 16),
                   SizedBox(width: 6),
                   Expanded(
-                    child: Text(
-                      'يحق لك استرداد المبلغ كاملاً خلال 48 ساعة من الحجز',
-                      style: TextStyle(color: Colors.orange, fontSize: 11),
-                    ),
+                    child: Text('يحق لك استرداد المبلغ كاملاً خلال 48 ساعة من الحجز',
+                        style: TextStyle(color: Colors.orange, fontSize: 11)),
                   ),
                 ],
               ),
@@ -740,8 +766,7 @@ class _BookingScreenState extends State<BookingScreen> {
             style: ElevatedButton.styleFrom(
               backgroundColor: primary,
               foregroundColor: Colors.white,
-              shape:
-                  RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             ),
             onPressed: () => Navigator.pop(context, true),
             child: const Text('دفع 60 د.ل'),
@@ -757,19 +782,13 @@ class _BookingScreenState extends State<BookingScreen> {
     try {
       final total = _calculateTotal(basePrice);
       const double fixedCommission = 60.0;
-
-      // ⏰ حساب وقت الانتهاء (48 ساعة من الآن)
       final expiresAt = DateTime.now().add(const Duration(hours: 48));
 
-      // ── 1. إنشاء الحجز ──
-      final bookingRef =
-          await FirebaseFirestore.instance.collection('bookings').add({
+      final bookingRef = await FirebaseFirestore.instance.collection('bookings').add({
         'userId': uid,
         'hallId': widget.hallId ?? '',
         'hallName': widget.hallData['name'] ?? '',
-        'hallImage': widget.hallData['image'] ??
-            widget.hallData['coverImage'] ??
-            '',
+        'hallImage': widget.hallData['image'] ?? widget.hallData['coverImage'] ?? '',
         'eventType': _selectedEventType,
         'timeSlot': _selectedTimeSlot,
         'eventDate': Timestamp.fromDate(_selectedDate!),
@@ -782,28 +801,16 @@ class _BookingScreenState extends State<BookingScreen> {
         'status': 'pending',
         'paymentStatus': 'unpaid',
         'createdAt': FieldValue.serverTimestamp(),
-        // ✅ سياسة الـ 48 ساعة
         'expiresAt': Timestamp.fromDate(expiresAt),
         'refundEligibleUntil': Timestamp.fromDate(expiresAt),
       });
 
-      // ── 2. تحديث حالة الدفع (يُفعّل Cloud Function) ──
-      await bookingRef.update({
-        'paymentStatus': 'commission_paid',
-      });
+      await bookingRef.update({'paymentStatus': 'commission_paid'});
 
-      // ── 3. إرسال إشعار للمزود ──
       try {
-        final hallDoc = await FirebaseFirestore.instance
-            .collection('halls')
-            .doc(widget.hallId)
-            .get();
-
+        final hallDoc = await FirebaseFirestore.instance.collection('halls').doc(widget.hallId).get();
         final providerId = hallDoc.data()?['providerId'] ?? '';
-        final userDoc = await FirebaseFirestore.instance
-            .collection('users')
-            .doc(uid)
-            .get();
+        final userDoc = await FirebaseFirestore.instance.collection('users').doc(uid).get();
         final customerName = userDoc.data()?['fullName'] ?? 'زبون';
 
         if (providerId.toString().isNotEmpty) {
@@ -814,11 +821,8 @@ class _BookingScreenState extends State<BookingScreen> {
             bookingId: bookingRef.id,
           );
         }
-      } catch (notifError) {
-        // لا نوقف الحجز إذا فشل الإشعار
-      }
+      } catch (notifError) {}
 
-      // ── 4. رسالة النجاح ──
       if (!mounted) return;
       await showDialog(
         context: context,
@@ -830,8 +834,7 @@ class _BookingScreenState extends State<BookingScreen> {
             children: [
               Icon(Icons.check_circle, color: Colors.green, size: 28),
               SizedBox(width: 10),
-              Text('تم الحجز المبدئي!',
-                  style: TextStyle(color: textDark, fontSize: 18)),
+              Text('تم الحجز المبدئي!', style: TextStyle(color: textDark, fontSize: 18)),
             ],
           ),
           content: Text(
@@ -845,8 +848,7 @@ class _BookingScreenState extends State<BookingScreen> {
               style: ElevatedButton.styleFrom(
                 backgroundColor: primary,
                 foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12)),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               ),
               onPressed: () => Navigator.pop(context),
               child: const Text('حسناً'),
