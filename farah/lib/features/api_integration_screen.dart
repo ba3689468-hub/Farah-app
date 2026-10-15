@@ -17,9 +17,9 @@ class _ApiIntegrationScreenState extends State<ApiIntegrationScreen> {
   static const Color textDark = AppColors.textPrimary;
   static const Color textLight = AppColors.textSecondary;
 
-  // ✅ معرّف مشروع Firebase الخاص بك
-  static const String FUNCTIONS_REGION = 'us-central1';
-  static const String FUNCTIONS_PROJECT_ID = 'farah-app-caa99';
+  // ✅ رابط Supabase Edge Function الجديد
+  static const String SUPABASE_EDGE_URL =
+      'https://tzizhccygtgqbkgkhbwif.supabase.co/functions/v1/dynamic-processor';
 
   final _apiUrlCtrl = TextEditingController();
   final _apiKeyCtrl = TextEditingController();
@@ -419,8 +419,9 @@ class _ApiIntegrationScreenState extends State<ApiIntegrationScreen> {
     );
   }
 
+  // ✅ الرابط الجديد (Supabase)
   String _getWebhookUrl() {
-    return 'https://$FUNCTIONS_REGION-$FUNCTIONS_PROJECT_ID.cloudfunctions.net/receiveExternalBooking?hallId=$_selectedHallId&key=$_selectedHallId';
+    return '$SUPABASE_EDGE_URL?hallId=$_selectedHallId&key=$_selectedHallId';
   }
 
   Widget _buildCopyField({
