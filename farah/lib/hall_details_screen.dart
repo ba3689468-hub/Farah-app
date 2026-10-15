@@ -6,6 +6,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 import 'features/add_review_screen.dart';
 
 class HallDetailsScreen extends StatefulWidget {
@@ -35,6 +37,10 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
   static const Color textLight = AppColors.textSecondary;
 
   static const double APP_COMMISSION = 60.0;
+
+  // ✅ رابط Supabase Edge Function للإرسال
+  static const String NOTIFY_HALL_URL =
+      'https://tzizhccygtgqbkgkhbwif.supabase.co/functions/v1/notifyHallSystem';
 
   DateTime? _selectedDate;
   String? _selectedEventType;
@@ -185,9 +191,7 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
           ),
 
           SliverToBoxAdapter(child: _buildBookingCard()),
-
           SliverToBoxAdapter(child: _buildPaymentSummaryCard()),
-
           SliverToBoxAdapter(child: _buildReviewsSection()),
           SliverToBoxAdapter(child: _buildSimilarHallsSection(city)),
 
@@ -198,6 +202,9 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
     );
   }
 
+  // ═══════════════════════════════════════════════════════════
+  // 🖼️ معرض الصور
+  // ═══════════════════════════════════════════════════════════
   List<String> _getImages(Map<String, dynamic> hall) {
     final gallery = hall['gallery'];
     if (gallery is List && gallery.isNotEmpty) return List<String>.from(gallery);
@@ -356,6 +363,9 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
     );
   }
 
+  // ═══════════════════════════════════════════════════════════
+  // 📋 المعلومات الأساسية
+  // ═══════════════════════════════════════════════════════════
   Widget _buildInfoSection(String name, String city, double rating, int capacity, String description) {
     return Container(
       margin: const EdgeInsets.all(16),
@@ -491,6 +501,9 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
     );
   }
 
+  // ═══════════════════════════════════════════════════════════
+  // 📅 بطاقة الحجز
+  // ═══════════════════════════════════════════════════════════
   Widget _buildBookingCard() {
     return Container(
       margin: const EdgeInsets.fromLTRB(16, 0, 16, 8),
@@ -842,8 +855,7 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
   }
 
   // ═══════════════════════════════════════════════════════════
-  // 📅 التقويم — كل الأيام بيضاء، اليوم المختار أخضر،
-  // "محجوز" يظهر فقط عند اختيار يوم محجوز فعلياً
+  // 📅 التقويم — كل الأيام بيضاء، اليوم المختار أخضر
   // ═══════════════════════════════════════════════════════════
   Widget _buildVisualCalendar() {
     final firstDay = DateTime(_calendarMonth.year, _calendarMonth.month, 1);
@@ -1000,6 +1012,9 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
     );
   }
 
+  // ═══════════════════════════════════════════════════════════
+  // ⭐ التقييمات
+  // ═══════════════════════════════════════════════════════════
   Widget _buildReviewsSection() {
     final rating = (_hall['rating'] ?? 0).toDouble();
     final reviewsCount = _hall['reviewsCount'] ?? 0;
@@ -1189,6 +1204,9 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
     );
   }
 
+  // ═══════════════════════════════════════════════════════════
+  // 🏛️ قاعات مشابهة
+  // ═══════════════════════════════════════════════════════════
   Widget _buildSimilarHallsSection(String city) {
     return Padding(
       padding: const EdgeInsets.only(top: 16),
@@ -1303,6 +1321,9 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
     );
   }
 
+  // ═══════════════════════════════════════════════════════════
+  // 💰 شريط الحجز السفلي
+  // ═══════════════════════════════════════════════════════════
   Widget _buildBottomBar() {
     return Container(
       padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
@@ -1373,6 +1394,9 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
     );
   }
 
+  // ═══════════════════════════════════════════════════════════
+  // 📅 اختيارات
+  // ═══════════════════════════════════════════════════════════
   Future<void> _pickDate() async {
     final now = DateTime.now();
     final picked = await showDatePicker(
@@ -1434,6 +1458,9 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
     );
   }
 
+  // ═══════════════════════════════════════════════════════════
+  // ✅ تنفيذ الحجز
+  // ═══════════════════════════════════════════════════════════
   Future<void> _confirmBooking() async {
     if (_selectedEventType == null) {
       _showError('الرجاء اختيار نوع المناسبة');
@@ -1555,6 +1582,21 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
 
       await bookingRef.update({'paymentStatus': 'commission_paid'});
 
+      // ═══════════════════════════════════════════════════════════
+      // 🆕 إشعار نظام القاعة بالحجز الجديد
+      // ═══════════════════════════════════════════════════════════
+      try {
+        await http.post(
+          Uri.parse(NOTIFY_HALL_URL),
+          headers: {'Content-Type': 'application/json'},
+          body: jsonEncode({'bookingId': bookingRef.id}),
+        ).timeout(const Duration(seconds: 10));
+        print('✅ تم إرسال إشعار لنظام القاعة');
+      } catch (e) {
+        // لا نوقف الحجز إذا فشل الإشعار
+        print('⚠️ فشل إشعار نظام القاعة: $e');
+      }
+
       try {
         final hallDoc = await FirebaseFirestore.instance.collection('halls').doc(_hallId).get();
         final providerId = hallDoc.data()?['providerId'] ?? '';
@@ -1626,6 +1668,9 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
     );
   }
 
+  // ═══════════════════════════════════════════════════════════
+  // الاتصال والاتجاهات والمشاركة
+  // ═══════════════════════════════════════════════════════════
   Future<void> _callProvider() async {
     final phone = _hall['providerPhone'] ?? _hall['phone'] ?? _hall['contactPhone'] ?? '';
     if (phone.toString().trim().isEmpty) {
