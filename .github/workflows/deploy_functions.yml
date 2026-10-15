@@ -24,10 +24,14 @@ jobs:
           cd functions
           npm install
 
-      - name: Authenticate to Google Cloud
-        uses: google-github-actions/auth@v2
-        with:
-          credentials_json: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+      - name: Decode Firebase Service Account
+        run: |
+          echo '${{ secrets.FIREBASE_SERVICE_ACCOUNT }}' | base64 -d > ${{ github.workspace }}/gcp-key.json
+          echo "GOOGLE_APPLICATION_CREDENTIALS=${{ github.workspace }}/gcp-key.json" >> $GITHUB_ENV
+
+      - name: Verify Service Account
+        run: |
+          node -e "const j = require('${{ github.workspace }}/gcp-key.json'); console.log('✅ Project:', j.project_id); console.log('✅ Client:', j.client_email);"
 
       - name: Install Firebase CLI
         run: npm install -g firebase-tools
