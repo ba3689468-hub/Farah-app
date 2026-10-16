@@ -15,17 +15,14 @@ jobs:
 
       - run: cd farah && flutter build web --release
 
-      - name: Decode Firebase Service Account
+      - name: Create Service Account File
         run: |
-          echo '${{ secrets.FIREBASE_SERVICE_ACCOUNT }}' | base64 -d > ${{ github.workspace }}/gcp-key.json
-          echo "GOOGLE_APPLICATION_CREDENTIALS=${{ github.workspace }}/gcp-key.json" >> $GITHUB_ENV
-
-      - name: Verify Service Account
-        run: |
-          node -e "const j = require('${{ github.workspace }}/gcp-key.json'); console.log('✅ Project:', j.project_id); console.log('✅ Client:', j.client_email);"
+          echo '${{ secrets.FIREBASE_SERVICE_ACCOUNT }}' > service-account.json
 
       - name: Install Firebase CLI
         run: npm install -g firebase-tools
 
-      - name: Deploy to Firebase Hosting
-        run: firebase deploy --only hosting --project ${{ secrets.FIREBASE_PROJECT_ID }}
+      - name: Deploy Cloud Functions
+        run: |
+          export GOOGLE_APPLICATION_CREDENTIALS="$(pwd)/service-account.json"
+          firebase deploy --only hosting --project ${{ secrets.FIREBASE_PROJECT_ID }}
