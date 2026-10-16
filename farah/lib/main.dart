@@ -1,32 +1,56 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'core/constants/app_strings.dart';
-import 'core/theme/app_theme.dart';
-import 'features/onboarding/onboarding_screen.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+// ═══════════════════════════════════════════════════════════
+// 🆕 إعدادات Firebase للويب
+// ═══════════════════════════════════════════════════════════
+const FirebaseOptions webFirebaseOptions = FirebaseOptions(
+  apiKey: "AIzaSyCSqBeVcxBQBusowTlzqidEb4fLXxbHEzg",
+  authDomain: "farah-app-caa99.firebaseapp.com",
+  projectId: "farah-app-caa99",
+  storageBucket: "farah-app-caa99.firebasestorage.app",
+  messagingSenderId: "665183433574",
+  appId: "1:665183433574:web:76bdcc78d836fd6ceccea7",
+  measurementId: "G-Q79B7HVMLD",
+);
+
+// ═══════════════════════════════════════════════════════════
+// 🆕 إعدادات Supabase
+// ═══════════════════════════════════════════════════════════
+const String supabaseUrl = 'https://tzizhccygtgqbkgkhbwif.supabase.co';
+const String supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR6aXpoY2N5Z3RncWJrZ2toYndpZiIsInJvbGUiOiJhbm9uIiwiaWF0IjoxNzI5MDAwMDAwLCJleHAiOjIwNDQ1NzYwMDB9.PLACEHOLDER_KEY';
+
+// ⚠️ استبدل anonKey بمفتاحك الحقيقي من Supabase:
+// Dashboard → Settings → API → anon/public
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // ── تهيئة Firebase ──
-  try {
+  // ═══════════════════════════════════════════════════════════
+  // تهيئة Firebase (يستخدم إعدادات الويب للويب، والجوال للموبايل)
+  // ═══════════════════════════════════════════════════════════
+  if (kIsWeb) {
+    await Firebase.initializeApp(options: webFirebaseOptions);
+  } else {
     await Firebase.initializeApp();
-  } catch (e) {
-    runApp(MaterialApp(
-        home: Scaffold(body: Center(child: Text('فشل Firebase: $e')))));
-    return;
   }
 
-  // ── تهيئة Supabase ──
+  // ═══════════════════════════════════════════════════════════
+  // تهيئة Supabase
+  // ═══════════════════════════════════════════════════════════
   await Supabase.initialize(
-    url: 'https://tzizhccygtgqbgkhbwif.supabase.co',
-    anonKey:
-        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR6aXpoY2N5Z3RncWJna2hid2lmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE2Mzk0NDEsImV4cCI6MjEwNzIxNTQ0MX0.im5_c5MMQgnUYLwRIuzS_SJKObyVPLW5PPBjOtvmUR0',
+    url: supabaseUrl,
+    anonKey: supabaseAnonKey,
   );
 
-  runApp(const ProviderScope(child: FarahApp()));
+  runApp(
+    const ProviderScope(
+      child: FarahApp(),
+    ),
+  );
 }
 
 class FarahApp extends StatelessWidget {
@@ -35,18 +59,13 @@ class FarahApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: AppStrings.appName,
+      title: 'فرح',
       debugShowCheckedModeBanner: false,
-      theme: AppTheme.lightTheme,
-      themeMode: ThemeMode.light,
-      locale: const Locale('ar', 'LY'),
-      supportedLocales: const [Locale('ar', 'LY'), Locale('en', 'US')],
-      localizationsDelegates: const [
-        GlobalMaterialLocalizations.delegate,
-        GlobalWidgetsLocalizations.delegate,
-        GlobalCupertinoLocalizations.delegate,
-      ],
-      home: const OnboardingScreen(),
+      theme: ThemeData(
+        primaryColor: const Color(0xFFD4AF37),
+        fontFamily: 'Cairo',
+      ),
+      home: const OnboardingScreen(), // ← استبدل بـ الشاشة الأولى عندك
     );
   }
 }
