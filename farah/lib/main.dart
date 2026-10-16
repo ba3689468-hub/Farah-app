@@ -21,7 +21,7 @@ const FirebaseOptions webFirebaseOptions = FirebaseOptions(
 // 🆕 إعدادات Supabase
 // ═══════════════════════════════════════════════════════════
 const String supabaseUrl = 'https://tzizhccygtgqbkgkhbwif.supabase.co';
-const String supabaseAnonKey = sb_publishable_HxGzyPlkTAUk5U7Rznlf0Q_EY0dui55 
+const String supabaseAnonKey = 'sb_publishable_HxGzyPlkTAUk5U7Rznlf0Q_EY0du155'; 
 
 // ⚠️ استبدل anonKey بمفتاحك الحقيقي من Supabase:
 // Dashboard → Settings → API → anon/public
