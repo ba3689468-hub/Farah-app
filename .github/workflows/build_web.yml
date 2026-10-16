@@ -33,11 +33,13 @@ jobs:
           cd farah
           flutter build web --release
 
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+
       - name: Install Firebase CLI
         run: npm install -g firebase-tools
 
       - name: Deploy to Firebase Hosting
-        run: |
-          echo '${{ secrets.FIREBASE_SERVICE_ACCOUNT }}' > service-account.json
-          export GOOGLE_APPLICATION_CREDENTIALS="$(pwd)/service-account.json"
-          firebase deploy --only hosting --project ${{ secrets.FIREBASE_PROJECT_ID }}
+        run: firebase deploy --only hosting --project ${{ secrets.FIREBASE_PROJECT_ID }}
