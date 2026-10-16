@@ -1,4 +1,4 @@
-name: Build & Deploy Flutter Web
+name: Flutter Web Deploy
 
 on:
   push:
@@ -7,43 +7,36 @@ on:
   workflow_dispatch:
 
 jobs:
-  build-web:
+  build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
-      - name: Setup Node.js
+      - name: Setup Node
         uses: actions/setup-node@v3
         with:
-          node-version: '20'
+          node-version: "20"
 
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          channel: 'stable'
-          cache: true
+          channel: stable
 
-      - name: Get Dependencies
-        run: |
-          cd farah
-          flutter pub get
+      - name: Get packages
+        run: cd farah && flutter pub get
 
-      - name: Build Web
-        run: |
-          cd farah
-          flutter build web --release
+      - name: Build web
+        run: cd farah && flutter build web --release
 
-      - name: Decode Firebase Service Account
-        run: |
-          echo '${{ secrets.FIREBASE_SERVICE_ACCOUNT }}' | base64 -d > ${{ github.workspace }}/gcp-key.json
-          echo "GOOGLE_APPLICATION_CREDENTIALS=${{ github.workspace }}/gcp-key.json" >> $GITHUB_ENV
+      - name: Decode credentials
+        run: echo '${{ secrets.FIREBASE_SERVICE_ACCOUNT }}' | base64 -d > ${{ github.workspace }}/gcp-key.json
 
-      - name: Verify Service Account
-        run: |
-          node -e "const j = require('${{ github.workspace }}/gcp-key.json'); console.log('✅ Project:', j.project_id); console.log('✅ Client:', j.client_email);"
+      - name: Set credentials env
+        run: echo "GOOGLE_APPLICATION_CREDENTIALS=${{ github.workspace }}/gcp-key.json" >> $GITHUB_ENV
 
-      - name: Install Firebase CLI
+      - name: Install Firebase
         run: npm install -g firebase-tools
 
-      - name: Deploy to Firebase Hosting
+      - name: Deploy
         run: firebase deploy --only hosting --project ${{ secrets.FIREBASE_PROJECT_ID }}
