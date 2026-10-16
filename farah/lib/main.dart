@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
+import 'features/auth/presentation/screens/login_screen_farah.dart';
 // ═══════════════════════════════════════════════════════════
 // 🆕 إعدادات Firebase للويب
 // ═══════════════════════════════════════════════════════════
@@ -21,7 +21,7 @@ const FirebaseOptions webFirebaseOptions = FirebaseOptions(
 // 🆕 إعدادات Supabase
 // ═══════════════════════════════════════════════════════════
 const String supabaseUrl = 'https://tzizhccygtgqbkgkhbwif.supabase.co';
-const String supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR6aXpoY2N5Z3RncWJrZ2toYndpZiIsInJvbGUiOiJhbm9uIiwiaWF0IjoxNzI5MDAwMDAwLCJleHAiOjIwNDQ1NzYwMDB9.PLACEHOLDER_KEY';
+const String supabaseAnonKey = sb_publishable_HxGzyPlkTAUk5U7Rznlf0Q_EY0dui55 
 
 // ⚠️ استبدل anonKey بمفتاحك الحقيقي من Supabase:
 // Dashboard → Settings → API → anon/public
@@ -65,7 +65,7 @@ class FarahApp extends StatelessWidget {
         primaryColor: const Color(0xFFD4AF37),
         fontFamily: 'Cairo',
       ),
-      home: const OnboardingScreen(), // ← استبدل بـ الشاشة الأولى عندك
+      home: const FarahGlassLoginScreen(),
     );
   }
 }
