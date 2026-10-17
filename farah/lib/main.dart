@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'splash_screen.dart'; 
+import 'features/onboarding/onboarding_screen.dart';
 // ═══════════════════════════════════════════════════════════
 // 🆕 إعدادات Firebase للويب
 // ═══════════════════════════════════════════════════════════
@@ -65,7 +65,7 @@ class FarahApp extends StatelessWidget {
         primaryColor: const Color(0xFFD4AF37),
         fontFamily: 'Cairo',
       ),
-      home: const SplashScreen(), 
+      home: const OnboardingScreen(),
     );
   }
 }
