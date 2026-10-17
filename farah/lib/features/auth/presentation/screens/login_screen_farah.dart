@@ -3,11 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import '../../../../hall_list_screen.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_animate/flutter_animate.dart';
+import '../../../../hall_list_screen.dart';
 import '../providers/auth_provider.dart';
 import 'register_screen.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:farah/features/provider_dashboard_screen.dart';
 
 class FarahGlassLoginScreen extends ConsumerStatefulWidget {
@@ -49,7 +49,6 @@ class _FarahGlassLoginScreenState extends ConsumerState<FarahGlassLoginScreen> {
     });
 
     try {
-      // ✅ نحول رقم الهاتف إلى بريد وهمي ليتمكن Firebase من تسجيل الدخول
       final phone = _phoneCtrl.text.trim();
       final fakeEmail = '$phone@farah.app';
 
@@ -62,7 +61,6 @@ class _FarahGlassLoginScreenState extends ConsumerState<FarahGlassLoginScreen> {
             FirebaseFirestore.instance.collection('users').doc(fbUser.uid);
         final doc = await docRef.get();
 
-        // ── إذا كان المستخدم جديداً (لم يسجل بياناته سابقاً) ──
         if (!doc.exists) {
           await docRef.set({
             'uid': fbUser.uid,
@@ -79,7 +77,6 @@ class _FarahGlassLoginScreenState extends ConsumerState<FarahGlassLoginScreen> {
         }
 
         if (mounted) {
-          // ✅ التحقق من دور المستخدم لتوجيهه للصفحة المناسبة
           String role = 'user';
           if (doc.exists) {
             final userData = doc.data() as Map<String, dynamic>?;
@@ -87,7 +84,6 @@ class _FarahGlassLoginScreenState extends ConsumerState<FarahGlassLoginScreen> {
           }
 
           if (role == 'provider') {
-            // ── مزود خدمة → لوحة المزود ──
             Navigator.pushAndRemoveUntil(
               context,
               MaterialPageRoute(
@@ -95,7 +91,6 @@ class _FarahGlassLoginScreenState extends ConsumerState<FarahGlassLoginScreen> {
               (route) => false,
             );
           } else {
-            // ── زبون → الصفحة الرئيسية ──
             Navigator.pushAndRemoveUntil(
               context,
               MaterialPageRoute(builder: (_) => HallListScreen()),
@@ -180,7 +175,6 @@ class _FarahGlassLoginScreenState extends ConsumerState<FarahGlassLoginScreen> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                // ── العنوان ──
                 const Text(
                   'تسجيل الدخول',
                   style: TextStyle(
@@ -190,8 +184,6 @@ class _FarahGlassLoginScreenState extends ConsumerState<FarahGlassLoginScreen> {
                   ),
                 ),
                 const SizedBox(height: 6),
-
-                // ── الخط الفاصل ──
                 Container(
                   width: 60,
                   height: 2,
@@ -204,17 +196,11 @@ class _FarahGlassLoginScreenState extends ConsumerState<FarahGlassLoginScreen> {
                 ),
                 const SizedBox(height: 28),
 
-                // ── حقل رقم الهاتف ──
                 _phoneField(),
-
                 const SizedBox(height: 18),
-
-                // ── حقل كلمة المرور ──
                 _passwordField(),
-
                 const SizedBox(height: 14),
 
-                // ── تذكرني + نسيت ──
                 Row(
                   children: [
                     SizedBox(
@@ -271,7 +257,6 @@ class _FarahGlassLoginScreenState extends ConsumerState<FarahGlassLoginScreen> {
                   ],
                 ),
 
-                // ── رسالة الخطأ ──
                 if (_error != null) ...[
                   const SizedBox(height: 14),
                   Container(
@@ -302,7 +287,6 @@ class _FarahGlassLoginScreenState extends ConsumerState<FarahGlassLoginScreen> {
 
                 const SizedBox(height: 26),
 
-                // ── زر الدخول ──
                 Container(
                   width: 200,
                   height: 54,
@@ -352,7 +336,6 @@ class _FarahGlassLoginScreenState extends ConsumerState<FarahGlassLoginScreen> {
                 ),
                 const SizedBox(height: 18),
 
-                // ── إنشاء حساب ──
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -383,7 +366,6 @@ class _FarahGlassLoginScreenState extends ConsumerState<FarahGlassLoginScreen> {
           ),
         ),
 
-        // ── الأيقونة العلوية ──
         Positioned(
           top: 0,
           child: Container(
@@ -430,6 +412,7 @@ class _FarahGlassLoginScreenState extends ConsumerState<FarahGlassLoginScreen> {
         ],
       ),
       child: Row(
+        textDirection: TextDirection.rtl, // ✅ إصلاح اتجاه الأيقونات
         children: [
           const SizedBox(width: 6),
           Container(
@@ -510,6 +493,7 @@ class _FarahGlassLoginScreenState extends ConsumerState<FarahGlassLoginScreen> {
         ],
       ),
       child: Row(
+        textDirection: TextDirection.rtl, // ✅ إصلاح اتجاه الأيقونات
         children: [
           const SizedBox(width: 6),
           Container(
