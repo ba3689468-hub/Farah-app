@@ -3,7 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+// ✅ استيراد شاشة الترحيب الأصلية
 import 'features/onboarding/onboarding_screen.dart';
+
 // ═══════════════════════════════════════════════════════════
 // 🆕 إعدادات Firebase للويب
 // ═══════════════════════════════════════════════════════════
@@ -21,26 +24,19 @@ const FirebaseOptions webFirebaseOptions = FirebaseOptions(
 // 🆕 إعدادات Supabase
 // ═══════════════════════════════════════════════════════════
 const String supabaseUrl = 'https://tzizhccygtgqbkgkhbwif.supabase.co';
-const String supabaseAnonKey = 'sb_publishable_HxGzyPlkTAUk5U7Rznlf0Q_EY0du155'; 
-
-// ⚠️ استبدل anonKey بمفتاحك الحقيقي من Supabase:
-// Dashboard → Settings → API → anon/public
+const String supabaseAnonKey = 'sb_publishable_HxGzyPlkTAUk5U7Rznlf0Q_EY0du155';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // ═══════════════════════════════════════════════════════════
-  // تهيئة Firebase (يستخدم إعدادات الويب للويب، والجوال للموبايل)
-  // ═══════════════════════════════════════════════════════════
+  // تهيئة Firebase
   if (kIsWeb) {
     await Firebase.initializeApp(options: webFirebaseOptions);
   } else {
     await Firebase.initializeApp();
   }
 
-  // ═══════════════════════════════════════════════════════════
   // تهيئة Supabase
-  // ═══════════════════════════════════════════════════════════
   await Supabase.initialize(
     url: supabaseUrl,
     anonKey: supabaseAnonKey,
@@ -65,7 +61,8 @@ class FarahApp extends StatelessWidget {
         primaryColor: const Color(0xFFD4AF37),
         fontFamily: 'Cairo',
       ),
-      home: const OnboardingScreen(),
+      // ✅ العودة لشاشة الترحيب الأصلية
+      home: const OnboardingScreen(), 
     );
   }
 }
