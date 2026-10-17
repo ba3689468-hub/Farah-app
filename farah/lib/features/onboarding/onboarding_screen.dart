@@ -1,5 +1,5 @@
-import 'package:farah/core/constants/app_colors.dart';
 import 'package:flutter/material.dart';
+import 'package:farah/core/constants/app_colors.dart';
 import '../auth/presentation/screens/login_screen_farah.dart';
 
 class OnboardingScreen extends StatefulWidget {
@@ -11,34 +11,23 @@ class OnboardingScreen extends StatefulWidget {
 
 class _OnboardingScreenState extends State<OnboardingScreen> {
   final PageController _pageController = PageController();
-  int _currentIndex = 0;
-
-  static const Color primary = AppColors.primary;
-  static const Color primaryDark = AppColors.primaryDark;
-  static const Color primaryLight = AppColors.primaryLight;
+  int _currentPage = 0;
 
   final List<Map<String, String>> _pages = [
     {
-      'image': 'https://images.unsplash.com/photo-1519225421980-715cb0215aed?q=80&w=1000&auto=format&fit=crop',
       'title': 'مرحباً بك في تطبيق فرح',
-      'desc': 'أكبر دليل لحجز قاعات الأفراح في ليبيا - تصفح القاعات، قارن الأسعار، واحجز بكل سهولة',
+      'subtitle': 'أكبر دليل لحجز قاعات الأفراح في ليبيا - تصفح القاعات، قارن الأسعار، واحجز بكل سهولة',
+      'image': 'assets/images/onboarding1.png', // تأكد من وجود الصورة في هذا المسار
     },
     {
-      'image': 'https://images.unsplash.com/photo-1511795409834-ef04bbd61622?q=80&w=1000&auto=format&fit=crop',
-      'title': 'تصفح القاعات',
-      'desc': 'اكتشف أفضل القاعات والمزودين حسب المدينة والسعر والتقييم',
+      'title': 'احجز قاعتك بضغطة زر',
+      'subtitle': 'تصفح أفضل القاعات، اختر التاريخ والوقت المناسبين، واحجز بكل سهولة وأمان',
+      'image': 'assets/images/onboarding2.png',
     },
     {
-      // ✅ الصورة الثالثة الجديدة (قاعة أفراح فاخرة)
-      'image': 'https://i.postimg.cc/nLZRvC5q/pexels-highervibration-10319485.jpg',
-      'title': 'قارن الأسعار',
-      'desc': 'شاهد الصور، التقييمات، والأسعار لاتخاذ القرار الأفضل لقاعتك',
-    },
-    {
-      // ✅ الصورة الرابعة الجديدة (تجهيزات قاعة أفراح)
-      'image': 'https://i.postimg.cc/SxTsFMh9/pexels-reneterp-12919275.jpg',
-      'title': 'احجز بسهولة',
-      'desc': 'اختر تاريخك، حدد عدد الضيوف، وأتمم حجزك في دقائق معدودة',
+      'title': 'خدمات متكاملة لحفلك',
+      'subtitle': 'كل ما تحتاجه في مكان واحد: تصوير، ضيافة، ديكور، وفساتين أفراح',
+      'image': 'assets/images/onboarding3.png',
     },
   ];
 
@@ -48,302 +37,189 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     super.dispose();
   }
 
-  void _nextPage() {
-    if (_currentIndex < _pages.length - 1) {
-      _pageController.nextPage(
-        duration: const Duration(milliseconds: 400),
-        curve: Curves.easeInOut,
-      );
-    } else {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (_) => FarahGlassLoginScreen(),
-        ),
-      );
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
-    final size = MediaQuery.of(context).size;
-
-    return Scaffold(
-      backgroundColor: Colors.white,
-      body: Stack(
-        children: [
-          // ── الخلفية الوردية ──
-          Container(
-            height: size.height * 0.72,
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [primaryDark, primary, primary],
-                stops: [0.0, 0.5, 1.0],
-              ),
-            ),
-          ),
-
-          // ── دوائر زخرفية ──
-          Positioned(
-            top: -80,
-            right: -60,
-            child: Container(
-              width: 220,
-              height: 220,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: Colors.white.withValues(alpha: 0.08),
-              ),
-            ),
-          ),
-          Positioned(
-            top: 100,
-            left: -80,
-            child: Container(
-              width: 180,
-              height: 180,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: Colors.white.withValues(alpha: 0.06),
-              ),
-            ),
-          ),
-
-          // ── زر تخطي ──
-          Positioned(
-            top: 40,
-            left: 20,
-            child: GestureDetector(
-              onTap: () {
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => FarahGlassLoginScreen(),
-                  ),
-                );
-              },
-              child: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(
-                    color: Colors.white.withValues(alpha: 0.3),
-                    width: 1,
-                  ),
-                ),
-                child: const Text(
-                  'تخطي',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold,
+    // إجبار الشاشة على العمل من اليسار لليمين (LTR) للحفاظ على التصميم الأصلي
+    return Directionality(
+      textDirection: TextDirection.ltr,
+      child: Scaffold(
+        backgroundColor: AppColors.background,
+        body: SafeArea(
+          child: Column(
+            children: [
+              // ── زر التخطي (على اليسار كما طلبت) ──
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: TextButton(
+                    onPressed: () => _goToLogin(context),
+                    child: const Text(
+                      'تخطي',
+                      style: TextStyle(color: AppColors.primary, fontSize: 16, fontWeight: FontWeight.bold),
+                    ),
                   ),
                 ),
               ),
-            ),
-          ),
 
-          // ── الصور (PageView) ──
-          Positioned(
-            top: size.height * 0.07,
-            left: 0,
-            right: 0,
-            height: size.height * 0.62,
-            child: PageView.builder(
-              controller: _pageController,
-              onPageChanged: (index) {
-                setState(() => _currentIndex = index);
-              },
-              itemCount: _pages.length,
-              itemBuilder: (context, index) {
-                return Center(
-                  child: Container(
-                    width: size.width * 0.85,
-                    height: size.height * 0.55,
-                    decoration: BoxDecoration(
-                      border: Border.all(
-                        color: Colors.white.withValues(alpha: 0.6),
-                        width: 4,
-                      ),
-                      borderRadius: const BorderRadius.only(
-                        topLeft: Radius.circular(300),
-                        topRight: Radius.circular(300),
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.18),
-                          blurRadius: 25,
-                          offset: const Offset(0, 10),
-                        ),
-                      ],
-                    ),
-                    child: ClipRRect(
-                      borderRadius: const BorderRadius.only(
-                        topLeft: Radius.circular(300),
-                        topRight: Radius.circular(300),
-                      ),
-                      child: Image.network(
-                        _pages[index]['image']!,
-                        fit: BoxFit.cover,
-                        loadingBuilder: (context, child, loadingProgress) {
-                          if (loadingProgress == null) return child;
-                          return Container(
-                            color: primaryLight.withValues(alpha: 0.3),
-                            child: const Center(
-                              child: CircularProgressIndicator(
-                                color: Colors.white,
-                              ),
-                            ),
-                          );
-                        },
-                        errorBuilder: (context, error, stackTrace) {
-                          return Container(
-                            color: primaryLight.withValues(alpha: 0.3),
-                            child: const Center(
-                              child: Icon(
-                                Icons.celebration,
-                                size: 80,
-                                color: Colors.white,
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                  ),
-                );
-              },
-            ),
-          ),
-
-          // ── البطاقة السفلية ──
-          Positioned(
-            bottom: 0,
-            left: 0,
-            right: 0,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(35),
-                  topRight: Radius.circular(35),
+              // ── محتوى الصفحات ──
+              Expanded(
+                child: PageView.builder(
+                  controller: _pageController,
+                  onPageChanged: (index) {
+                    setState(() => _currentPage = index);
+                  },
+                  itemCount: _pages.length,
+                  itemBuilder: (context, index) {
+                    return _buildPage(
+                      title: _pages[index]['title']!,
+                      subtitle: _pages[index]['subtitle']!,
+                      imagePath: _pages[index]['image']!,
+                    );
+                  },
                 ),
-                boxShadow: [
-                  BoxShadow(
-                    color: primaryDark.withValues(alpha: 0.10),
-                    blurRadius: 25,
-                    offset: const Offset(0, -8),
-                  ),
-                ],
               ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: List.generate(
-                      _pages.length,
-                      (index) => _buildDot(index == _currentIndex),
-                    ),
-                  ),
-                  const SizedBox(height: 14),
-                  Text(
-                    _pages[_currentIndex]['title']!,
-                    style: const TextStyle(
-                      color: primaryDark,
-                      fontSize: 22,
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: -0.5,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 10),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 8),
-                    child: Text(
-                      _pages[_currentIndex]['desc']!,
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(
-                        color: Color(0xFF888888),
-                        fontSize: 12.5,
-                        height: 1.5,
+
+              // ── المؤشرات (النقاط) وزر التالي ──
+              Padding(
+                padding: const EdgeInsets.all(24.0),
+                child: Column(
+                  children: [
+                    // النقاط
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: List.generate(
+                        _pages.length,
+                        (index) => _buildDot(index),
                       ),
                     ),
-                  ),
-                  const SizedBox(height: 20),
-                  GestureDetector(
-                    onTap: _nextPage,
-                    child: Container(
+                    const SizedBox(height: 30),
+                    
+                    // زر التالي / ابدأ الآن
+                    SizedBox(
                       width: double.infinity,
-                      height: 52,
-                      decoration: BoxDecoration(
-                        gradient: const LinearGradient(
-                          colors: [primary, primaryDark],
-                          begin: Alignment.centerLeft,
-                          end: Alignment.centerRight,
-                        ),
-                        borderRadius: BorderRadius.circular(26),
-                        boxShadow: [
-                          BoxShadow(
-                            color: primary.withValues(alpha: 0.35),
-                            blurRadius: 20,
-                            offset: const Offset(0, 8),
+                      height: 55,
+                      child: ElevatedButton(
+                        onPressed: () {
+                          if (_currentPage == _pages.length - 1) {
+                            _goToLogin(context);
+                          } else {
+                            _pageController.nextPage(
+                              duration: const Duration(milliseconds: 300),
+                              curve: Curves.easeIn,
+                            );
+                          }
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.primary,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(30),
                           ),
-                        ],
-                      ),
-                      child: Center(
+                        ),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Text(
-                              _currentIndex == _pages.length - 1
-                                  ? 'ابدأ الآن'
-                                  : 'التالي',
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 15,
-                                fontWeight: FontWeight.bold,
-                                letterSpacing: 0.5,
-                              ),
+                              _currentPage == _pages.length - 1 ? 'ابدأ الآن' : 'التالي',
+                              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
                             ),
-                            const SizedBox(width: 8),
-                            const Icon(
-                              Icons.arrow_forward_ios,
+                            const SizedBox(width: 10),
+                            // السهم يتجه لليمين دائماً في LTR
+                            Icon(
+                              _currentPage == _pages.length - 1 ? Icons.check : Icons.arrow_forward_ios,
                               color: Colors.white,
-                              size: 13,
+                              size: 18,
                             ),
                           ],
                         ),
                       ),
                     ),
-                  ),
-                  const SizedBox(height: 8),
-                ],
+                  ],
+                ),
               ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  // ── دالة بناء الصفحة ──
+  Widget _buildPage({required String title, required String subtitle, required String imagePath}) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 30),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          // الصورة
+          Expanded(
+            flex: 3,
+            child: Image.asset(
+              imagePath,
+              fit: BoxFit.contain,
+              errorBuilder: (context, error, stackTrace) {
+                return Container(
+                  height: 200,
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: const Center(
+                    child: Icon(Icons.image, size: 80, color: AppColors.primary),
+                  ),
+                );
+              },
             ),
           ),
+          const SizedBox(height: 40),
+          
+          // العنوان
+          Text(
+            title,
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+              color: AppColors.textPrimary,
+            ),
+          ),
+          const SizedBox(height: 16),
+          
+          // الوصف
+          Text(
+            subtitle,
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              fontSize: 14,
+              color: AppColors.textSecondary,
+              height: 1.5,
+            ),
+          ),
+          const SizedBox(height: 40),
         ],
       ),
     );
   }
 
-  Widget _buildDot(bool isActive) {
+  // ── دالة بناء النقاط (المؤشرات) ──
+  Widget _buildDot(int index) {
     return AnimatedContainer(
-      duration: const Duration(milliseconds: 300),
+      duration: const Duration(milliseconds: 200),
       margin: const EdgeInsets.symmetric(horizontal: 4),
-      width: isActive ? 28 : 8,
       height: 8,
+      width: _currentPage == index ? 24 : 8,
       decoration: BoxDecoration(
-        color: isActive
-            ? primary
-            : Colors.grey.withValues(alpha: 0.25),
+        color: _currentPage == index ? AppColors.primary : Colors.grey.shade300,
         borderRadius: BorderRadius.circular(4),
       ),
+    );
+  }
+
+  // ── الانتقال لصفحة تسجيل الدخول ──
+  void _goToLogin(BuildContext context) {
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (_) => const FarahGlassLoginScreen()),
     );
   }
 }
