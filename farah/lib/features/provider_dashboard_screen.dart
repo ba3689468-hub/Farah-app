@@ -136,7 +136,7 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
             _buildDashboardTab(),
             _buildMyHallsTab(),
             _buildBookingsTab(),
-            const StoreManagementScreen(), // 🆕 إضافة شاشة المتجر
+            StoreManagementScreen(), // 🆕 إضافة شاشة المتجر
             const ProviderProfileScreen(),
           ],
         ),
