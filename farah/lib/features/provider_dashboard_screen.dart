@@ -11,6 +11,7 @@ import 'api_integration_screen.dart';
 import 'edit_profile_screen.dart';
 import 'wallet_screen.dart';
 import 'notifications_screen.dart';
+import 'store_management_screen.dart'; // 🆕 استيراد شاشة المتجر
 import 'auth/presentation/screens/login_screen_farah.dart';
 
 class ProviderDashboardScreen extends StatefulWidget {
@@ -92,7 +93,9 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
     final userIds = <String>{};
     for (final b in allBookings) {
       final u = (b.data()['userId'] ?? '') as String;
-      if (u.isNotEmpty && !u.startsWith('manual_')) userIds.add(u);
+      if (u.isNotEmpty && !u.startsWith('manual_') && !u.startsWith('external_')) {
+        userIds.add(u);
+      }
     }
     final Map<String, String> userMap = {};
     for (final u in userIds) {
@@ -133,6 +136,7 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
             _buildDashboardTab(),
             _buildMyHallsTab(),
             _buildBookingsTab(),
+            const StoreManagementScreen(), // 🆕 إضافة شاشة المتجر
             const ProviderProfileScreen(),
           ],
         ),
@@ -365,7 +369,6 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
     );
   }
 
-  // ✅ شريط علوي مع أزرار الإشعارات + الحجز اليدوي + إضافة قاعة
   Widget _buildAppBar(String title) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
@@ -388,34 +391,28 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
                   fontSize: 22,
                   fontWeight: FontWeight.bold)),
           const Spacer(),
-
-          // ✅ زر الإشعارات
           _providerNotificationButton(),
-
           if (_currentTab == 0 || _currentTab == 1) ...[
             const SizedBox(width: 8),
-            // ✅ زر الربط البرمجي (جديد)
-GestureDetector(
-  onTap: () async {
-    await Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => const ApiIntegrationScreen(),
-      ),
-    );
-  },
-  child: Container(
-    padding: const EdgeInsets.all(10),
-    decoration: BoxDecoration(
-      color: Colors.purple.withValues(alpha: 0.1),
-      borderRadius: BorderRadius.circular(14),
-    ),
-    child: const Icon(Icons.api,
-        color: Colors.purple, size: 22),
-  ),
-),
-const SizedBox(width: 8),
-            // ✅ زر إضافة حجز يدوي (جديد)
+            GestureDetector(
+              onTap: () async {
+                await Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const ApiIntegrationScreen(),
+                  ),
+                );
+              },
+              child: Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: Colors.purple.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: const Icon(Icons.api, color: Colors.purple, size: 22),
+              ),
+            ),
+            const SizedBox(width: 8),
             GestureDetector(
               onTap: () async {
                 final result = await Navigator.push(
@@ -437,7 +434,6 @@ const SizedBox(width: 8),
               ),
             ),
             const SizedBox(width: 8),
-            // ✅ زر إضافة قاعة
             GestureDetector(
               onTap: () async {
                 final result = await Navigator.push(
@@ -549,6 +545,11 @@ const SizedBox(width: 8),
         'icon': Icons.event_note_outlined,
         'active': Icons.event_note,
         'label': 'الحجوزات'
+      },
+      {
+        'icon': Icons.shopping_bag_outlined, // 🆕 أيقونة المتجر
+        'active': Icons.shopping_bag,
+        'label': 'متجري'
       },
       {
         'icon': Icons.person_outline,
@@ -1094,7 +1095,6 @@ const SizedBox(width: 8),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis),
                       const SizedBox(height: 4),
-                      // ✅ اسم العميل + شارة "يدوي"
                       Row(
                         mainAxisAlignment: MainAxisAlignment.end,
                         children: [
@@ -1244,7 +1244,6 @@ const SizedBox(width: 8),
                   ],
                 ),
                 const SizedBox(height: 12),
-                // ✅ لا نعرض المبالغ للحجوزات اليدوية
                 if (!isManual)
                   Row(
                     children: [
@@ -1259,7 +1258,6 @@ const SizedBox(width: 8),
                     ],
                   ),
 
-                // ✅ الأزرار
                 if (!isManual) ...[
                   if (status == 'pending')
                     _buildNewBookingActions(docId),
@@ -1268,7 +1266,6 @@ const SizedBox(width: 8),
                   if (status == 'confirmed')
                     _buildCompleteAction(docId, eventDate),
                 ] else ...[
-                  // ✅ زر حذف للحجوزات اليدوية
                   Padding(
                     padding: const EdgeInsets.only(top: 16),
                     child: GestureDetector(
@@ -1544,7 +1541,8 @@ const SizedBox(width: 8),
         final hallName = bookingData['hallName'] ?? 'قاعة';
 
         if (customerId.toString().isNotEmpty &&
-            !customerId.toString().startsWith('manual_')) {
+            !customerId.toString().startsWith('manual_') &&
+            !customerId.toString().startsWith('external_')) {
           await NotificationHelper.notifyCustomerConfirmed(
             customerId: customerId.toString(),
             hallName: hallName.toString(),
@@ -1664,7 +1662,8 @@ const SizedBox(width: 8),
         final hallName = bookingData['hallName'] ?? 'قاعة';
 
         if (customerId.toString().isNotEmpty &&
-            !customerId.toString().startsWith('manual_')) {
+            !customerId.toString().startsWith('manual_') &&
+            !customerId.toString().startsWith('external_')) {
           if (isConfirm) {
             await NotificationHelper.notifyCustomerConfirmed(
               customerId: customerId.toString(),
@@ -1701,7 +1700,6 @@ const SizedBox(width: 8),
     }
   }
 
-  // ✅ حذف الحجز اليدوي
   Future<void> _deleteManualBooking(String docId) async {
     final ok = await showDialog<bool>(
       context: context,
