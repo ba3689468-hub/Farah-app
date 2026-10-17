@@ -33,7 +33,7 @@ class _StoreManagementScreenState extends State<StoreManagementScreen> {
             onPressed: () async {
               final result = await Navigator.push(
                 context,
-                MaterialPageRoute(builder: (_) => const AddEditProductScreen()),
+                MaterialPageRoute(builder: (_) => AddEditProductScreen()),
               );
               if (result == true) setState(() {});
             },
@@ -98,7 +98,7 @@ class _StoreManagementScreenState extends State<StoreManagementScreen> {
               onPressed: () async {
                 final result = await Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (_) => const AddEditProductScreen()),
+                  MaterialPageRoute(builder: (_) => AddEditProductScreen()),
                 );
                 if (result == true) setState(() {});
               },
