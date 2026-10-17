@@ -11,7 +11,7 @@ import 'api_integration_screen.dart';
 import 'edit_profile_screen.dart';
 import 'wallet_screen.dart';
 import 'notifications_screen.dart';
-import 'store_management_screen.dart'; // 🆕 استيراد شاشة المتجر
+import 'add_edit_product_screen.dart'; // ✅ استيراد شاشة المنتج
 import 'auth/presentation/screens/login_screen_farah.dart';
 
 class ProviderDashboardScreen extends StatefulWidget {
@@ -136,7 +136,7 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
             _buildDashboardTab(),
             _buildMyHallsTab(),
             _buildBookingsTab(),
-            StoreManagementScreen(), // 🆕 إضافة شاشة المتجر
+            // ✅ تم إزالة تبويب المتجر من هنا
             const ProviderProfileScreen(),
           ],
         ),
@@ -369,6 +369,7 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
     );
   }
 
+  // ✅ تعديل زر الإضافة (+) ليفتح نافذة اختيار
   Widget _buildAppBar(String title) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
@@ -434,15 +435,45 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
               ),
             ),
             const SizedBox(width: 8),
+            
+            // ✅ زر الإضافة الذكي
             GestureDetector(
-              onTap: () async {
-                final result = await Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => const AddEditHallScreen(),
+              onTap: () {
+                showModalBottomSheet(
+                  context: context,
+                  shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+                  builder: (context) => SafeArea(
+                    child: Padding(
+                      padding: const EdgeInsets.all(20),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Text('ماذا تريد أن تضيف؟', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                          const SizedBox(height: 20),
+                          ListTile(
+                            leading: const Icon(Icons.storefront, color: primary, size: 30),
+                            title: const Text('إضافة قاعة أفراح', style: TextStyle(fontWeight: FontWeight.bold)),
+                            onTap: () async {
+                              Navigator.pop(context); // إغلاق النافذة
+                              final result = await Navigator.push(context, MaterialPageRoute(builder: (_) => const AddEditHallScreen()));
+                              if (result == true) _loadData();
+                            },
+                          ),
+                          const Divider(),
+                          ListTile(
+                            leading: const Icon(Icons.shopping_bag, color: Colors.purple, size: 30),
+                            title: const Text('إضافة متجر / منتج', style: TextStyle(fontWeight: FontWeight.bold)),
+                            onTap: () async {
+                              Navigator.pop(context); // إغلاق النافذة
+                              final result = await Navigator.push(context, MaterialPageRoute(builder: (_) => const AddEditProductScreen()));
+                              if (result == true) _loadData();
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
                 );
-                if (result == true) _loadData();
               },
               child: Container(
                 padding: const EdgeInsets.all(10),
@@ -529,6 +560,7 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
     );
   }
 
+  // ✅ إرجاع شريط التنقل السفلي إلى 4 أزرار فقط
   Widget _buildProviderBottomNav() {
     final items = [
       {
@@ -545,11 +577,6 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
         'icon': Icons.event_note_outlined,
         'active': Icons.event_note,
         'label': 'الحجوزات'
-      },
-      {
-        'icon': Icons.shopping_bag_outlined, // 🆕 أيقونة المتجر
-        'active': Icons.shopping_bag,
-        'label': 'متجري'
       },
       {
         'icon': Icons.person_outline,
@@ -615,8 +642,10 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
     );
   }
 
-  Widget _buildStats(
-      List<QueryDocumentSnapshot<Map<String, dynamic>>> bookings) {
+  // ... (باقي الدوال المساعدة مثل _buildStats, _buildFilterTabs, _buildHallFullCard, _buildBookingCard, ProviderProfileScreen تبقى كما هي في ملفك الأصلي) ...
+  // لتوفير المساحة، لقد تركتها كما هي. إذا كنت بحاجة لها مجدداً أخبرني.
+
+  Widget _buildStats(List<QueryDocumentSnapshot<Map<String, dynamic>>> bookings) {
     int pending = 0;
     int waitingAttendance = 0;
     int confirmed = 0;
