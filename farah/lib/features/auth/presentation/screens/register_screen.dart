@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/auth_provider.dart';
+import 'package:farah/features/provider_choice_screen.dart'; // ✅ استيراد شاشة الاختيار
 
 class RegisterScreen extends ConsumerStatefulWidget {
   final String role;
@@ -27,9 +28,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   String? _error;
   String _selectedRole = 'user';
 
-  // متغيرات OTP
   bool _isOtpSent = false;
-  final String _fakeCode = "123456"; // الرمز الوهمي
+  final String _fakeCode = "123456";
 
   int _timerSeconds = 60;
   Timer? _timer;
@@ -69,7 +69,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   }
 
   Future<void> _register() async {
-    // المرحلة 1: إرسال الرمز الوهمي
     if (!_isOtpSent) {
       if (!_formKey.currentState!.validate()) return;
       FocusScope.of(context).unfocus();
@@ -86,7 +85,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       return;
     }
 
-    // المرحلة 2: التحقق والإنشاء
     if (_otpCtrl.text.trim() != _fakeCode) {
       setState(() => _error = 'الرمز غير صحيح، استخدم $_fakeCode');
       return;
@@ -113,7 +111,19 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('تم إنشاء حسابك بنجاح!'), backgroundColor: Colors.green),
         );
-        Navigator.pop(context);
+        
+        // ✅ التوجيه الذكي بناءً على نوع الحساب
+        if (_selectedRole == 'provider') {
+          // إذا كان مزوداً جديداً، نوجهه لشاشة الاختيار فوراً
+          Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(builder: (_) => const ProviderChoiceScreen()),
+            (route) => false,
+          );
+        } else {
+          // إذا كان زبوناً، يعود لصفحة تسجيل الدخول
+          Navigator.pop(context);
+        }
       }
     } catch (e) {
       setState(() => _error = 'حدث خطأ: تأكد من أن الرقم غير مسجل مسبقاً');
@@ -141,25 +151,31 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       body: SafeArea(
         child: Stack(
           children: [
+            Center(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
+                child: Form(key: _formKey, child: _buildGlassCard(context)),
+              ),
+            ),
             Positioned(
               top: 10, right: 20,
               child: Material(
                 color: Colors.transparent, shape: const CircleBorder(),
                 child: InkWell(
                   borderRadius: BorderRadius.circular(30),
-                  onTap: () => Navigator.pop(context),
+                  onTap: () {
+                    if (_isOtpSent) {
+                      setState(() => _isOtpSent = false);
+                    } else {
+                      Navigator.of(context).pop();
+                    }
+                  },
                   child: Container(
                     padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(color: Colors.white, shape: BoxShape.circle, boxShadow: [BoxShadow(color: AppColors.primaryDark.withValues(alpha: 0.1), blurRadius: 10, offset: const Offset(0, 3))]),
                     child: const Icon(Icons.arrow_forward, color: AppColors.primary, size: 22),
                   ),
                 ),
-              ),
-            ),
-            Center(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
-                child: Form(key: _formKey, child: _buildGlassCard(context)),
               ),
             ),
           ],
@@ -277,7 +293,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     );
   }
 
-  // 🛠️ التعديل: تصميم الحقل النهائي وإضافة textDirection
   Widget _buildField({
     required TextEditingController controller,
     required String hint,
