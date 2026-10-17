@@ -27,8 +27,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   String? _error;
   String _selectedRole = 'user';
 
+  // متغيرات OTP
   bool _isOtpSent = false;
-  final String _fakeCode = "123456";
+  final String _fakeCode = "123456"; // الرمز الوهمي
 
   int _timerSeconds = 60;
   Timer? _timer;
@@ -68,6 +69,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   }
 
   Future<void> _register() async {
+    // المرحلة 1: إرسال الرمز الوهمي
     if (!_isOtpSent) {
       if (!_formKey.currentState!.validate()) return;
       FocusScope.of(context).unfocus();
@@ -84,6 +86,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       return;
     }
 
+    // المرحلة 2: التحقق والإنشاء
     if (_otpCtrl.text.trim() != _fakeCode) {
       setState(() => _error = 'الرمز غير صحيح، استخدم $_fakeCode');
       return;
@@ -245,6 +248,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   )),
                 ),
                 const SizedBox(height: 18),
+                
                 if (!_isOtpSent) Row(mainAxisAlignment: MainAxisAlignment.center, children: [Text('لديك حساب بالفعل؟ ', style: TextStyle(color: chocolate.withValues(alpha: 0.75), fontSize: 13)), GestureDetector(onTap: _loading ? null : () => Navigator.pop(context), child: const Text('سجّل دخول', style: TextStyle(color: deepRose, fontSize: 13, fontWeight: FontWeight.bold, decoration: TextDecoration.underline))) ]),
               ],
             ),
@@ -273,7 +277,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     );
   }
 
-  // 🛠️ التعديل: جعل الخلفية بيضاء دائماً، وتغيير لون النص فقط عند التعطيل
+  // 🛠️ التعديل: تصميم الحقل النهائي وإضافة textDirection
   Widget _buildField({
     required TextEditingController controller,
     required String hint,
@@ -286,51 +290,69 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     bool enabled = true,
     String? Function(String?)? validator,
   }) {
-    return TextFormField(
-      controller: controller,
-      obscureText: obscure,
-      keyboardType: keyboardType,
-      validator: validator,
-      enabled: enabled && !_loading,
-      textAlign: TextAlign.right,
-      textDirection: TextDirection.rtl,
-      maxLength: maxLength,
-      inputFormatters: digitsOnly ? [FilteringTextInputFormatter.digitsOnly] : null,
-      style: TextStyle(
-        // لون النص يتغير إلى رمادي فاتح عند التعطيل
-        color: enabled ? chocolate : chocolate.withValues(alpha: 0.3),
-        fontSize: 15,
-        fontWeight: FontWeight.w500,
+    return Container(
+      height: 58,
+      decoration: BoxDecoration(
+        color: enabled ? Colors.white : Colors.grey.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(30),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.primaryDark.withValues(alpha: 0.06),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
-      decoration: InputDecoration(
-        hintText: hint,
-        hintStyle: TextStyle(color: chocolate.withValues(alpha: 0.5), fontSize: 14),
-        counterText: '',
-        errorStyle: const TextStyle(color: Colors.red, fontSize: 11, height: 0.8),
-        filled: true,
-        // ✅ التعديل هنا: الخلفية تظل بيضاء دائماً
-        fillColor: Colors.white, 
-        contentPadding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
-        
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(30), borderSide: BorderSide.none),
-        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(30), borderSide: BorderSide.none),
-        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(30), borderSide: BorderSide.none),
-        
-        prefixIconConstraints: const BoxConstraints(minWidth: 60, minHeight: 60),
-        prefixIcon: Padding(
-          padding: const EdgeInsets.all(6),
-          child: Container(
-            width: 46, height: 46,
+      child: Row(
+        textDirection: TextDirection.rtl, // ✅ إصلاح اتجاه الأيقونات
+        children: [
+          const SizedBox(width: 6),
+          Container(
+            width: 46,
+            height: 46,
             decoration: BoxDecoration(
-              // الأيقونة تظل ملونة حتى عند التعطيل لتبدو جميلة
-              gradient: const LinearGradient(colors: [AppColors.primary, AppColors.primaryDark], begin: Alignment.topLeft, end: Alignment.bottomRight),
+              gradient: const LinearGradient(
+                colors: [AppColors.primary, AppColors.primaryDark],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
               borderRadius: BorderRadius.circular(14),
             ),
             child: Icon(icon, color: Colors.white, size: 22),
           ),
-        ),
-        
-        suffixIcon: toggle,
+          const SizedBox(width: 12),
+          Expanded(
+            child: TextFormField(
+              controller: controller,
+              obscureText: obscure,
+              keyboardType: keyboardType,
+              validator: validator,
+              enabled: enabled && !_loading,
+              textAlign: TextAlign.right,
+              textDirection: TextDirection.rtl,
+              maxLength: maxLength,
+              inputFormatters: digitsOnly ? [FilteringTextInputFormatter.digitsOnly] : null,
+              style: TextStyle(
+                color: enabled ? chocolate : chocolate.withValues(alpha: 0.5),
+                fontSize: 15,
+                fontWeight: FontWeight.w500,
+              ),
+              decoration: InputDecoration(
+                hintText: hint,
+                hintStyle: TextStyle(color: chocolate.withValues(alpha: 0.5), fontSize: 14),
+                counterText: '',
+                errorStyle: const TextStyle(color: Colors.red, fontSize: 11, height: 0.8),
+                border: InputBorder.none,
+                enabledBorder: InputBorder.none,
+                focusedBorder: InputBorder.none,
+                isDense: true,
+                contentPadding: const EdgeInsets.symmetric(vertical: 14),
+              ),
+            ),
+          ),
+          if (toggle != null) toggle,
+          const SizedBox(width: 6),
+        ],
       ),
     );
   }
