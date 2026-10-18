@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-// ✅ تم إضافة مسار صفحة تسجيل الدخول بناءً على صورتك
+// ✅ تم التأكد من المسار الصحيح
 import 'package:farah/features/auth/presentation/screens/login_screen_farah.dart';
 
 class OnboardingScreen extends StatefulWidget {
@@ -83,10 +83,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       padding: const EdgeInsets.all(16.0),
                       child: TextButton(
                         onPressed: () {
-                          // ✅ الانتقال لصفحة تسجيل الدخول عند التخطي
+                          // ✅ استخدام اسم الكلاس الصحيح FarahGlassLoginScreen
                           Navigator.pushReplacement(
                             context, 
-                            MaterialPageRoute(builder: (context) => LoginScreenFarah())
+                            MaterialPageRoute(builder: (context) => const FarahGlassLoginScreen())
                           );
                         },
                         child: const Text(
@@ -161,10 +161,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       child: ElevatedButton(
                         onPressed: () {
                           if (_currentPage == _pages.length - 1) {
-                            // ✅ الانتقال لصفحة تسجيل الدخول عند الضغط على "ابدأ الآن"
+                            // ✅ استخدام اسم الكلاس الصحيح FarahGlassLoginScreen
                             Navigator.pushReplacement(
                               context, 
-                              MaterialPageRoute(builder: (context) => LoginScreenFarah())
+                              MaterialPageRoute(builder: (context) => const FarahGlassLoginScreen())
                             );
                           } else {
                             _pageController.nextPage(
@@ -186,7 +186,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                               style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
                             ),
                             const SizedBox(width: 8),
-                            // ✅ السهم الآن يتجه لليسار (لأن التطبيق RTL نستخدم forward)
+                            // ✅ السهم يتجه لليسار
                             const Icon(
                               Icons.arrow_forward_ios, 
                               size: 18,
