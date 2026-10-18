@@ -86,7 +86,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           // ✅ الانتقال لصفحة تسجيل الدخول عند التخطي
                           Navigator.pushReplacement(
                             context, 
-                            MaterialPageRoute(builder: (context) => const LoginScreenFarah())
+                            MaterialPageRoute(builder: (context) => LoginScreenFarah())
                           );
                         },
                         child: const Text(
