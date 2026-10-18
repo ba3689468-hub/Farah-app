@@ -3,40 +3,41 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_localizations/flutter_localizations.dart'; // تمت الإضافة لدعم اللغة العربية
 
-// ✅ استيراد شاشة الترحيب الأصلية
+// 🟩 استيراد شاشة الترحيب الأولى
 import 'features/onboarding/onboarding_screen.dart';
 
-// ═══════════════════════════════════════════════════════════
-// 🆕 إعدادات Firebase للويب
-// ═══════════════════════════════════════════════════════════
+//
+// 🔵 إعدادات Firebase
+//
 const FirebaseOptions webFirebaseOptions = FirebaseOptions(
-  apiKey: "AIzaSyCSqBeVcxBQBusowTlzqidEb4fLXxbHEzg",
+  apiKey: "AIzaSyCSqBeVcXBQouswQlzqIDFb4fLXbHEzg",
   authDomain: "farah-app-caa99.firebaseapp.com",
   projectId: "farah-app-caa99",
   storageBucket: "farah-app-caa99.firebasestorage.app",
   messagingSenderId: "665183433574",
-  appId: "1:665183433574:web:76bdcc78d836fd6ceccea7",
-  measurementId: "G-Q79B7HVMLD",
+  appId: "1:665183433574:web:76bdc78d836fd6cecea7",
+  measurementId: "G-G7987HVMLD",
 );
 
-// ═══════════════════════════════════════════════════════════
-// 🆕 إعدادات Supabase
-// ═══════════════════════════════════════════════════════════
-const String supabaseUrl = 'https://tzizhccygtgqbkgkhbwif.supabase.co';
-const String supabaseAnonKey = 'sb_publishable_HxGzyPlkTAUk5U7Rznlf0Q_EY0du155';
+//
+// 🔵 إعدادات Supabase
+//
+const String supabaseUrl = 'https://tzizhccygtgqbkghbwif.supabase.co';
+const String supabaseAnonKey = 'sb_publishable_HxGzyPlKTAUK5U7Rznlf0Q_EY0du155';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // تهيئة Firebase
+  // 🚀 تهيئة Firebase
   if (kIsWeb) {
     await Firebase.initializeApp(options: webFirebaseOptions);
   } else {
     await Firebase.initializeApp();
   }
 
-  // تهيئة Supabase
+  // 🚀 تهيئة Supabase
   await Supabase.initialize(
     url: supabaseUrl,
     anonKey: supabaseAnonKey,
@@ -57,12 +58,26 @@ class FarahApp extends StatelessWidget {
     return MaterialApp(
       title: 'فرح',
       debugShowCheckedModeBanner: false,
+      
+      // --- إعدادات اللغة العربية (RTL) ---
+      locale: const Locale('ar', 'LY'), // إجبار التطبيق على العربية
+      supportedLocales: const [
+        Locale('ar', 'LY'),
+        Locale('en', 'US'),
+      ],
+      localizationsDelegates: const [
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      // -----------------------------------
+
       theme: ThemeData(
         primaryColor: const Color(0xFFD4AF37),
         fontFamily: 'Cairo',
       ),
-      // ✅ العودة لشاشة الترحيب الأصلية
-      home: const OnboardingScreen(), 
+      // 🟩 العودة لشاشة الترحيب الأساسية
+      home: const OnboardingScreen(),
     );
   }
 }
