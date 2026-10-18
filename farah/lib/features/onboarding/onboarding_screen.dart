@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+// ✅ تم إضافة مسار صفحة تسجيل الدخول بناءً على صورتك
+import 'package:farah/features/auth/presentation/screens/login_screen_farah.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({Key? key}) : super(key: key);
@@ -11,7 +13,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   final PageController _pageController = PageController();
   int _currentPage = 0;
 
-  // تم استخدام أسماء الصور التي قمت برفعها في مجلد assets/icons
   final List<Map<String, dynamic>> _pages = [
     {
       'image': 'assets/icons/pexels-amar-14716282.jpg',
@@ -32,14 +33,13 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // اللون الأساسي للتطبيق (الزهري/الأحمر)
     const Color primaryColor = Color(0xFFD81B60); 
 
     return Scaffold(
       backgroundColor: primaryColor,
       body: Column(
         children: [
-          // 1. الجزء العلوي: الصورة (تم إعطاؤه مساحة أكبر flex: 6 لإبراز الصورة)
+          // الجزء العلوي: الصورة (flex: 6)
           Expanded(
             flex: 6,
             child: Stack(
@@ -54,25 +54,19 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   itemCount: _pages.length,
                   itemBuilder: (context, index) {
                     return ClipRRect(
-                      // الانحناء السفلي للصورة (شكل القوس)
                       borderRadius: const BorderRadius.only(
                         bottomLeft: Radius.elliptical(250, 100),
                         bottomRight: Radius.elliptical(250, 100),
                       ),
-                      child: Image.asset( // استخدام Image.asset للصور المحلية
+                      child: Image.asset(
                         _pages[index]['image'],
                         fit: BoxFit.cover,
                         width: double.infinity,
-                        // تصميم بديل في حال فشل تحميل الصورة (لتفادي الأيقونة المكسورة)
                         errorBuilder: (context, error, stackTrace) {
                           return Container(
-                            color: Colors.pink.shade100, 
+                            color: Colors.pink.shade100,
                             child: Center(
-                              child: Icon(
-                                Icons.image_rounded, 
-                                size: 80, 
-                                color: Colors.pink.shade300
-                              ),
+                              child: Icon(Icons.image_rounded, size: 80, color: Colors.pink.shade300),
                             ),
                           );
                         },
@@ -89,16 +83,15 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       padding: const EdgeInsets.all(16.0),
                       child: TextButton(
                         onPressed: () {
-                          // ضع كود الانتقال للشاشة الرئيسية هنا
-                          // Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const HallListScreen()));
+                          // ✅ الانتقال لصفحة تسجيل الدخول عند التخطي
+                          Navigator.pushReplacement(
+                            context, 
+                            MaterialPageRoute(builder: (context) => const LoginScreenFarah())
+                          );
                         },
                         child: const Text(
                           'تخطي',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
+                          style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
                         ),
                       ),
                     ),
@@ -108,7 +101,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             ),
           ),
 
-          // 2. الجزء السفلي: الصندوق الأبيض (تم تقليل مساحته إلى flex: 4)
+          // الجزء السفلي: الصندوق الأبيض (flex: 4)
           Expanded(
             flex: 4,
             child: Container(
@@ -125,17 +118,17 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
-                    // مؤشرات الصفحات (النقاط)
+                    // النقاط
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
-                      textDirection: TextDirection.rtl, // ضبط الاتجاه للعربية
+                      textDirection: TextDirection.rtl,
                       children: List.generate(
                         _pages.length,
                         (index) => AnimatedContainer(
                           duration: const Duration(milliseconds: 300),
                           margin: const EdgeInsets.symmetric(horizontal: 4),
                           height: 8,
-                          width: _currentPage == index ? 24 : 8, // النقطة النشطة تصبح مستطيلة
+                          width: _currentPage == index ? 24 : 8,
                           decoration: BoxDecoration(
                             color: _currentPage == index ? primaryColor : Colors.grey[300],
                             borderRadius: BorderRadius.circular(8),
@@ -144,42 +137,36 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       ),
                     ),
 
-                    // النصوص (العنوان والوصف)
+                    // النصوص
                     Column(
                       children: [
                         Text(
                           _pages[_currentPage]['title'],
                           textAlign: TextAlign.center,
-                          style: const TextStyle(
-                            fontSize: 22,
-                            fontWeight: FontWeight.bold,
-                            color: primaryColor,
-                          ),
+                          style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: primaryColor),
                         ),
                         const SizedBox(height: 8),
                         Text(
                           _pages[_currentPage]['description'],
                           textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: Colors.grey[600],
-                            height: 1.5,
-                          ),
+                          style: TextStyle(fontSize: 14, color: Colors.grey[600], height: 1.5),
                         ),
                       ],
                     ),
 
-                    // زر التالي
+                    // زر التالي / ابدأ الآن
                     SizedBox(
                       width: double.infinity,
                       height: 55,
                       child: ElevatedButton(
                         onPressed: () {
                           if (_currentPage == _pages.length - 1) {
-                            // إذا كانت هذه آخر صفحة، انتقل للرئيسية
-                            // Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const HallListScreen()));
+                            // ✅ الانتقال لصفحة تسجيل الدخول عند الضغط على "ابدأ الآن"
+                            Navigator.pushReplacement(
+                              context, 
+                              MaterialPageRoute(builder: (context) => const LoginScreenFarah())
+                            );
                           } else {
-                            // الانتقال للصفحة التالية
                             _pageController.nextPage(
                               duration: const Duration(milliseconds: 300),
                               curve: Curves.easeIn,
@@ -188,9 +175,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: primaryColor,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(30),
-                          ),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
                           elevation: 0,
                         ),
                         child: Row(
@@ -198,16 +183,12 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           children: [
                             Text(
                               _currentPage == _pages.length - 1 ? 'ابدأ الآن' : 'التالي',
-                              style: const TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
-                              ),
+                              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
                             ),
                             const SizedBox(width: 8),
-                            // السهم متجه لليسار
+                            // ✅ السهم الآن يتجه لليسار (لأن التطبيق RTL نستخدم forward)
                             const Icon(
-                              Icons.arrow_back_ios, 
+                              Icons.arrow_forward_ios, 
                               size: 18,
                               color: Colors.white,
                             ),
