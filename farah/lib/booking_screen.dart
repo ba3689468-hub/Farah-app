@@ -701,6 +701,37 @@ class _BookingScreenState extends State<BookingScreen> {
       return;
     }
 
+    // ✅✅✅ إضافة التحقق من توفر الفترة في هذا التاريخ ✅✅✅
+    setState(() => _loading = true); // إظهار التحميل أثناء البحث
+    try {
+      // تصفير الوقت من التاريخ لضمان التطابق التام (منتصف الليل)
+      final normalizedDate = DateTime(_selectedDate!.year, _selectedDate!.month, _selectedDate!.day);
+
+      final existingBookings = await FirebaseFirestore.instance
+          .collection('bookings')
+          .where('hallId', isEqualTo: widget.hallId ?? '')
+          .where('eventDate', isEqualTo: Timestamp.fromDate(normalizedDate))
+          .where('timeSlot', isEqualTo: _selectedTimeSlot)
+          // نتحقق من الحجوزات النشطة فقط (تجاهل الملغاة)
+          .where('status', whereIn: ['pending', 'confirmed', 'checked_in'])
+          .get();
+
+      if (existingBookings.docs.isNotEmpty) {
+        if (!mounted) return;
+        setState(() => _loading = false);
+        _showError('عذراً، هذه الفترة ($_selectedTimeSlot) محجوزة بالفعل في هذا التاريخ. الرجاء اختيار فترة أو تاريخ آخر.');
+        return; // إيقاف العملية
+      }
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _loading = false);
+      _showError('حدث خطأ أثناء التحقق من التوفر: $e');
+      return;
+    }
+
+    // إذا وصلنا هنا، الفترة متاحة ✅
+    setState(() => _loading = false); // إخفاء التحميل قبل فتح نافذة الدفع
+
     final bool? shouldPay = await showDialog<bool>(
       context: context,
       barrierDismissible: false,
@@ -775,14 +806,17 @@ class _BookingScreenState extends State<BookingScreen> {
       ),
     );
 
-    if (shouldPay != true) return;
+    if (shouldPay != true) return; // إذا ألغى الزبون الدفع
 
-    setState(() => _loading = true);
+    setState(() => _loading = true); // إعادة التحميل لحفظ الحجز
 
     try {
       final total = _calculateTotal(basePrice);
       const double fixedCommission = 60.0;
       final expiresAt = DateTime.now().add(const Duration(hours: 48));
+      
+      // تصفير الوقت من التاريخ لضمان التطابق التام
+      final bookingDate = DateTime(_selectedDate!.year, _selectedDate!.month, _selectedDate!.day);
 
       final bookingRef = await FirebaseFirestore.instance.collection('bookings').add({
         'userId': uid,
@@ -791,7 +825,7 @@ class _BookingScreenState extends State<BookingScreen> {
         'hallImage': widget.hallData['image'] ?? widget.hallData['coverImage'] ?? '',
         'eventType': _selectedEventType,
         'timeSlot': _selectedTimeSlot,
-        'eventDate': Timestamp.fromDate(_selectedDate!),
+        'eventDate': Timestamp.fromDate(bookingDate), // استخدام التاريخ المصفى
         'guestsCount': _guestsCount,
         'services': _selectedServices,
         'basePrice': basePrice,
