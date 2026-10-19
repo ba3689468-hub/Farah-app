@@ -3,7 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_localizations/flutter_localizations.dart'; // تمت الإضافة لدعم اللغة العربية
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:google_fonts/google_fonts.dart'; // ✅ تمت إضافة استيراد الخطوط
 
 // 🟩 استيراد شاشة الترحيب الأولى
 import 'features/onboarding/onboarding_screen.dart';
@@ -60,7 +61,7 @@ class FarahApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       
       // --- إعدادات اللغة العربية (RTL) ---
-      locale: const Locale('ar', 'LY'), // إجبار التطبيق على العربية
+      locale: const Locale('ar', 'LY'),
       supportedLocales: const [
         Locale('ar', 'LY'),
         Locale('en', 'US'),
@@ -74,9 +75,9 @@ class FarahApp extends StatelessWidget {
 
       theme: ThemeData(
         primaryColor: const Color(0xFFD4AF37),
-        fontFamily: 'Cairo',
+        // ✅ تغيير الخط الرسمي للتطبيق إلى Tajawal
+        fontFamily: GoogleFonts.tajawal().fontFamily, 
       ),
-      // 🟩 العودة لشاشة الترحيب الأساسية
       home: const OnboardingScreen(),
     );
   }
