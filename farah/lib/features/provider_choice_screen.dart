@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:farah/core/constants/app_colors.dart';
 import 'add_edit_hall_screen.dart';
-import 'add_edit_product_screen.dart';
+import 'select_store_type_screen.dart'; // ✅ تم استيراد شاشة اختيار نوع المتجر
 
 class ProviderChoiceScreen extends StatelessWidget {
   const ProviderChoiceScreen({super.key});
@@ -10,62 +10,67 @@ class ProviderChoiceScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(24.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Text(
-                'مرحباً بك في فرح!',
-                style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: AppColors.primary),
-              ),
-              const SizedBox(height: 10),
-              const Text(
-                'ماذا تود أن تضيف أولاً؟',
-                style: TextStyle(fontSize: 16, color: AppColors.textSecondary),
-              ),
-              const SizedBox(height: 40),
-              
-              // خيار إضافة قاعة
-              _buildChoiceCard(
-                context: context,
-                title: 'إضافة قاعة أفراح',
-                subtitle: 'لعرض قاعتك واستقبال الحجوزات',
-                icon: Icons.storefront,
-                color: AppColors.primary,
-                onTap: () async {
-                  final result = await Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => const AddEditHallScreen()),
-                  );
-                  if (result == true && context.mounted) {
-                    Navigator.pop(context, true); // العودة للوحة التحكم
-                  }
-                },
-              ),
-              
-              const SizedBox(height: 20),
-              
-              // خيار إضافة متجر
-              _buildChoiceCard(
-                context: context,
-                title: 'إضافة متجر / خدمة',
-                subtitle: 'لعرض منتجاتك (فساتين، ديكور، ضيافة...)',
-                icon: Icons.shopping_bag,
-                color: Colors.purple,
-                onTap: () async {
-                  final result = await Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => const AddEditProductScreen()),
-                  );
-                  if (result == true && context.mounted) {
-                    Navigator.pop(context, true); // العودة للوحة التحكم
-                  }
-                },
-              ),
-            ],
-          ),
+      appBar: AppBar(
+        title: const Text('اختر نوع نشاطك', style: TextStyle(fontWeight: FontWeight.bold)),
+        centerTitle: true,
+        elevation: 0,
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(24.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const SizedBox(height: 20),
+            const Text(
+              'مرحباً بك في فرح! 🎉',
+              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              'ماذا تريد أن تضيف اليوم؟ يمكنك إضافة قاعة أفراح أو إنشاء متجر لمنتجاتك وخدماتك.',
+              style: TextStyle(fontSize: 14, color: AppColors.textSecondary, height: 1.5),
+            ),
+            const SizedBox(height: 40),
+
+            // خيار إضافة قاعة
+            _buildChoiceCard(
+              context: context,
+              title: 'إضافة قاعة أفراح',
+              subtitle: 'أضف قاعتك، حدد أسعارها وفتراتها المتاحة',
+              icon: Icons.storefront,
+              color: AppColors.primary,
+              onTap: () async {
+                final result = await Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const AddEditHallScreen()),
+                );
+                // إذا تمت الإضافة بنجاح، اخرج من هذه الشاشة واذهب للوحة التحكم
+                if (result == true && context.mounted) {
+                  Navigator.pop(context);
+                }
+              },
+            ),
+            const SizedBox(height: 20),
+
+            // خيار إضافة متجر (تم إصلاحه هنا)
+            _buildChoiceCard(
+              context: context,
+              title: 'إنشاء متجر',
+              subtitle: 'فساتين، ضيافة، تجميل، ديكور... أضف منتجاتك الآن',
+              icon: Icons.local_mall,
+              color: Colors.blue,
+              onTap: () async {
+                final result = await Navigator.push(
+                  context,
+                  // ✅ التعديل هنا: الانتقال لشاشة اختيار النوع بدلاً من إضافة المنتج مباشرة
+                  MaterialPageRoute(builder: (_) => const SelectStoreTypeScreen()),
+                );
+                if (result == true && context.mounted) {
+                  Navigator.pop(context);
+                }
+              },
+            ),
+          ],
         ),
       ),
     );
@@ -86,30 +91,51 @@ class ProviderChoiceScreen extends StatelessWidget {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: color.withValues(alpha: 0.2), width: 1.5),
           boxShadow: [
-            BoxShadow(color: color.withValues(alpha: 0.1), blurRadius: 15, offset: const Offset(0, 5)),
+            BoxShadow(
+              color: color.withValues(alpha: 0.05),
+              blurRadius: 15,
+              offset: const Offset(0, 5),
+            ),
           ],
-          border: Border.all(color: color.withValues(alpha: 0.3), width: 1.5),
         ),
         child: Row(
           children: [
             Container(
               padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(color: color.withValues(alpha: 0.1), shape: BoxShape.circle),
-              child: Icon(icon, color: color, size: 32),
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(icon, color: color, size: 36),
             ),
-            const SizedBox(width: 16),
+            const SizedBox(width: 20),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
-                  const SizedBox(height: 4),
-                  Text(subtitle, style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    subtitle,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: AppColors.textSecondary,
+                      height: 1.4,
+                    ),
+                  ),
                 ],
               ),
             ),
-            Icon(Icons.arrow_forward_ios, color: color, size: 16),
+            Icon(Icons.arrow_back_ios, color: color, size: 16),
           ],
         ),
       ),
