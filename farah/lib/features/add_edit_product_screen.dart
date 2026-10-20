@@ -5,12 +5,19 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:cached_network_image/cached_network_image.dart'; // ✅ تمت الإضافة
 
 class AddEditProductScreen extends StatefulWidget {
   final Map<String, dynamic>? productData;
   final String? productId;
+  final String storeId; // ✅ معرف المتجر (إلزامي)
 
-  const AddEditProductScreen({super.key, this.productData, this.productId});
+  const AddEditProductScreen({
+    super.key, 
+    this.productData, 
+    this.productId, 
+    required this.storeId, // ✅ تمت الإضافة هنا
+  });
 
   @override
   State<AddEditProductScreen> createState() => _AddEditProductScreenState();
@@ -64,7 +71,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
     }
   }
 
-  // ── رفع الصورة إلى Supabase (نفس المجلد المستخدم للقاعات) ──
+  // ── رفع الصورة إلى Supabase ──
   Future<String?> _uploadImage() async {
     if (_imageFile == null) return _existingImageUrl;
     try {
@@ -92,6 +99,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
 
     final data = {
       'providerId': uid,
+      'storeId': widget.storeId, // ✅ هنا يتم ربط المنتج بالمتجر
       'name': _nameCtrl.text.trim(),
       'price': double.tryParse(_priceCtrl.text.trim()) ?? 0.0,
       'description': _descCtrl.text.trim(),
@@ -156,7 +164,16 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                   child: _imageFile != null
                       ? ClipRRect(borderRadius: BorderRadius.circular(16), child: Image.file(_imageFile!, fit: BoxFit.cover))
                       : _existingImageUrl != null && _existingImageUrl!.isNotEmpty
-                          ? ClipRRect(borderRadius: BorderRadius.circular(16), child: Image.network(_existingImageUrl!, fit: BoxFit.cover))
+                          ? ClipRRect(
+                              borderRadius: BorderRadius.circular(16), 
+                              // ✅ استخدام CachedNetworkImage
+                              child: CachedNetworkImage(
+                                imageUrl: _existingImageUrl!, 
+                                fit: BoxFit.cover,
+                                placeholder: (context, url) => const Center(child: CircularProgressIndicator(color: primary)),
+                                errorWidget: (context, url, error) => const Center(child: Icon(Icons.error, color: Colors.red)),
+                              )
+                            )
                           : const Column(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
