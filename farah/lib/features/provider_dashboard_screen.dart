@@ -11,7 +11,9 @@ import 'api_integration_screen.dart';
 import 'edit_profile_screen.dart';
 import 'wallet_screen.dart';
 import 'notifications_screen.dart';
-import 'add_edit_product_screen.dart'; 
+// ✅ استيراد الشاشات الجديدة الخاصة بالمتاجر
+import 'select_store_type_screen.dart'; 
+import 'store_management_screen.dart';
 import 'auth/presentation/screens/login_screen_farah.dart';
 
 class ProviderDashboardScreen extends StatefulWidget {
@@ -164,7 +166,6 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
             SliverToBoxAdapter(child: _buildStats(bookings)),
             SliverToBoxAdapter(child: _buildQuickActions()),
             
-            // عرض أحدث 3 حجوزات في الرئيسية
             if (bookings.isNotEmpty) ...[
               SliverToBoxAdapter(
                 child: Padding(
@@ -186,7 +187,6 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
                 sliver: SliverList(
                   delegate: SliverChildBuilderDelegate(
                     (context, i) {
-                      // نأخذ أول 3 حجوزات فقط
                       final b = bookings[i];
                       return Padding(
                         padding: const EdgeInsets.only(bottom: 12),
@@ -205,7 +205,6 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
     );
   }
 
-  // ✅ إجراءات سريعة في لوحة التحكم
   Widget _buildQuickActions() {
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
@@ -324,7 +323,6 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
                 final status = dataMap['status'] ?? 'pending';
                 final paymentStatus = dataMap['paymentStatus'] ?? 'unpaid';
                 
-                // إذا طلبنا "بانتظار الحضور"، يجب أن نأخذ الحجوزات المعلقة المدفوعة أو بانتظار الحضور
                 if (_filter == 'pending_attendance') {
                   return status == 'pending_attendance' || (status == 'pending' && paymentStatus == 'commission_paid');
                 }
@@ -380,7 +378,6 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
           
           if (_currentTab == 0 || _currentTab == 1) ...[
             const SizedBox(width: 8),
-            // ✅ زر الإضافة الذكي فقط
             GestureDetector(
               onTap: () {
                 showModalBottomSheet(
@@ -394,6 +391,8 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
                         children: [
                           const Text('ماذا تريد أن تضيف؟', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                           const SizedBox(height: 20),
+                          
+                          // 1. إضافة قاعة
                           ListTile(
                             leading: const Icon(Icons.storefront, color: primary, size: 30),
                             title: const Text('إضافة قاعة أفراح', style: TextStyle(fontWeight: FontWeight.bold)),
@@ -404,12 +403,26 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
                             },
                           ),
                           const Divider(),
+                          
+                          // 2. إضافة متجر جديد (يذهب لاختيار النوع)
                           ListTile(
-                            leading: const Icon(Icons.shopping_bag, color: Colors.purple, size: 30),
-                            title: const Text('إضافة متجر / منتج', style: TextStyle(fontWeight: FontWeight.bold)),
+                            leading: const Icon(Icons.local_mall, color: Colors.blue, size: 30),
+                            title: const Text('إضافة متجر جديد', style: TextStyle(fontWeight: FontWeight.bold)),
                             onTap: () async {
                               Navigator.pop(context);
-                              final result = await Navigator.push(context, MaterialPageRoute(builder: (_) => const AddEditProductScreen()));
+                              final result = await Navigator.push(context, MaterialPageRoute(builder: (_) => const SelectStoreTypeScreen()));
+                              if (result == true) _loadData();
+                            },
+                          ),
+                          const Divider(),
+
+                          // 3. إدارة المتاجر
+                          ListTile(
+                            leading: const Icon(Icons.inventory, color: Colors.purple, size: 30),
+                            title: const Text('إدارة المتاجر والمنتجات', style: TextStyle(fontWeight: FontWeight.bold)),
+                            onTap: () async {
+                              Navigator.pop(context);
+                              final result = await Navigator.push(context, MaterialPageRoute(builder: (_) => const StoreManagementScreen()));
                               if (result == true) _loadData();
                             },
                           ),
@@ -658,7 +671,6 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
     );
   }
 
-  // ✅ تصميم بطاقة القاعة بشكل أجمل وأوسع
   Widget _buildHallFullCard(Map<String, dynamic> hall, String hallId) {
     final name = hall['name'] ?? 'قاعة';
     final image = hall['image'] ?? hall['coverImage'];
@@ -822,7 +834,6 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
     final status = data['status'] ?? 'pending';
     final paymentStatus = data['paymentStatus'] ?? 'unpaid';
     
-    // ✅ إصلاح منطقي: إذا كان مدفوعاً وحالته pending، نعتبره بانتظار الحضور
     final isActuallyWaiting = status == 'pending_attendance' || (status == 'pending' && paymentStatus == 'commission_paid');
     final displayStatus = isActuallyWaiting ? 'pending_attendance' : status;
 
@@ -1009,7 +1020,6 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
               ),
             ),
           ] else if (isActuallyWaiting || (status == 'pending' && !isManual)) ...[
-             // في حالة العرض المصغر، نظهر زر سريع للانتقال للحجوزات
              Padding(
                padding: const EdgeInsets.fromLTRB(14, 0, 14, 14),
                child: GestureDetector(
