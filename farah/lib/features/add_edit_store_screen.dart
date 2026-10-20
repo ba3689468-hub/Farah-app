@@ -4,7 +4,9 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:farah/core/constants/app_colors.dart';
 
 class AddEditStoreScreen extends StatefulWidget {
-  const AddEditStoreScreen({super.key});
+  final String initialType; // ✅ استقبال النوع من الشاشة السابقة
+
+  const AddEditStoreScreen({super.key, required this.initialType});
 
   @override
   State<AddEditStoreScreen> createState() => _AddEditStoreScreenState();
@@ -17,18 +19,7 @@ class _AddEditStoreScreenState extends State<AddEditStoreScreen> {
   final _phoneCtrl = TextEditingController();
   final _locationCtrl = TextEditingController();
   
-  String? _selectedType;
   bool _loading = false;
-
-  // أنواع المتاجر المتاحة
-  final List<String> _storeTypes = [
-    'ملابس وأزياء',
-    'تجميل وعطور',
-    'ضيافة وحلويات',
-    'ديكور وتجهيزات',
-    'تصوير وفيديو',
-    'أخرى',
-  ];
 
   @override
   void dispose() {
@@ -41,12 +32,6 @@ class _AddEditStoreScreenState extends State<AddEditStoreScreen> {
 
   Future<void> _saveStore() async {
     if (!_formKey.currentState!.validate()) return;
-    if (_selectedType == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('الرجاء اختيار نوع المتجر'), backgroundColor: Colors.orange),
-      );
-      return;
-    }
 
     setState(() => _loading = true);
     final uid = FirebaseAuth.instance.currentUser?.uid;
@@ -56,7 +41,7 @@ class _AddEditStoreScreenState extends State<AddEditStoreScreen> {
         'providerId': uid,
         'name': _nameCtrl.text.trim(),
         'description': _descCtrl.text.trim(),
-        'type': _selectedType,
+        'type': widget.initialType, // ✅ نستخدم النوع الممرر
         'phone': _phoneCtrl.text.trim(),
         'location': _locationCtrl.text.trim(),
         'createdAt': FieldValue.serverTimestamp(),
@@ -67,7 +52,7 @@ class _AddEditStoreScreenState extends State<AddEditStoreScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('✅ تم إنشاء المتجر بنجاح!'), backgroundColor: Colors.green),
       );
-      Navigator.pop(context, true); // العودة للوحة التحكم وتحديثها
+      Navigator.pop(context, true); 
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -82,7 +67,7 @@ class _AddEditStoreScreenState extends State<AddEditStoreScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('إضافة متجر جديد'),
+        title: const Text('بيانات المتجر'),
         centerTitle: true,
       ),
       body: SingleChildScrollView(
@@ -92,18 +77,29 @@ class _AddEditStoreScreenState extends State<AddEditStoreScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // صورة توضيحية صغيرة
-              Center(
-                child: Container(
-                  padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    color: AppColors.primary.withValues(alpha: 0.1),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(Icons.storefront, size: 60, color: AppColors.primary),
+              // عرض النوع المختار بجانب أيقونة
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.category, color: AppColors.primary, size: 28),
+                    const SizedBox(width: 12),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text('نوع المتجر المختار:', style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+                        Text(widget.initialType, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.primary)),
+                      ],
+                    ),
+                  ],
                 ),
               ),
-              const SizedBox(height: 30),
+              const SizedBox(height: 24),
 
               // اسم المتجر
               const Text('اسم المتجر', style: TextStyle(fontWeight: FontWeight.bold)),
@@ -118,7 +114,7 @@ class _AddEditStoreScreenState extends State<AddEditStoreScreen> {
               ),
               const SizedBox(height: 20),
 
-              // وصف المتجر (الصفة)
+              // وصف المتجر
               const Text('وصف المتجر', style: TextStyle(fontWeight: FontWeight.bold)),
               const SizedBox(height: 8),
               TextFormField(
@@ -129,22 +125,6 @@ class _AddEditStoreScreenState extends State<AddEditStoreScreen> {
                   prefixIcon: Icon(Icons.description),
                 ),
                 validator: (v) => v!.isEmpty ? 'الرجاء إدخال وصف المتجر' : null,
-              ),
-              const SizedBox(height: 20),
-
-              // نوع المتجر
-              const Text('نوع المتجر', style: TextStyle(fontWeight: FontWeight.bold)),
-              const SizedBox(height: 8),
-              DropdownButtonFormField<String>(
-                value: _selectedType,
-                decoration: const InputDecoration(
-                  hintText: 'اختر نوع المتجر',
-                  prefixIcon: Icon(Icons.category),
-                ),
-                items: _storeTypes.map((type) {
-                  return DropdownMenuItem(value: type, child: Text(type));
-                }).toList(),
-                onChanged: (val) => setState(() => _selectedType = val),
               ),
               const SizedBox(height: 20),
 
