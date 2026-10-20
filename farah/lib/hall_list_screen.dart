@@ -3,6 +3,7 @@ import 'package:farah/core/constants/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cached_network_image/cached_network_image.dart'; // ✅ تمت إضافة الاستيراد
 import 'features/auth/presentation/screens/login_screen_farah.dart';
 import 'features/favorites_screen.dart';
 import 'features/explore_screen.dart';
@@ -937,9 +938,20 @@ class _HallListScreenState extends State<HallListScreen> {
                 children: [
                   SizedBox(
                     height: 170, width: double.infinity,
+                    // ✅ استخدام CachedNetworkImage
                     child: image != null
-                        ? Image.network(image, fit: BoxFit.cover,
-                            errorBuilder: (_, __, ___) => Container(color: primary.withValues(alpha: 0.2), child: const Icon(Icons.celebration, color: Colors.white, size: 50)))
+                        ? CachedNetworkImage(
+                            imageUrl: image.toString(),
+                            fit: BoxFit.cover,
+                            placeholder: (context, url) => Container(
+                              color: primary.withValues(alpha: 0.1),
+                              child: const Center(child: CircularProgressIndicator(color: primary, strokeWidth: 2)),
+                            ),
+                            errorWidget: (context, url, error) => Container(
+                              color: primary.withValues(alpha: 0.2),
+                              child: const Icon(Icons.celebration, color: Colors.white, size: 50),
+                            ),
+                          )
                         : Container(color: primary.withValues(alpha: 0.2), child: const Icon(Icons.celebration, color: Colors.white, size: 50)),
                   ),
                   Positioned(top: 12, right: 12, child: _favoriteButton(hall)),
@@ -1013,8 +1025,20 @@ class _HallListScreenState extends State<HallListScreen> {
                 children: [
                   SizedBox(
                     height: 110, width: double.infinity,
+                    // ✅ استخدام CachedNetworkImage
                     child: image != null
-                        ? Image.network(image, fit: BoxFit.cover, errorBuilder: (_, __, ___) => Container(color: primary.withValues(alpha: 0.2), child: const Icon(Icons.celebration, color: Colors.white, size: 40)))
+                        ? CachedNetworkImage(
+                            imageUrl: image.toString(),
+                            fit: BoxFit.cover,
+                            placeholder: (context, url) => Container(
+                              color: primary.withValues(alpha: 0.1),
+                              child: const Center(child: CircularProgressIndicator(color: primary, strokeWidth: 2)),
+                            ),
+                            errorWidget: (context, url, error) => Container(
+                              color: primary.withValues(alpha: 0.2),
+                              child: const Icon(Icons.celebration, color: Colors.white, size: 40),
+                            ),
+                          )
                         : Container(color: primary.withValues(alpha: 0.2), child: const Icon(Icons.celebration, color: Colors.white, size: 40)),
                   ),
                   Positioned(top: 8, right: 8, child: _favoriteButton(hall)),
@@ -1080,6 +1104,7 @@ class _HallListScreenState extends State<HallListScreen> {
       decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(28),
           boxShadow: [BoxShadow(color: primary.withValues(alpha: 0.12), blurRadius: 25, offset: const Offset(0, 8))]),
       child: Row(
+        textDirection: TextDirection.rtl, // ✅ تم إضافة هذا السطر لضمان ترتيب الأيقونات من اليمين
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: List.generate(items.length, (i) {
           final active = i == _currentIndex;
