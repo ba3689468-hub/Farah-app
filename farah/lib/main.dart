@@ -54,7 +54,6 @@ class FarahApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // ✅ اللون الأساسي للتطبيق (يمكنك تغييره من هنا ليتغير في كل التطبيق)
     const Color primaryColor = Color(0xFFD81B60); 
     const Color secondaryColor = Color(0xFFD4AF37);
 
@@ -62,7 +61,6 @@ class FarahApp extends StatelessWidget {
       title: 'فرح',
       debugShowCheckedModeBanner: false,
       
-      // إعدادات اللغة العربية
       locale: const Locale('ar', 'LY'),
       supportedLocales: const [Locale('ar', 'LY'), Locale('en', 'US')],
       localizationsDelegates: const [
@@ -71,34 +69,31 @@ class FarahApp extends StatelessWidget {
         GlobalCupertinoLocalizations.delegate,
       ],
 
-      // 🎨 الثيم العام للتطبيق (Global Theme)
       theme: ThemeData(
         primaryColor: primaryColor,
-        scaffoldBackgroundColor: const Color(0xFFF8F9FA), // خلفية رمادية فاتحة مريحة للعين
+        scaffoldBackgroundColor: const Color(0xFFF8F9FA),
         fontFamily: GoogleFonts.tajawal().fontFamily,
         
-        // 1. توحيد تصميم شريط التطبيق العلوي (App Bar)
         appBarTheme: const AppBarTheme(
           backgroundColor: primaryColor,
           foregroundColor: Colors.white,
           elevation: 0,
           centerTitle: true,
           titleTextStyle: TextStyle(
-            fontFamily: 'Tajawal', // سيأخذ خط Tajawal تلقائياً
+            fontFamily: 'Tajawal',
             fontSize: 20,
             fontWeight: FontWeight.bold,
             color: Colors.white,
           ),
         ),
 
-        // 2. توحيد تصميم الأزرار الأساسية (Elevated Button)
         elevatedButtonTheme: ElevatedButtonThemeData(
           style: ElevatedButton.styleFrom(
             backgroundColor: primaryColor,
             foregroundColor: Colors.white,
-            minimumSize: const Size(double.infinity, 55), // العرض الكامل والارتفاع الموحد
+            minimumSize: const Size(double.infinity, 55),
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16), // حواف دائرية موحدة
+              borderRadius: BorderRadius.circular(16),
             ),
             textStyle: const TextStyle(
               fontSize: 16,
@@ -110,7 +105,6 @@ class FarahApp extends StatelessWidget {
           ),
         ),
 
-        // 3. توحيد تصميم حقول الإدخال (Text Fields)
         inputDecorationTheme: InputDecorationTheme(
           filled: true,
           fillColor: Colors.white,
@@ -134,8 +128,8 @@ class FarahApp extends StatelessWidget {
           ),
         ),
 
-        // 4. توحيد تصميم البطاقات (Cards)
-        cardTheme: CardTheme(
+        // ✅ هنا كان الخطأ، لقد تم تغييرها إلى CardThemeData
+        cardTheme: CardThemeData(
           color: Colors.white,
           elevation: 3,
           shadowColor: Colors.black.withValues(alpha: 0.05),
