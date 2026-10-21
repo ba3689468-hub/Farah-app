@@ -9,7 +9,8 @@ import '../../../../hall_list_screen.dart';
 import '../providers/auth_provider.dart';
 import 'register_screen.dart';
 import 'package:farah/features/provider_dashboard_screen.dart';
-import 'package:farah/features/provider_choice_screen.dart'; // ✅ استيراد شاشة الاختيار
+import 'package:farah/features/provider_choice_screen.dart'; 
+import 'package:farah/features/store_dashboard_screen.dart'; // ✅ تمت إضافة استيراد لوحة المتاجر
 
 class FarahGlassLoginScreen extends ConsumerStatefulWidget {
   const FarahGlassLoginScreen({super.key});
@@ -58,8 +59,7 @@ class _FarahGlassLoginScreenState extends ConsumerState<FarahGlassLoginScreen> {
 
       final fbUser = FirebaseAuth.instance.currentUser;
       if (fbUser != null) {
-        final docRef =
-            FirebaseFirestore.instance.collection('users').doc(fbUser.uid);
+        final docRef = FirebaseFirestore.instance.collection('users').doc(fbUser.uid);
         final doc = await docRef.get();
 
         // ── إذا كان المستخدم جديداً (لم يسجل بياناته سابقاً) ──
@@ -80,38 +80,35 @@ class _FarahGlassLoginScreenState extends ConsumerState<FarahGlassLoginScreen> {
 
         if (mounted) {
           String role = 'user';
+          String? providerType; // ✅ متغير لمعرفة نوع المزود
+
           if (doc.exists) {
             final userData = doc.data() as Map<String, dynamic>?;
             role = userData?['role'] ?? 'user';
+            providerType = userData?['providerType']; // جلب نوع المزود
           }
 
           if (role == 'provider') {
-            // ✅ فحص إذا كان المزود يملك قاعات أو منتجات
-            final hallsSnap = await FirebaseFirestore.instance
-                .collection('halls')
-                .where('providerId', isEqualTo: fbUser.uid)
-                .limit(1)
-                .get();
-            final productsSnap = await FirebaseFirestore.instance
-                .collection('products')
-                .where('providerId', isEqualTo: fbUser.uid)
-                .limit(1)
-                .get();
-
-            if (hallsSnap.docs.isEmpty && productsSnap.docs.isEmpty) {
-              // مزود جديد ليس لديه شيء -> شاشة الاختيار
+            // ✅ فحص نوع المزود وتوجيهه للوحة المناسبة
+            if (providerType == 'store') {
+              // مزود متاجر -> لوحة المتاجر
               Navigator.pushAndRemoveUntil(
                 context,
-                MaterialPageRoute(
-                    builder: (_) => const ProviderChoiceScreen()),
+                MaterialPageRoute(builder: (_) => const StoreDashboardScreen()),
+                (route) => false,
+              );
+            } else if (providerType == 'hall') {
+              // مزود قاعات -> لوحة القاعات
+              Navigator.pushAndRemoveUntil(
+                context,
+                MaterialPageRoute(builder: (_) => const ProviderDashboardScreen()),
                 (route) => false,
               );
             } else {
-              // مزود لديه قاعات أو منتجات -> لوحة التحكم
+              // مزود جديد (لم يختر نوعه بعد) -> شاشة الاختيار
               Navigator.pushAndRemoveUntil(
                 context,
-                MaterialPageRoute(
-                    builder: (_) => const ProviderDashboardScreen()),
+                MaterialPageRoute(builder: (_) => const ProviderChoiceScreen()),
                 (route) => false,
               );
             }
@@ -438,7 +435,7 @@ class _FarahGlassLoginScreenState extends ConsumerState<FarahGlassLoginScreen> {
         ],
       ),
       child: Row(
-        textDirection: TextDirection.rtl, // ✅ إصلاح اتجاه الأيقونات
+        textDirection: TextDirection.rtl,
         children: [
           const SizedBox(width: 6),
           Container(
@@ -519,7 +516,7 @@ class _FarahGlassLoginScreenState extends ConsumerState<FarahGlassLoginScreen> {
         ],
       ),
       child: Row(
-        textDirection: TextDirection.rtl, // ✅ إصلاح اتجاه الأيقونات
+        textDirection: TextDirection.rtl,
         children: [
           const SizedBox(width: 6),
           Container(
