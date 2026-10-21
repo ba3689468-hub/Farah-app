@@ -2,12 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:farah/core/constants/app_colors.dart';
-import 'store_management_screen.dart'; // لإدارة المتاجر
-import 'select_store_type_screen.dart'; // لإضافة متجر جديد
-import 'edit_profile_screen.dart';
-import 'wallet_screen.dart';
-import 'notifications_screen.dart';
-import 'auth/presentation/screens/login_screen_farah.dart';
+import 'store_management_screen.dart';
+import 'select_store_type_screen.dart';
 
 class StoreDashboardScreen extends StatefulWidget {
   const StoreDashboardScreen({super.key});
@@ -32,8 +28,8 @@ class _StoreDashboardScreenState extends State<StoreDashboardScreen> {
           index: _currentIndex,
           children: [
             _buildStoreHome(),
-            const StoreManagementScreen(), // شاشة إدارة المنتجات
-            const _StoreProfileScreen(), // حسابي
+            const StoreManagementScreen(),
+            const _StoreProfileScreen(),
           ],
         ),
       ),
@@ -66,7 +62,7 @@ class _StoreDashboardScreenState extends State<StoreDashboardScreen> {
                 GestureDetector(
                   onTap: () async {
                     await Navigator.push(context, MaterialPageRoute(builder: (_) => const SelectStoreTypeScreen()));
-                    setState(() {}); // تحديث عند العودة
+                    setState(() {});
                   },
                   child: Container(
                     padding: const EdgeInsets.all(10),
@@ -79,14 +75,14 @@ class _StoreDashboardScreenState extends State<StoreDashboardScreen> {
           ),
         ),
 
-        // إحصائيات المتاجر
+        // إحصائيات المتاجر والمنتجات (استخدام StreamBuilder)
         SliverToBoxAdapter(
-          child: FutureBuilder<QuerySnapshot>(
+          child: StreamBuilder<QuerySnapshot>(
             stream: FirebaseFirestore.instance.collection('stores').where('providerId', isEqualTo: uid).snapshots(),
             builder: (context, storeSnap) {
               final storeCount = storeSnap.data?.docs.length ?? 0;
               
-              return FutureBuilder<QuerySnapshot>(
+              return StreamBuilder<QuerySnapshot>(
                 stream: FirebaseFirestore.instance.collection('products').where('providerId', isEqualTo: uid).snapshots(),
                 builder: (context, productSnap) {
                   final productCount = productSnap.data?.docs.length ?? 0;
@@ -221,8 +217,6 @@ class _StoreProfileScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // نفس كود حسابي الخاص بالمزود (يمكنك استخدام الكود القديم)
-    // ...
     return const Center(child: Text('حسابي'));
   }
 }
