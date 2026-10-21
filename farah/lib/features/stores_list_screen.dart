@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:farah/core/constants/app_colors.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'store_details_screen.dart';
 
 class StoresListScreen extends StatefulWidget {
-  const StoresListScreen({super.key});
+  final String initialCategory; // ✅ استقبال القسم المختار
+
+  const StoresListScreen({super.key, this.initialCategory = 'الكل'});
 
   @override
   State<StoresListScreen> createState() => _StoresListScreenState();
@@ -16,10 +17,32 @@ class _StoresListScreenState extends State<StoresListScreen> {
   static const Color textDark = AppColors.textPrimary;
   static const Color textLight = AppColors.textSecondary;
 
-  String _selectedCategory = 'الكل';
+  late String _selectedCategory;
+  
   final List<String> _categories = [
-    'الكل', 'فساتين وأزياء', 'تجميل وعطور', 'ضيافة وحلويات', 'ديكور وتجهيزات', 'تصوير وفيديو', 'كوش وأعراس'
+    'الكل', 
+    'فساتين وأزياء', 
+    'تجميل وعطور', 
+    'ضيافة وحلويات', 
+    'ديكور وتجهيزات', 
+    'تصوير وفيديو', 
+    'كوش وأعراس',
+    'أحذية',
+    'ملابس نسائية',
+    'مجوهرات',
+    'هدايا'
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    // ✅ إذا تم تمرير قسم معين، نبدأ به، وإلا نبدأ بـ "الكل"
+    _selectedCategory = widget.initialCategory;
+    // تأكد من أن القسم الممرر موجود في القائمة، وإلا نضعه "الكل"
+    if (!_categories.contains(_selectedCategory)) {
+      _selectedCategory = 'الكل';
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -76,9 +99,13 @@ class _StoresListScreenState extends State<StoresListScreen> {
                 }
                 
                 final allStores = snapshot.data?.docs ?? [];
+                // ✅ الفلترة بناءً على القسم المختار
                 final stores = _selectedCategory == 'الكل' 
                     ? allStores 
-                    : allStores.where((doc) => (doc.data() as Map)['type'] == _selectedCategory).toList();
+                    : allStores.where((doc) {
+                        final storeType = (doc.data() as Map)['type'] ?? '';
+                        return storeType.toString().contains(_selectedCategory) || _selectedCategory.contains(storeType.toString());
+                      }).toList();
 
                 if (stores.isEmpty) {
                   return const Center(child: Text('لا توجد متاجر في هذا القسم', style: TextStyle(color: textLight)));
