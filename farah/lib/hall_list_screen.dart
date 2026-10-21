@@ -13,7 +13,7 @@ import 'features/notifications_screen.dart';
 import 'features/provider_dashboard_screen.dart';
 import 'hall_details_screen.dart';
 import 'my_bookings_screen.dart';
-import 'stores_list_screen.dart'; // ✅ تأكد أن هذا الملف موجود في نفس المجلد
+import 'features/stores_list_screen.dart'; // ✅ أضفنا كلمة features/
 
 class HallListScreen extends StatefulWidget {
   const HallListScreen({super.key});
