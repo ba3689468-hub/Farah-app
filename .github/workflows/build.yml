@@ -28,10 +28,13 @@ jobs:
           sudo rm -rf "/usr/local/share/boost"
           df -h
 
-      # ✅ التعديل الأساسي: تثبيت نسخة NDK مستقرة بدلاً من مسح الكاش فقط
-      - name: Install Stable NDK
-        run: |
-          echo "y" | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --install "ndk;26.1.10909125"
+      # ✅ استبدلنا الخطوة القديمة بهذه الخطوة الأكثر استقراراً
+      - name: Setup Android NDK
+        uses: nttld/setup-ndk@v1
+        id: setup-ndk
+        with:
+          ndk-version: r26b
+          add-to-path: true
 
       - name: Clean project
         run: cd farah && flutter clean
@@ -39,8 +42,12 @@ jobs:
       - name: Get dependencies
         run: cd farah && flutter pub get
 
+      # ✅ تمرير مسار NDK للتأكد من أن فلاتر سيستخدمه
       - name: Build APK
         run: cd farah && flutter build apk --debug
+        env:
+          ANDROID_NDK_HOME: ${{ steps.setup-ndk.outputs.ndk-path }}
+          ANDROID_NDK_ROOT: ${{ steps.setup-ndk.outputs.ndk-path }}
 
       - name: Create Release
         uses: softprops/action-gh-release@v1
