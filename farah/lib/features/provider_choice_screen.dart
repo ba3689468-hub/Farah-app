@@ -1,10 +1,32 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:farah/core/constants/app_colors.dart';
 import 'add_edit_hall_screen.dart';
-import 'select_store_type_screen.dart'; // ✅ تم استيراد شاشة اختيار نوع المتجر
+import 'select_store_type_screen.dart';
 
 class ProviderChoiceScreen extends StatelessWidget {
   const ProviderChoiceScreen({super.key});
+
+  Future<void> _setProviderType(BuildContext context, String type, Widget nextScreen) async {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid != null) {
+      // ✅ حفظ نوع المزود في قاعدة البيانات
+      await FirebaseFirestore.instance.collection('users').doc(uid).update({
+        'providerType': type, 
+      });
+    }
+    
+    if (context.mounted) {
+      final result = await Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => nextScreen),
+      );
+      if (result == true && context.mounted) {
+        Navigator.pop(context);
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -27,7 +49,7 @@ class ProviderChoiceScreen extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             const Text(
-              'ماذا تريد أن تضيف اليوم؟ يمكنك إضافة قاعة أفراح أو إنشاء متجر لمنتجاتك وخدماتك.',
+              'هذا الاختيار سيحدد شكل لوحة التحكم الخاصة بك. اختر نشاطك الأساسي:',
               style: TextStyle(fontSize: 14, color: AppColors.textSecondary, height: 1.5),
             ),
             const SizedBox(height: 40),
@@ -35,40 +57,22 @@ class ProviderChoiceScreen extends StatelessWidget {
             // خيار إضافة قاعة
             _buildChoiceCard(
               context: context,
-              title: 'إضافة قاعة أفراح',
-              subtitle: 'أضف قاعتك، حدد أسعارها وفتراتها المتاحة',
+              title: 'صاحب قاعة أفراح',
+              subtitle: 'أضف قاعتك، حدد أسعارها، واستقبل الحجوزات',
               icon: Icons.storefront,
               color: AppColors.primary,
-              onTap: () async {
-                final result = await Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const AddEditHallScreen()),
-                );
-                // إذا تمت الإضافة بنجاح، اخرج من هذه الشاشة واذهب للوحة التحكم
-                if (result == true && context.mounted) {
-                  Navigator.pop(context);
-                }
-              },
+              onTap: () => _setProviderType(context, 'hall', const AddEditHallScreen()),
             ),
             const SizedBox(height: 20),
 
-            // خيار إضافة متجر (تم إصلاحه هنا)
+            // خيار إضافة متجر
             _buildChoiceCard(
               context: context,
-              title: 'إنشاء متجر',
-              subtitle: 'فساتين، ضيافة، تجميل، ديكور... أضف منتجاتك الآن',
+              title: 'صاحب متجر',
+              subtitle: 'فساتين، ضيافة، تجميل... أنشئ متجرك وأضف منتجاتك',
               icon: Icons.local_mall,
               color: Colors.blue,
-              onTap: () async {
-                final result = await Navigator.push(
-                  context,
-                  // ✅ التعديل هنا: الانتقال لشاشة اختيار النوع بدلاً من إضافة المنتج مباشرة
-                  MaterialPageRoute(builder: (_) => const SelectStoreTypeScreen()),
-                );
-                if (result == true && context.mounted) {
-                  Navigator.pop(context);
-                }
-              },
+              onTap: () => _setProviderType(context, 'store', const SelectStoreTypeScreen()),
             ),
           ],
         ),
@@ -93,21 +97,14 @@ class ProviderChoiceScreen extends StatelessWidget {
           borderRadius: BorderRadius.circular(20),
           border: Border.all(color: color.withValues(alpha: 0.2), width: 1.5),
           boxShadow: [
-            BoxShadow(
-              color: color.withValues(alpha: 0.05),
-              blurRadius: 15,
-              offset: const Offset(0, 5),
-            ),
+            BoxShadow(color: color.withValues(alpha: 0.05), blurRadius: 15, offset: const Offset(0, 5)),
           ],
         ),
         child: Row(
           children: [
             Container(
               padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.1),
-                shape: BoxShape.circle,
-              ),
+              decoration: BoxDecoration(color: color.withValues(alpha: 0.1), shape: BoxShape.circle),
               child: Icon(icon, color: color, size: 36),
             ),
             const SizedBox(width: 20),
@@ -115,23 +112,9 @@ class ProviderChoiceScreen extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    title,
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.textPrimary,
-                    ),
-                  ),
+                  Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
                   const SizedBox(height: 6),
-                  Text(
-                    subtitle,
-                    style: const TextStyle(
-                      fontSize: 12,
-                      color: AppColors.textSecondary,
-                      height: 1.4,
-                    ),
-                  ),
+                  Text(subtitle, style: const TextStyle(fontSize: 12, color: AppColors.textSecondary, height: 1.4)),
                 ],
               ),
             ),
