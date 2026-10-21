@@ -13,7 +13,7 @@ import 'features/notifications_screen.dart';
 import 'features/provider_dashboard_screen.dart';
 import 'hall_details_screen.dart';
 import 'my_bookings_screen.dart';
-import 'features/stores_list_screen.dart'; // ✅ أضفنا كلمة features/
+import 'features/stores_list_screen.dart'; // ✅ تأكد من المسار
 
 class HallListScreen extends StatefulWidget {
   const HallListScreen({super.key});
@@ -722,6 +722,7 @@ class _HallListScreenState extends State<HallListScreen> {
     );
   }
 
+  // ✅ هنا التعديل المطلوب لتمرير القسم
   Widget _buildCategoryIcons() {
     return Padding(
       padding: const EdgeInsets.only(top: 8),
@@ -738,10 +739,18 @@ class _HallListScreenState extends State<HallListScreen> {
             
             return GestureDetector(
               onTap: () {
-                // ✅ هنا تم إزالة كلمة const
+                // ✅ ربط كل أيقونة بالقسم الخاص بها
+                String filterType = 'الكل'; // افتراضي
+                if (cat['name'] == 'فساتين') filterType = 'فساتين وأزياء';
+                if (cat['name'] == 'تجميل') filterType = 'تجميل وعطور';
+                if (cat['name'] == 'ضيافة') filterType = 'ضيافة وحلويات';
+                if (cat['name'] == 'ديكور') filterType = 'ديكور وتجهيزات';
+
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (_) => StoresListScreen()),
+                  MaterialPageRoute(
+                    builder: (_) => StoresListScreen(initialCategory: filterType), // ✅ نمرر القسم
+                  ),
                 );
               },
               child: Column(
