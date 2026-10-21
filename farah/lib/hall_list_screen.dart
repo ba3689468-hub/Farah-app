@@ -13,7 +13,7 @@ import 'features/notifications_screen.dart';
 import 'features/provider_dashboard_screen.dart';
 import 'hall_details_screen.dart';
 import 'my_bookings_screen.dart';
-import 'stores_list_screen.dart'; // ✅ تمت إضافة استيراد شاشة المتاجر
+import 'stores_list_screen.dart'; // ✅ تأكد أن هذا الملف موجود في نفس المجلد
 
 class HallListScreen extends StatefulWidget {
   const HallListScreen({super.key});
@@ -38,15 +38,11 @@ class _HallListScreenState extends State<HallListScreen> {
   late Future<QuerySnapshot> _hallsFuture;
   String _userName = 'فرح';
 
-  // ═══════════════════════════════════════════════════════════
-  // 🔍 فلاتر البحث المتقدم
-  // ═══════════════════════════════════════════════════════════
   String? _searchCity;
   DateTime? _searchDate;
   String? _searchTimeSlot;
   String? _searchEventType;
 
-  // ✅ قائمة النتائج المفلترة (للبحث في الصفحة الرئيسية)
   Future<List<QueryDocumentSnapshot>>? _filteredHallsFuture;
   bool _isAdvancedFiltering = false;
   int _filteredCount = 0;
@@ -78,8 +74,6 @@ class _HallListScreenState extends State<HallListScreen> {
     {'name': 'ديكور', 'image': 'assets/icons/wedding-arch.png', 'color': Color(0xFF9C27B0)},
     {'name': 'متاجر', 'image': 'assets/icons/shop.png', 'color': Color(0xFFC2185B)},
   ];
-
-  final List<String> _cities = const ['الكل', 'طرابلس', 'بنغازي', 'مصراتة', 'الزاوية', 'سبها'];
 
   @override
   void initState() {
@@ -151,7 +145,6 @@ class _HallListScreenState extends State<HallListScreen> {
         if (!_isAdvancedFiltering) SliverToBoxAdapter(child: _buildHeroBannersCarousel()),
         if (!_isAdvancedFiltering) SliverToBoxAdapter(child: _buildCategoryIcons()),
         SliverToBoxAdapter(child: _buildFeaturedTitle()),
-        // ✅ عرض النتائج (مفلترة أو كل القاعات)
         if (_isAdvancedFiltering)
           _buildFilteredHallsSection()
         else
@@ -281,9 +274,6 @@ class _HallListScreenState extends State<HallListScreen> {
     );
   }
 
-  // ═══════════════════════════════════════════════════════════
-  // 🔍 شريط البحث المتطور
-  // ═══════════════════════════════════════════════════════════
   Widget _buildAdvancedSearchBar() {
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 12, 20, 8),
@@ -480,9 +470,6 @@ class _HallListScreenState extends State<HallListScreen> {
     });
   }
 
-  // ═══════════════════════════════════════════════════════════
-  // ✅ البحث المتقدم — يعرض النتائج في الصفحة نفسها
-  // ═══════════════════════════════════════════════════════════
   Future<void> _performAdvancedSearch() async {
     if (_searchCity == null && _searchDate == null && _searchTimeSlot == null && _searchEventType == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -494,12 +481,10 @@ class _HallListScreenState extends State<HallListScreen> {
     setState(() => _isAdvancedFiltering = true);
 
     try {
-      // 1. جلب القاعات حسب المدينة
       Query hallQuery = FirebaseFirestore.instance.collection('halls');
       if (_searchCity != null) hallQuery = hallQuery.where('city', isEqualTo: _searchCity);
       final hallsSnap = await hallQuery.get();
 
-      // 2. جلب الحجوزات في التاريخ المختار
       final Set<String> bookedHallIds = {};
       if (_searchDate != null) {
         final startOfDay = DateTime(_searchDate!.year, _searchDate!.month, _searchDate!.day);
@@ -522,10 +507,8 @@ class _HallListScreenState extends State<HallListScreen> {
         }
       }
 
-      // 3. استثناء القاعات المحجوزة
       var filteredHalls = hallsSnap.docs.where((doc) => !bookedHallIds.contains(doc.id)).toList();
 
-      // 4. فلترة حسب نوع المناسبة
       if (_searchEventType != null) {
         filteredHalls = filteredHalls.where((doc) {
           final data = doc.data() as Map<String, dynamic>;
@@ -551,7 +534,6 @@ class _HallListScreenState extends State<HallListScreen> {
     }
   }
 
-  // ── بانر الفلاتر النشطة ──
   Widget _buildActiveFiltersBanner() {
     return Container(
       margin: const EdgeInsets.fromLTRB(20, 8, 20, 12),
@@ -608,7 +590,6 @@ class _HallListScreenState extends State<HallListScreen> {
     );
   }
 
-  // ── قسم عرض النتائج المفلترة ──
   Widget _buildFilteredHallsSection() {
     if (_filteredHallsFuture == null) return const SliverToBoxAdapter(child: SizedBox());
     return FutureBuilder<List<QueryDocumentSnapshot>>(
@@ -645,7 +626,6 @@ class _HallListScreenState extends State<HallListScreen> {
               (context, i) {
                 final data = docs[i].data() as Map<String, dynamic>;
                 data['_id'] = docs[i].id;
-                // ✅ تمرير الفلاتر إلى شاشة التفاصيل
                 data['_prefilledDate'] = _searchDate;
                 data['_prefilledEventType'] = _searchEventType;
                 data['_prefilledTimeSlot'] = _searchTimeSlot;
@@ -758,10 +738,10 @@ class _HallListScreenState extends State<HallListScreen> {
             
             return GestureDetector(
               onTap: () {
-                // ✅ تم ربط التصنيفات بشاشة المتاجر هنا
+                // ✅ هنا تم إزالة كلمة const
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (_) => const StoresListScreen()),
+                  MaterialPageRoute(builder: (_) => StoresListScreen()),
                 );
               },
               child: Column(
@@ -914,7 +894,6 @@ class _HallListScreenState extends State<HallListScreen> {
     );
   }
 
-  // ✅ بطاقة القاعة العمودية — تدعم تمرير الفلاتر
   Widget _buildHallVerticalCard(Map<String, dynamic> hall, {bool prefilled = false}) {
     final name = hall['name'] ?? 'قاعة';
     final city = hall['city'] ?? 'غير محدد';
@@ -949,7 +928,6 @@ class _HallListScreenState extends State<HallListScreen> {
                 children: [
                   SizedBox(
                     height: 170, width: double.infinity,
-                    // ✅ استخدام CachedNetworkImage
                     child: image != null
                         ? CachedNetworkImage(
                             imageUrl: image.toString(),
@@ -1036,7 +1014,6 @@ class _HallListScreenState extends State<HallListScreen> {
                 children: [
                   SizedBox(
                     height: 110, width: double.infinity,
-                    // ✅ استخدام CachedNetworkImage
                     child: image != null
                         ? CachedNetworkImage(
                             imageUrl: image.toString(),
