@@ -3,7 +3,7 @@ import 'package:farah/core/constants/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cached_network_image/cached_network_image.dart'; // ✅ تمت إضافة الاستيراد
+import 'package:cached_network_image/cached_network_image.dart';
 import 'features/auth/presentation/screens/login_screen_farah.dart';
 import 'features/favorites_screen.dart';
 import 'features/explore_screen.dart';
@@ -13,6 +13,7 @@ import 'features/notifications_screen.dart';
 import 'features/provider_dashboard_screen.dart';
 import 'hall_details_screen.dart';
 import 'my_bookings_screen.dart';
+import 'stores_list_screen.dart'; // ✅ تمت إضافة استيراد شاشة المتاجر
 
 class HallListScreen extends StatefulWidget {
   const HallListScreen({super.key});
@@ -754,22 +755,32 @@ class _HallListScreenState extends State<HallListScreen> {
           itemBuilder: (context, i) {
             final cat = _categoriesList[i];
             final color = cat['color'] as Color;
-            return Column(
-              children: [
-                Container(
-                  width: 66, height: 66,
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(22),
-                    border: Border.all(color: color.withValues(alpha: 0.25), width: 1.5),
+            
+            return GestureDetector(
+              onTap: () {
+                // ✅ تم ربط التصنيفات بشاشة المتاجر هنا
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const StoresListScreen()),
+                );
+              },
+              child: Column(
+                children: [
+                  Container(
+                    width: 66, height: 66,
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(22),
+                      border: Border.all(color: color.withValues(alpha: 0.25), width: 1.5),
+                    ),
+                    child: Image.asset(cat['image'] as String, fit: BoxFit.contain,
+                        errorBuilder: (_, __, ___) => Icon(Icons.image_not_supported, color: color, size: 28)),
                   ),
-                  child: Image.asset(cat['image'] as String, fit: BoxFit.contain,
-                      errorBuilder: (_, __, ___) => Icon(Icons.image_not_supported, color: color, size: 28)),
-                ),
-                const SizedBox(height: 8),
-                Text(cat['name'] as String, style: const TextStyle(color: textDark, fontSize: 12, fontWeight: FontWeight.w600)),
-              ],
+                  const SizedBox(height: 8),
+                  Text(cat['name'] as String, style: const TextStyle(color: textDark, fontSize: 12, fontWeight: FontWeight.w600)),
+                ],
+              ),
             );
           },
         ),
@@ -1104,7 +1115,7 @@ class _HallListScreenState extends State<HallListScreen> {
       decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(28),
           boxShadow: [BoxShadow(color: primary.withValues(alpha: 0.12), blurRadius: 25, offset: const Offset(0, 8))]),
       child: Row(
-        textDirection: TextDirection.rtl, // ✅ تم إضافة هذا السطر لضمان ترتيب الأيقونات من اليمين
+        textDirection: TextDirection.rtl,
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: List.generate(items.length, (i) {
           final active = i == _currentIndex;
