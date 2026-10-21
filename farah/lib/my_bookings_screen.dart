@@ -645,7 +645,7 @@ class _RefundCountdownWidgetState extends State<RefundCountdownWidget> {
                 fontWeight: FontWeight.bold,
                 fontFeatures: const [FontFeature.tabularFigures()],
               ),
-              textDirection: TextDirection.ltr,
+              
             ),
         ],
       ),
