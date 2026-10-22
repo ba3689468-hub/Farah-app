@@ -26,10 +26,9 @@ class BiometricAuthService {
   /// 2. تفعيل البصمة وحفظ بيانات الدخول
   Future<bool> enableBiometrics(String phone, String password) async {
     try {
+      // ✅ إزالة جميع المعاملات الاختيارية لتجنب أخطاء الإصدارات
       final bool didAuthenticate = await _localAuth.authenticate(
         localizedReason: 'قم بتأكيد بصمتك لتفعيل الدخول السريع',
-        // ✅ تم استبدال stickyAuth (المحذوف) بـ persistAcrossBackgrounding
-        persistAcrossBackgrounding: true,
       );
       
       if (didAuthenticate) {
@@ -52,10 +51,9 @@ class BiometricAuthService {
   /// 4. التحقق من البصمة واسترجاع البيانات لتسجيل الدخول
   Future<Map<String, String>?> loginWithBiometrics() async {
     try {
+      // ✅ إزالة جميع المعاملات الاختيارية هنا أيضًا
       final bool didAuthenticate = await _localAuth.authenticate(
         localizedReason: 'قم بتأكيد بصمتك لتسجيل الدخول',
-        // ✅ تم استبدال stickyAuth (المحذوف) بـ persistAcrossBackgrounding
-        persistAcrossBackgrounding: true,
       );
       
       if (didAuthenticate) {
