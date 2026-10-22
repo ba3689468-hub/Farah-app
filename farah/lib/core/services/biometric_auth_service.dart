@@ -12,7 +12,7 @@ class BiometricAuthService {
   static const String _keyPhone = 'bio_phone';
   static const String _keyPassword = 'bio_password';
 
-  /// التحقق من دعم الجهاز للبصمة
+  /// 1. التحقق من دعم الجهاز للبصمة
   Future<bool> isBiometricAvailable() async {
     try {
       final bool canCheck = await _localAuth.canCheckBiometrics;
@@ -23,12 +23,12 @@ class BiometricAuthService {
     }
   }
 
-  /// تفعيل البصمة وحفظ بيانات الدخول
+  /// 2. تفعيل البصمة وحفظ بيانات الدخول
   Future<bool> enableBiometrics(String phone, String password) async {
     try {
+      // ✅ تم إزالة biometricOnly: true لأن الإصدارات الحديثة لا تدعمها
       final bool didAuthenticate = await _localAuth.authenticate(
         localizedReason: 'قم بتأكيد بصمتك لتفعيل الدخول السريع',
-        biometricOnly: true,
         stickyAuth: true,
       );
       
@@ -43,18 +43,18 @@ class BiometricAuthService {
     }
   }
 
-  /// مسح البيانات (تعطيل البصمة)
+  /// 3. تعطيل البصمة ومسح البيانات المحفوظة
   Future<void> disableBiometrics() async {
     await _storage.delete(key: _keyPhone);
     await _storage.delete(key: _keyPassword);
   }
 
-  /// التحقق من البصمة واسترجاع البيانات
+  /// 4. التحقق من البصمة واسترجاع البيانات لتسجيل الدخول
   Future<Map<String, String>?> loginWithBiometrics() async {
     try {
+      // ✅ تم إزالة biometricOnly: true هنا أيضاً
       final bool didAuthenticate = await _localAuth.authenticate(
         localizedReason: 'قم بتأكيد بصمتك لتسجيل الدخول',
-        biometricOnly: true,
         stickyAuth: true,
       );
       
@@ -72,7 +72,7 @@ class BiometricAuthService {
     }
   }
 
-  /// التحقق من وجود بيانات محفوظة
+  /// 5. التحقق من وجود بيانات محفوظة مسبقاً
   Future<bool> hasSavedCredentials() async {
     final phone = await _storage.read(key: _keyPhone);
     return phone != null;
