@@ -854,4 +854,501 @@ class _HallListScreenState extends State<HallListScreen> {
               itemCount: docs.length,
               itemBuilder: (context, i) {
                 final data = docs[i].data() as Map<String, dynamic>;
-                data['
+                data['_id'] = docs[i].id;
+                return _buildHallGridCard(data);
+              },
+            ),
+          );
+        }
+
+        return Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Column(
+            children: docs.map((doc) {
+              final data = doc.data() as Map<String, dynamic>;
+              data['_id'] = doc.id;
+              return Padding(padding: const EdgeInsets.only(bottom: 14), child: _buildHallVerticalCard(data, prefilled: false));
+            }).toList(),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _favoriteButton(Map<String, dynamic> hall) {
+    final id = hall['_id'] as String? ?? hall['id'] as String? ?? '';
+    return StreamBuilder<DocumentSnapshot>(
+      stream: FirebaseFirestore.instance.collection('users').doc(FirebaseAuth.instance.currentUser?.uid).snapshots(),
+      builder: (context, snap) {
+        final data = snap.data?.data() as Map<String, dynamic>?;
+        final favs = List<String>.from(data?['favorites'] ?? []);
+        final isFav = favs.contains(id);
+        return GestureDetector(
+          onTap: () async {
+            final user = FirebaseAuth.instance.currentUser;
+            if (user == null) return;
+            if (isFav) {
+              await FirebaseFirestore.instance.collection('users').doc(user.uid).update({'favorites': FieldValue.arrayRemove([id])});
+            } else {
+              await FirebaseFirestore.instance.collection('users').doc(user.uid).update({'favorites': FieldValue.arrayUnion([id])});
+            }
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text(isFav ? 'تم الإزالة من المفضلة' : 'تمت الإضافة للمفضلة'), duration: const Duration(seconds: 1)),
+              );
+            }
+          },
+          child: Container(
+            padding: const EdgeInsets.all(6),
+            decoration: BoxDecoration(color: Colors.white, shape: BoxShape.circle,
+                boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 6)]),
+            child: Icon(isFav ? Icons.favorite : Icons.favorite_border, color: Colors.redAccent, size: 20),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildHallVerticalCard(Map<String, dynamic> hall, {bool prefilled = false}) {
+    final name = hall['name'] ?? 'قاعة';
+    final city = hall['city'] ?? 'غير محدد';
+    final price = hall['price'] ?? 0;
+    final rating = (hall['rating'] ?? 0).toDouble();
+    final image = hall['image'] ?? hall['coverImage'];
+
+    return GestureDetector(
+      onTap: () => Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => HallDetailsScreen(
+            hallData: hall,
+            prefilledDate: prefilled ? _searchDate : null,
+            prefilledEventType: prefilled ? _searchEventType : null,
+            prefilledTimeSlot: prefilled ? _searchTimeSlot : null,
+          ),
+        ),
+      ),
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [BoxShadow(color: primary.withValues(alpha: 0.06), blurRadius: 15, offset: const Offset(0, 5))],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            ClipRRect(
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+              child: Stack(
+                children: [
+                  SizedBox(
+                    height: 170, width: double.infinity,
+                    child: image != null
+                        ? CachedNetworkImage(
+                            imageUrl: image.toString(),
+                            fit: BoxFit.cover,
+                            placeholder: (context, url) => Container(
+                              color: primary.withValues(alpha: 0.1),
+                              child: const Center(child: CircularProgressIndicator(color: primary, strokeWidth: 2)),
+                            ),
+                            errorWidget: (context, url, error) => Container(
+                              color: primary.withValues(alpha: 0.2),
+                              child: const Icon(Icons.celebration, color: Colors.white, size: 50),
+                            ),
+                          )
+                        : Container(color: primary.withValues(alpha: 0.2), child: const Icon(Icons.celebration, color: Colors.white, size: 50)),
+                  ),
+                  Positioned(top: 12, right: 12, child: _favoriteButton(hall)),
+                  Positioned(
+                    top: 12, left: 12,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12)),
+                      child: const Text('مميزة', style: TextStyle(color: primary, fontSize: 10, fontWeight: FontWeight.bold)),
+                    ),
+                  ),
+                  Positioned(
+                    bottom: 12, left: 12,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      decoration: BoxDecoration(color: primary, borderRadius: BorderRadius.circular(12)),
+                      child: Text('$price د.ل', style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.bold)),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(14),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Expanded(child: Text(name, style: const TextStyle(color: textDark, fontSize: 17, fontWeight: FontWeight.bold), maxLines: 1, overflow: TextOverflow.ellipsis)),
+                      Row(children: [
+                        const Icon(Icons.star, color: Colors.amber, size: 16),
+                        const SizedBox(width: 3),
+                        Text(rating.toStringAsFixed(1), style: const TextStyle(color: textDark, fontSize: 13, fontWeight: FontWeight.bold)),
+                      ]),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Row(children: [
+                    const Icon(Icons.location_on_outlined, color: textLight, size: 14),
+                    const SizedBox(width: 4),
+                    Text(city, style: const TextStyle(color: textLight, fontSize: 12)),
+                  ]),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHallGridCard(Map<String, dynamic> hall) {
+    final name = hall['name'] ?? 'قاعة';
+    final city = hall['city'] ?? 'غير محدد';
+    final price = hall['price'] ?? 0;
+    final rating = (hall['rating'] ?? 0).toDouble();
+    final image = hall['image'] ?? hall['coverImage'];
+
+    return GestureDetector(
+      onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => HallDetailsScreen(hallData: hall))),
+      child: Container(
+        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16),
+            boxShadow: [BoxShadow(color: primary.withValues(alpha: 0.06), blurRadius: 12, offset: const Offset(0, 4))]),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            ClipRRect(
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+              child: Stack(
+                children: [
+                  SizedBox(
+                    height: 110, width: double.infinity,
+                    child: image != null
+                        ? CachedNetworkImage(
+                            imageUrl: image.toString(),
+                            fit: BoxFit.cover,
+                            placeholder: (context, url) => Container(
+                              color: primary.withValues(alpha: 0.1),
+                              child: const Center(child: CircularProgressIndicator(color: primary, strokeWidth: 2)),
+                            ),
+                            errorWidget: (context, url, error) => Container(
+                              color: primary.withValues(alpha: 0.2),
+                              child: const Icon(Icons.celebration, color: Colors.white, size: 40),
+                            ),
+                          )
+                        : Container(color: primary.withValues(alpha: 0.2), child: const Icon(Icons.celebration, color: Colors.white, size: 40)),
+                  ),
+                  Positioned(top: 8, right: 8, child: _favoriteButton(hall)),
+                ],
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(10),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(name, style: const TextStyle(color: textDark, fontSize: 12, fontWeight: FontWeight.bold), maxLines: 1, overflow: TextOverflow.ellipsis),
+                  const SizedBox(height: 4),
+                  Row(children: [
+                    const Icon(Icons.location_on_outlined, color: textLight, size: 11),
+                    const SizedBox(width: 2),
+                    Expanded(child: Text(city, style: const TextStyle(color: textLight, fontSize: 10), maxLines: 1, overflow: TextOverflow.ellipsis)),
+                  ]),
+                  const SizedBox(height: 6),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text('$price', style: const TextStyle(color: primary, fontSize: 13, fontWeight: FontWeight.bold)),
+                      Row(children: [
+                        const Icon(Icons.star, color: Colors.amber, size: 11),
+                        Text(rating.toStringAsFixed(1), style: const TextStyle(color: textDark, fontSize: 10, fontWeight: FontWeight.bold)),
+                      ]),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildEmpty() {
+    return Padding(
+      padding: const EdgeInsets.all(40),
+      child: Column(
+        children: [
+          Icon(Icons.storefront_outlined, size: 70, color: primary.withValues(alpha: 0.3)),
+          const SizedBox(height: 14),
+          const Text('لا توجد قاعات', style: TextStyle(color: textDark, fontSize: 15, fontWeight: FontWeight.bold)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBottomNav() {
+    final items = [
+      {'icon': Icons.home_outlined, 'active': Icons.home, 'label': 'الرئيسية'},
+      {'icon': Icons.explore_outlined, 'active': Icons.explore, 'label': 'استكشف'},
+      {'icon': Icons.favorite_border, 'active': Icons.favorite, 'label': 'المفضلة'},
+      {'icon': Icons.event_note_outlined, 'active': Icons.event_note, 'label': 'حجوزاتي'},
+      {'icon': Icons.person_outline, 'active': Icons.person, 'label': 'حسابي'},
+    ];
+    return Container(
+      margin: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(28),
+          boxShadow: [BoxShadow(color: primary.withValues(alpha: 0.12), blurRadius: 25, offset: const Offset(0, 8))]),
+      child: Row(
+        textDirection: TextDirection.rtl,
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: List.generate(items.length, (i) {
+          final active = i == _currentIndex;
+          return GestureDetector(
+            onTap: () => setState(() => _currentIndex = i),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 250),
+              padding: EdgeInsets.symmetric(horizontal: active ? 12 : 8, vertical: 8),
+              decoration: BoxDecoration(
+                gradient: active ? const LinearGradient(colors: [primary, primaryDark]) : null,
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(active ? items[i]['active'] as IconData : items[i]['icon'] as IconData, color: active ? Colors.white : textLight, size: 20),
+                  if (active) ...[
+                    const SizedBox(width: 5),
+                    Text(items[i]['label'] as String, style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
+                  ],
+                ],
+              ),
+            ),
+          );
+        }),
+      ),
+    );
+  }
+}
+
+class SimpleProfileScreen extends StatefulWidget {
+  const SimpleProfileScreen({super.key});
+  @override
+  State<SimpleProfileScreen> createState() => _SimpleProfileScreenState();
+}
+
+class _SimpleProfileScreenState extends State<SimpleProfileScreen> {
+  static const Color primary = AppColors.primary;
+  static const Color primaryDark = AppColors.primaryDark;
+  static const Color textDark = AppColors.textPrimary;
+  static const Color textLight = AppColors.textSecondary;
+
+  late Future<DocumentSnapshot> _userFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    _userFuture = uid == null ? Future.error('no user') : FirebaseFirestore.instance.collection('users').doc(uid).get();
+  }
+
+  Future<void> _logout() async {
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        backgroundColor: Colors.white,
+        title: const Text('تسجيل الخروج', textAlign: TextAlign.right, style: TextStyle(color: textDark)),
+        content: const Text('هل أنت متأكد؟', textAlign: TextAlign.right),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('إلغاء')),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: primary, foregroundColor: Colors.white),
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('خروج'),
+          ),
+        ],
+      ),
+    );
+    if (ok != true) return;
+    await FirebaseAuth.instance.signOut();
+    if (!mounted) return;
+    Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (_) => const FarahGlassLoginScreen()), (route) => false);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<DocumentSnapshot>(
+      future: _userFuture,
+      builder: (context, snap) {
+        if (snap.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator(color: primary));
+        }
+        if (!snap.hasData || !snap.data!.exists) return const Center(child: Text('تعذر تحميل البيانات'));
+        final user = snap.data!.data() as Map<String, dynamic>;
+        final name = user['fullName'] ?? 'مستخدم';
+        final phone = user['phone'] ?? '';
+        final role = user['role'] ?? 'user';
+        final isProvider = role == 'provider';
+
+        return SingleChildScrollView(
+          child: Column(
+            children: [
+              const SizedBox(height: 20),
+              Container(
+                width: 110, height: 110,
+                decoration: const BoxDecoration(shape: BoxShape.circle, gradient: LinearGradient(colors: [primary, primaryDark])),
+                child: Icon(isProvider ? Icons.storefront : Icons.person, size: 55, color: Colors.white),
+              ),
+              const SizedBox(height: 16),
+              Text(name, style: const TextStyle(color: textDark, fontSize: 24, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 10),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 6),
+                decoration: BoxDecoration(gradient: const LinearGradient(colors: [primary, primaryDark]), borderRadius: BorderRadius.circular(20)),
+                child: Text(isProvider ? 'مزوّد خدمة' : 'زبون', style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
+              ),
+              const SizedBox(height: 24),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Container(
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20)),
+                  child: _infoRow(Icons.phone_outlined, 'رقم الهاتف', phone.isEmpty ? 'غير محدد' : phone),
+                ),
+              ),
+              const SizedBox(height: 18),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Column(
+                  children: [
+                    if (isProvider) ...[
+                      _menuItem(Icons.dashboard_outlined, 'لوحة المزود', 'إدارة حجوزاتك وأرباحك', () {
+                        Navigator.push(context, MaterialPageRoute(builder: (_) => const ProviderDashboardScreen()));
+                      }),
+                      const SizedBox(height: 10),
+                    ],
+                    _menuItem(Icons.calendar_month, 'حجوزاتي', 'سجل حجوزاتك السابقة والقادمة', () {}),
+                    const SizedBox(height: 10),
+                    _menuItem(Icons.favorite_border, 'المفضلة', 'القاعات المحفوظة', () {}),
+                    const SizedBox(height: 10),
+                    _menuItem(Icons.account_balance_wallet, 'محفظتي', 'رصيدك وطرق الدفع', () {
+                      Navigator.push(context, MaterialPageRoute(builder: (_) => const WalletScreen()));
+                    }),
+                    const SizedBox(height: 10),
+                    _menuItem(Icons.notifications_outlined, 'الإشعارات', 'تخصيص التنبيهات', () {
+                      Navigator.push(context, MaterialPageRoute(builder: (_) => const NotificationsScreen()));
+                    }),
+                    const SizedBox(height: 10),
+                    _menuItem(Icons.edit_outlined, 'تعديل الملف الشخصي', 'الاسم وكلمة المرور', () async {
+                      final result = await Navigator.push(context, MaterialPageRoute(builder: (_) => const EditProfileScreen()));
+                      if (result == true && mounted) {
+                        setState(() {
+                          _userFuture = FirebaseFirestore.instance.collection('users').doc(FirebaseAuth.instance.currentUser?.uid).get();
+                        });
+                      }
+                    }),
+                    const SizedBox(height: 10),
+                    _menuItem(Icons.settings_outlined, 'الإعدادات', 'اللغة والمظهر والخصوصية', () {}),
+                    const SizedBox(height: 10),
+                    _menuItem(Icons.help_outline, 'المساعدة والدعم', 'تواصل معنا', () {}),
+                    const SizedBox(height: 10),
+                    _menuItem(Icons.info_outline, 'عن التطبيق', 'فرح — الإصدار 1.0.0', () {}),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 22),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: GestureDetector(
+                  onTap: _logout,
+                  child: Container(
+                    width: double.infinity, height: 54,
+                    decoration: BoxDecoration(
+                      color: Colors.red.withValues(alpha: 0.08),
+                      borderRadius: BorderRadius.circular(28),
+                      border: Border.all(color: Colors.redAccent.withValues(alpha: 0.4), width: 1.2),
+                    ),
+                    child: const Center(
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.logout, color: Colors.redAccent, size: 20),
+                          SizedBox(width: 10),
+                          Text('تسجيل الخروج', style: TextStyle(color: Colors.redAccent, fontSize: 15, fontWeight: FontWeight.bold)),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 24),
+              const Text('فرح — الإصدار 1.0.0', style: TextStyle(color: textLight, fontSize: 11)),
+              const SizedBox(height: 30),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _infoRow(IconData icon, String label, String value) {
+    return Row(
+      children: [
+        Container(width: 42, height: 42,
+            decoration: BoxDecoration(gradient: const LinearGradient(colors: [primary, primaryDark]), borderRadius: BorderRadius.circular(12)),
+            child: Icon(icon, color: Colors.white, size: 20)),
+        const SizedBox(width: 14),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(label, style: const TextStyle(color: textLight, fontSize: 12)),
+              const SizedBox(height: 2),
+              Text(value, style: const TextStyle(color: textDark, fontSize: 14, fontWeight: FontWeight.w600), overflow: TextOverflow.ellipsis),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _menuItem(IconData icon, String title, String subtitle, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(18)),
+        child: Row(
+          children: [
+            Container(width: 46, height: 46,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(colors: [primary.withValues(alpha: 0.9), primaryDark], begin: Alignment.topLeft, end: Alignment.bottomRight),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: Icon(icon, color: Colors.white, size: 22)),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(title, style: const TextStyle(color: textDark, fontSize: 15, fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 3),
+                  Text(subtitle, style: const TextStyle(color: textLight, fontSize: 11), maxLines: 1, overflow: TextOverflow.ellipsis),
+                ],
+              ),
+            ),
+            const Icon(Icons.arrow_back_ios, color: textLight, size: 14),
+          ],
+        ),
+      ),
+    );
+  }
+}
