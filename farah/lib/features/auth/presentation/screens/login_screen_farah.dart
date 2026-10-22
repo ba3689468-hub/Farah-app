@@ -12,7 +12,7 @@ import 'package:farah/features/provider_dashboard_screen.dart';
 import 'package:farah/features/provider_choice_screen.dart'; 
 import 'package:farah/features/store_dashboard_screen.dart'; 
 // ✅ استيراد خدمة البصمة
-import '../../../core/services/biometric_auth_service.dart'; 
+import 'package:farah/core/services/biometric_auth_service.dart';
 
 class FarahGlassLoginScreen extends ConsumerStatefulWidget {
   const FarahGlassLoginScreen({super.key});
