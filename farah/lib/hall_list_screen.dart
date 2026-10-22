@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter_animate/flutter_animate.dart'; // ✅ استيراد مكتبة التأثيرات
 import 'features/auth/presentation/screens/login_screen_farah.dart';
 import 'features/favorites_screen.dart';
 import 'features/explore_screen.dart';
@@ -14,7 +15,7 @@ import 'features/provider_dashboard_screen.dart';
 import 'hall_details_screen.dart';
 import 'my_bookings_screen.dart';
 import 'features/stores_list_screen.dart';
-import 'core/widgets/shimmer_loading.dart'; // ✅ استيراد هيكل التحميل (تأكد من المسار)
+import 'core/widgets/shimmer_loading.dart';
 
 class HallListScreen extends StatefulWidget {
   const HallListScreen({super.key});
@@ -599,7 +600,7 @@ class _HallListScreenState extends State<HallListScreen> {
         if (snap.connectionState == ConnectionState.waiting) {
           return const SliverToBoxAdapter(
             child: SizedBox(
-              height: 400, // ارتفاع ثابت للهيكل
+              height: 400, 
               child: ShimmerLoading(),
             ),
           );
@@ -812,7 +813,6 @@ class _HallListScreenState extends State<HallListScreen> {
       future: _hallsFuture,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          // ✅ استخدام الهيكل الجديد للتحميل
           return const SizedBox(
             height: 400, 
             child: ShimmerLoading(),
@@ -909,6 +909,7 @@ class _HallListScreenState extends State<HallListScreen> {
     );
   }
 
+  // ✅ هنا تمت إضافة التأثيرات الحركية
   Widget _buildHallVerticalCard(Map<String, dynamic> hall, {bool prefilled = false}) {
     final name = hall['name'] ?? 'قاعة';
     final city = hall['city'] ?? 'غير محدد';
@@ -1005,7 +1006,10 @@ class _HallListScreenState extends State<HallListScreen> {
           ],
         ),
       ),
-    );
+    )
+        .animate()
+        .fadeIn(duration: 600.ms, curve: Curves.easeOut)
+        .slideY(begin: 0.1, end: 0, curve: Curves.easeOut);
   }
 
   Widget _buildHallGridCard(Map<String, dynamic> hall) {
