@@ -193,7 +193,6 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
     final statusInfo = _getStatusInfo(status);
     final bool isPending = status == 'pending' || status == 'pending_attendance';
     
-    // ✅ تحديد ما إذا كان الحجز قابلاً للحذف (ملغى أو مكتمل)
     final bool canDelete = status == 'cancelled' || status == 'completed';
 
     return GestureDetector(
@@ -475,6 +474,15 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
             transaction.update(userRef, {'walletBalance': currentBalance + 60.0});
           }
         });
+
+        // ✅ إضافة سجل المعاملة في المحفظة
+        await FirebaseFirestore.instance.collection('transactions').add({
+          'userId': _uid,
+          'amount': 60.0,
+          'type': 'refund',
+          'description': 'استرداد رسم حجز (إلغاء)',
+          'createdAt': FieldValue.serverTimestamp(),
+        });
       }
 
       if (mounted) {
@@ -552,7 +560,7 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
 }
 
 // ═══════════════════════════════════════════════════════════
-// ✅ الويدجت المخصص للعداد التنازلي (تم إصلاح الخطأ هنا)
+// ✅ الويدجت المخصص للعداد التنازلي
 // ═══════════════════════════════════════════════════════════
 class RefundCountdownWidget extends StatefulWidget {
   final DateTime expiryDate;
@@ -563,14 +571,14 @@ class RefundCountdownWidget extends StatefulWidget {
 }
 
 class _RefundCountdownWidgetState extends State<RefundCountdownWidget> {
-  Timer? _timer; // ✅ تم التعديل: متغير قابل لـ null
-  Duration _remaining = Duration.zero; // قيمة افتراضية آمنة
+  Timer? _timer; 
+  Duration _remaining = Duration.zero; 
 
   @override
   void initState() {
     super.initState();
     _calculateRemaining();
-    _timer?.cancel(); // ✅ تأكد من إلغاء أي مؤقت سابق
+    _timer?.cancel(); 
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (mounted) {
         setState(() {
@@ -584,7 +592,7 @@ class _RefundCountdownWidgetState extends State<RefundCountdownWidget> {
     final now = DateTime.now();
     if (now.isAfter(widget.expiryDate)) {
       _remaining = Duration.zero;
-      _timer?.cancel(); // ✅ استخدام ?. لتجنب الانهيار
+      _timer?.cancel(); 
     } else {
       _remaining = widget.expiryDate.difference(now);
     }
@@ -592,7 +600,7 @@ class _RefundCountdownWidgetState extends State<RefundCountdownWidget> {
 
   @override
   void dispose() {
-    _timer?.cancel(); // ✅ استخدام ?. هنا أيضاً
+    _timer?.cancel(); 
     super.dispose();
   }
 
