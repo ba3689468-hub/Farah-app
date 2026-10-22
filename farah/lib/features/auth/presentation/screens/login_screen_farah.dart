@@ -10,7 +10,9 @@ import '../providers/auth_provider.dart';
 import 'register_screen.dart';
 import 'package:farah/features/provider_dashboard_screen.dart';
 import 'package:farah/features/provider_choice_screen.dart'; 
-import 'package:farah/features/store_dashboard_screen.dart'; // ✅ استيراد لوحة المتاجر
+import 'package:farah/features/store_dashboard_screen.dart'; 
+// ✅ استيراد خدمة البصمة
+import '../../../core/services/biometric_auth_service.dart'; 
 
 class FarahGlassLoginScreen extends ConsumerStatefulWidget {
   const FarahGlassLoginScreen({super.key});
@@ -30,16 +32,48 @@ class _FarahGlassLoginScreenState extends ConsumerState<FarahGlassLoginScreen> {
   bool _loading = false;
   String? _error;
 
+  // ✅ متغيرات البصمة
+  final BiometricAuthService _bioService = BiometricAuthService();
+  bool _canUseBiometrics = false;
+  bool _hasSavedCredentials = false;
+
   static const Color gold = AppColors.primary;
   static const Color lightGold = AppColors.background;
   static const Color deepRose = AppColors.primary;
   static const Color chocolate = AppColors.primary;
 
   @override
+  void initState() {
+    super.initState();
+    _checkBiometrics();
+  }
+
+  Future<void> _checkBiometrics() async {
+    final available = await _bioService.isBiometricAvailable();
+    final hasSaved = await _bioService.hasSavedCredentials();
+    if (mounted) {
+      setState(() {
+        _canUseBiometrics = available;
+        _hasSavedCredentials = hasSaved;
+      });
+    }
+  }
+
+  @override
   void dispose() {
     _phoneCtrl.dispose();
     _passCtrl.dispose();
     super.dispose();
+  }
+
+  // دالة الدخول بالبصمة
+  Future<void> _loginWithBiometrics() async {
+    final credentials = await _bioService.loginWithBiometrics();
+    if (credentials != null) {
+      _phoneCtrl.text = credentials['phone']!;
+      _passCtrl.text = credentials['password']!;
+      await _login(); // استدعاء دالة تسجيل الدخول العادية
+    }
   }
 
   Future<void> _login() async {
@@ -53,16 +87,16 @@ class _FarahGlassLoginScreenState extends ConsumerState<FarahGlassLoginScreen> {
     try {
       final phone = _phoneCtrl.text.trim();
       final fakeEmail = '$phone@farah.app';
+      final password = _passCtrl.text.trim();
 
       final repo = ref.read(authRepositoryProvider);
-      await repo.signIn(fakeEmail, _passCtrl.text.trim());
+      await repo.signIn(fakeEmail, password);
 
       final fbUser = FirebaseAuth.instance.currentUser;
       if (fbUser != null) {
         final docRef = FirebaseFirestore.instance.collection('users').doc(fbUser.uid);
         final doc = await docRef.get();
 
-        // ── إذا كان المستخدم جديداً (لم يسجل بياناته سابقاً) ──
         if (!doc.exists) {
           await docRef.set({
             'uid': fbUser.uid,
@@ -78,6 +112,36 @@ class _FarahGlassLoginScreenState extends ConsumerState<FarahGlassLoginScreen> {
           });
         }
 
+        // ✅ عرض نافذة تفعيل البصمة إذا كان الجهاز يدعمها ولم يتم تفعيلها مسبقاً
+        if (_canUseBiometrics && !_hasSavedCredentials && mounted) {
+          final enableBio = await showDialog<bool>(
+            context: context,
+            barrierDismissible: false,
+            builder: (_) => AlertDialog(
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+              title: const Row(
+                children: [
+                  Icon(Icons.fingerprint, color: Colors.blue, size: 30),
+                  SizedBox(width: 10),
+                  Text('تسجيل الدخول السريع'),
+                ],
+              ),
+              content: const Text('هل تريد تفعيل الدخول ببصمة الإصبع في المرات القادمة لتوفير الوقت؟'),
+              actions: [
+                TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('لاحقاً')),
+                ElevatedButton(
+                  onPressed: () => Navigator.pop(context, true),
+                  child: const Text('تفعيل'),
+                ),
+              ],
+            ),
+          );
+
+          if (enableBio == true) {
+            await _bioService.enableBiometrics(phone, password);
+          }
+        }
+
         if (mounted) {
           String role = 'user';
           String? providerType;
@@ -89,26 +153,15 @@ class _FarahGlassLoginScreenState extends ConsumerState<FarahGlassLoginScreen> {
           }
 
           if (role == 'provider') {
-            // ✅ فحص نوع المزود وتوجيهه للوحة المناسبة
             String finalProviderType = providerType ?? '';
 
-            // إذا كان الحساب قديماً ولا يحتوي على نوع، نكتشفه من البيانات
             if (finalProviderType.isEmpty) {
-              final hallsSnap = await FirebaseFirestore.instance
-                  .collection('halls')
-                  .where('providerId', isEqualTo: fbUser.uid)
-                  .limit(1)
-                  .get();
-              
-              final storesSnap = await FirebaseFirestore.instance
-                  .collection('stores')
-                  .where('providerId', isEqualTo: fbUser.uid)
-                  .limit(1)
-                  .get();
+              final hallsSnap = await FirebaseFirestore.instance.collection('halls').where('providerId', isEqualTo: fbUser.uid).limit(1).get();
+              final storesSnap = await FirebaseFirestore.instance.collection('stores').where('providerId', isEqualTo: fbUser.uid).limit(1).get();
 
               if (hallsSnap.docs.isNotEmpty) {
                 finalProviderType = 'hall';
-                await docRef.update({'providerType': 'hall'}); // حفظ النوع لتفادي التكرار
+                await docRef.update({'providerType': 'hall'});
               } else if (storesSnap.docs.isNotEmpty) {
                 finalProviderType = 'store';
                 await docRef.update({'providerType': 'store'});
@@ -116,34 +169,14 @@ class _FarahGlassLoginScreenState extends ConsumerState<FarahGlassLoginScreen> {
             }
 
             if (finalProviderType == 'store') {
-              // مزود متاجر -> لوحة المتاجر
-              Navigator.pushAndRemoveUntil(
-                context,
-                MaterialPageRoute(builder: (_) => const StoreDashboardScreen()),
-                (route) => false,
-              );
+              Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (_) => const StoreDashboardScreen()), (route) => false);
             } else if (finalProviderType == 'hall') {
-              // مزود قاعات -> لوحة القاعات
-              Navigator.pushAndRemoveUntil(
-                context,
-                MaterialPageRoute(builder: (_) => const ProviderDashboardScreen()),
-                (route) => false,
-              );
+              Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (_) => const ProviderDashboardScreen()), (route) => false);
             } else {
-              // مزود جديد تماماً (لم يختر نوعه بعد) -> شاشة الاختيار
-              Navigator.pushAndRemoveUntil(
-                context,
-                MaterialPageRoute(builder: (_) => const ProviderChoiceScreen()),
-                (route) => false,
-              );
+              Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (_) => const ProviderChoiceScreen()), (route) => false);
             }
           } else {
-            // ── زبون → الصفحة الرئيسية ──
-            Navigator.pushAndRemoveUntil(
-              context,
-              MaterialPageRoute(builder: (_) => HallListScreen()),
-              (route) => false,
-            );
+            Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (_) => HallListScreen()), (route) => false);
           }
         }
       }
@@ -187,10 +220,7 @@ class _FarahGlassLoginScreenState extends ConsumerState<FarahGlassLoginScreen> {
             ),
           ),
         ),
-      )
-          .animate()
-          .fadeIn(duration: 1.seconds)
-          .slideY(begin: 0.1, end: 0.0, curve: Curves.easeOut),
+      ).animate().fadeIn(duration: 1.seconds).slideY(begin: 0.1, end: 0.0, curve: Curves.easeOut),
     );
   }
 
@@ -225,20 +255,14 @@ class _FarahGlassLoginScreenState extends ConsumerState<FarahGlassLoginScreen> {
               children: [
                 const Text(
                   'تسجيل الدخول',
-                  style: TextStyle(
-                    color: chocolate,
-                    fontSize: 30,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: TextStyle(color: chocolate, fontSize: 30, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 6),
                 Container(
                   width: 60,
                   height: 2,
                   decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [gold, lightGold, gold],
-                    ),
+                    gradient: const LinearGradient(colors: [gold, lightGold, gold]),
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
@@ -256,50 +280,24 @@ class _FarahGlassLoginScreenState extends ConsumerState<FarahGlassLoginScreen> {
                       width: 22,
                       child: Checkbox(
                         value: _remember,
-                        onChanged: _loading
-                            ? null
-                            : (v) => setState(() => _remember = v!),
+                        onChanged: _loading ? null : (v) => setState(() => _remember = v!),
                         activeColor: deepRose,
                         checkColor: Colors.white,
-                        side: BorderSide(
-                          color: chocolate.withValues(alpha: 0.6),
-                          width: 1.5,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(4),
-                        ),
+                        side: BorderSide(color: chocolate.withValues(alpha: 0.6), width: 1.5),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
                       ),
                     ),
                     const SizedBox(width: 8),
-                    const Text(
-                      'تذكرني',
-                      style: TextStyle(color: chocolate, fontSize: 13),
-                    ),
+                    const Text('تذكرني', style: TextStyle(color: chocolate, fontSize: 13)),
                     const Spacer(),
                     TextButton(
-                      onPressed: _loading
-                          ? null
-                          : () {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text('قريباً: استعادة كلمة المرور'),
-                                ),
-                              );
-                            },
-                      style: TextButton.styleFrom(
-                        padding: EdgeInsets.zero,
-                        minimumSize: const Size(0, 0),
-                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                      ),
+                      onPressed: _loading ? null : () {
+                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('قريباً: استعادة كلمة المرور')));
+                      },
+                      style: TextButton.styleFrom(padding: EdgeInsets.zero, minimumSize: const Size(0, 0), tapTargetSize: MaterialTapTargetSize.shrinkWrap),
                       child: const Text(
                         'نسيت كلمة المرور؟',
-                        style: TextStyle(
-                          color: deepRose,
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
-                          decoration: TextDecoration.underline,
-                          decorationColor: deepRose,
-                        ),
+                        style: TextStyle(color: deepRose, fontSize: 13, fontWeight: FontWeight.w600, decoration: TextDecoration.underline, decorationColor: deepRose),
                       ),
                     ),
                   ],
@@ -308,26 +306,17 @@ class _FarahGlassLoginScreenState extends ConsumerState<FarahGlassLoginScreen> {
                 if (_error != null) ...[
                   const SizedBox(height: 14),
                   Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 14, vertical: 10),
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                     decoration: BoxDecoration(
                       color: Colors.red.withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                          color: Colors.red.withValues(alpha: 0.4)),
+                      border: Border.all(color: Colors.red.withValues(alpha: 0.4)),
                     ),
                     child: Row(
                       children: [
-                        const Icon(Icons.error_outline,
-                            color: Colors.red, size: 20),
+                        const Icon(Icons.error_outline, color: Colors.red, size: 20),
                         const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            _error!,
-                            style: const TextStyle(
-                                color: Colors.red, fontSize: 13),
-                          ),
-                        ),
+                        Expanded(child: Text(_error!, style: const TextStyle(color: Colors.red, fontSize: 13))),
                       ],
                     ),
                   ),
@@ -335,15 +324,12 @@ class _FarahGlassLoginScreenState extends ConsumerState<FarahGlassLoginScreen> {
 
                 const SizedBox(height: 26),
 
+                // ✅ زر الدخول العادي
                 Container(
                   width: 200,
                   height: 54,
                   decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [AppColors.primary, AppColors.primaryDark],
-                      begin: Alignment.centerLeft,
-                      end: Alignment.centerRight,
-                    ),
+                    gradient: const LinearGradient(colors: [AppColors.primary, AppColors.primaryDark], begin: Alignment.centerLeft, end: Alignment.centerRight),
                     borderRadius: BorderRadius.circular(30),
                   ),
                   child: Material(
@@ -353,58 +339,49 @@ class _FarahGlassLoginScreenState extends ConsumerState<FarahGlassLoginScreen> {
                       onTap: _loading ? null : _login,
                       child: Center(
                         child: _loading
-                            ? const SizedBox(
-                                height: 24,
-                                width: 24,
-                                child: CircularProgressIndicator(
-                                  color: Colors.white,
-                                  strokeWidth: 2.5,
-                                ),
-                              )
+                            ? const SizedBox(height: 24, width: 24, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5))
                             : const Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  Icon(Icons.celebration,
-                                      color: Colors.white, size: 20),
+                                  Icon(Icons.celebration, color: Colors.white, size: 20),
                                   SizedBox(width: 10),
-                                  Text(
-                                    'دخول',
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 17,
-                                      letterSpacing: 2,
-                                    ),
-                                  ),
+                                  Text('دخول', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 17, letterSpacing: 2)),
                                 ],
                               ),
                       ),
                     ),
                   ),
                 ),
+
+                // ✅ زر الدخول بالبصمة (يظهر فقط إذا كان مفعلاً)
+                if (_canUseBiometrics && _hasSavedCredentials) ...[
+                  const SizedBox(height: 16),
+                  GestureDetector(
+                    onTap: _loading ? null : _loginWithBiometrics,
+                    child: Container(
+                      width: 54,
+                      height: 54,
+                      decoration: BoxDecoration(
+                        color: Colors.blue.withValues(alpha: 0.1),
+                        shape: BoxShape.circle,
+                        border: Border.all(color: Colors.blue.withValues(alpha: 0.3), width: 1.5),
+                      ),
+                      child: const Icon(Icons.fingerprint, color: Colors.blue, size: 32),
+                    ),
+                  ),
+                ],
+
                 const SizedBox(height: 18),
 
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text(
-                      'ليس لديك حساب؟ ',
-                      style: TextStyle(
-                        color: chocolate.withValues(alpha: 0.75),
-                        fontSize: 13,
-                      ),
-                    ),
+                    Text('ليس لديك حساب؟ ', style: TextStyle(color: chocolate.withValues(alpha: 0.75), fontSize: 13)),
                     GestureDetector(
                       onTap: _loading ? null : _goToRegister,
                       child: const Text(
                         'أنشئ حساباً الآن',
-                        style: TextStyle(
-                          color: deepRose,
-                          fontSize: 13,
-                          fontWeight: FontWeight.bold,
-                          decoration: TextDecoration.underline,
-                          decorationColor: deepRose,
-                        ),
+                        style: TextStyle(color: deepRose, fontSize: 13, fontWeight: FontWeight.bold, decoration: TextDecoration.underline, decorationColor: deepRose),
                       ),
                     ),
                   ],
@@ -423,41 +400,22 @@ class _FarahGlassLoginScreenState extends ConsumerState<FarahGlassLoginScreen> {
               shape: BoxShape.circle,
               color: Colors.white,
               border: Border.all(color: gold, width: 2),
-              boxShadow: [
-                BoxShadow(
-                  color: gold.withValues(alpha: 0.15),
-                  blurRadius: 20,
-                  offset: const Offset(0, 8),
-                ),
-              ],
+              boxShadow: [BoxShadow(color: gold.withValues(alpha: 0.15), blurRadius: 20, offset: const Offset(0, 8))],
             ),
-            child: const Center(
-              child: Icon(
-                Icons.person,
-                size: 55,
-                color: AppColors.primary,
-              ),
-            ),
+            child: const Center(child: Icon(Icons.person, size: 55, color: AppColors.primary)),
           ),
         ),
       ],
     );
   }
 
-  // ── حقل رقم الهاتف ──
   Widget _phoneField() {
     return Container(
       height: 58,
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(30),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.primaryDark.withValues(alpha: 0.06),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
+        boxShadow: [BoxShadow(color: AppColors.primaryDark.withValues(alpha: 0.06), blurRadius: 12, offset: const Offset(0, 4))],
       ),
       child: Row(
         textDirection: TextDirection.rtl,
@@ -467,18 +425,10 @@ class _FarahGlassLoginScreenState extends ConsumerState<FarahGlassLoginScreen> {
             width: 46,
             height: 46,
             decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [AppColors.primary, AppColors.primaryDark],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
+              gradient: const LinearGradient(colors: [AppColors.primary, AppColors.primaryDark], begin: Alignment.topLeft, end: Alignment.bottomRight),
               borderRadius: BorderRadius.circular(14),
             ),
-            child: const Icon(
-              Icons.phone_outlined,
-              color: Colors.white,
-              size: 22,
-            ),
+            child: const Icon(Icons.phone_outlined, color: Colors.white, size: 22),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -489,14 +439,8 @@ class _FarahGlassLoginScreenState extends ConsumerState<FarahGlassLoginScreen> {
               textAlign: TextAlign.right,
               textDirection: TextDirection.rtl,
               maxLength: 10,
-              inputFormatters: [
-                FilteringTextInputFormatter.digitsOnly,
-              ],
-              style: const TextStyle(
-                color: chocolate,
-                fontSize: 15,
-                fontWeight: FontWeight.w500,
-              ),
+              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+              style: const TextStyle(color: chocolate, fontSize: 15, fontWeight: FontWeight.w500),
               validator: (v) {
                 if (v == null || v.isEmpty) return 'رقم الهاتف مطلوب';
                 if (v.length < 10) return 'رقم الهاتف يجب أن يكون 10 أرقام';
@@ -504,13 +448,9 @@ class _FarahGlassLoginScreenState extends ConsumerState<FarahGlassLoginScreen> {
               },
               decoration: InputDecoration(
                 hintText: '9X XXXXXXX',
-                hintStyle: TextStyle(
-                  color: chocolate.withValues(alpha: 0.5),
-                  fontSize: 14,
-                ),
+                hintStyle: TextStyle(color: chocolate.withValues(alpha: 0.5), fontSize: 14),
                 counterText: '',
-                errorStyle: const TextStyle(
-                    color: Colors.red, fontSize: 11, height: 0.8),
+                errorStyle: const TextStyle(color: Colors.red, fontSize: 11, height: 0.8),
                 border: InputBorder.none,
                 enabledBorder: InputBorder.none,
                 focusedBorder: InputBorder.none,
@@ -525,20 +465,13 @@ class _FarahGlassLoginScreenState extends ConsumerState<FarahGlassLoginScreen> {
     );
   }
 
-  // ── حقل كلمة المرور ──
   Widget _passwordField() {
     return Container(
       height: 58,
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(30),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.primaryDark.withValues(alpha: 0.06),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
+        boxShadow: [BoxShadow(color: AppColors.primaryDark.withValues(alpha: 0.06), blurRadius: 12, offset: const Offset(0, 4))],
       ),
       child: Row(
         textDirection: TextDirection.rtl,
@@ -548,18 +481,10 @@ class _FarahGlassLoginScreenState extends ConsumerState<FarahGlassLoginScreen> {
             width: 46,
             height: 46,
             decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [AppColors.primary, AppColors.primaryDark],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
+              gradient: const LinearGradient(colors: [AppColors.primary, AppColors.primaryDark], begin: Alignment.topLeft, end: Alignment.bottomRight),
               borderRadius: BorderRadius.circular(14),
             ),
-            child: const Icon(
-              Icons.lock_outline,
-              color: Colors.white,
-              size: 22,
-            ),
+            child: const Icon(Icons.lock_outline, color: Colors.white, size: 22),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -569,11 +494,7 @@ class _FarahGlassLoginScreenState extends ConsumerState<FarahGlassLoginScreen> {
               enabled: !_loading,
               textAlign: TextAlign.right,
               textDirection: TextDirection.rtl,
-              style: const TextStyle(
-                color: chocolate,
-                fontSize: 15,
-                fontWeight: FontWeight.w500,
-              ),
+              style: const TextStyle(color: chocolate, fontSize: 15, fontWeight: FontWeight.w500),
               validator: (v) {
                 if (v == null || v.isEmpty) return 'كلمة المرور مطلوبة';
                 if (v.length < 6) return 'كلمة المرور قصيرة';
@@ -581,12 +502,8 @@ class _FarahGlassLoginScreenState extends ConsumerState<FarahGlassLoginScreen> {
               },
               decoration: InputDecoration(
                 hintText: '••••••••••••••',
-                hintStyle: TextStyle(
-                  color: chocolate.withValues(alpha: 0.5),
-                  fontSize: 14,
-                ),
-                errorStyle: const TextStyle(
-                    color: Colors.red, fontSize: 11, height: 0.8),
+                hintStyle: TextStyle(color: chocolate.withValues(alpha: 0.5), fontSize: 14),
+                errorStyle: const TextStyle(color: Colors.red, fontSize: 11, height: 0.8),
                 border: InputBorder.none,
                 enabledBorder: InputBorder.none,
                 focusedBorder: InputBorder.none,
@@ -596,13 +513,7 @@ class _FarahGlassLoginScreenState extends ConsumerState<FarahGlassLoginScreen> {
             ),
           ),
           IconButton(
-            icon: Icon(
-              _obscure
-                  ? Icons.visibility_outlined
-                  : Icons.visibility_off_outlined,
-              color: chocolate,
-              size: 20,
-            ),
+            icon: Icon(_obscure ? Icons.visibility_outlined : Icons.visibility_off_outlined, color: chocolate, size: 20),
             onPressed: () => setState(() => _obscure = !_obscure),
           ),
           const SizedBox(width: 6),
