@@ -1,4 +1,4 @@
-package com.example.farah // ⚠️ تأكد أن هذا يطابق أول سطر في ملف AndroidManifest.xml
+package com.farah.farah
 
 import io.flutter.embedding.android.FlutterFragmentActivity
 
