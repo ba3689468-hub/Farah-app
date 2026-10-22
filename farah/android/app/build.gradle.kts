@@ -8,8 +8,8 @@ plugins {
 android {
     namespace = "com.farah.farah"
     compileSdk = flutter.compileSdkVersion
-    
-    // ✅ تم تفعيل تحديد نسخة NDK يدوياً لمنع خطأ ZipException
+
+    // ✅ ملاحظة: تأكد أن هذا الإصدار متوافق مع مشروعك، وإلا يمكنك تركه كما هو
     ndkVersion = "28.2.13676358"
 
     compileOptions {
@@ -22,10 +22,10 @@ android {
         applicationId = "com.farah.farah"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
-        minSdk = flutter.minSdkVersion
+        minSdk = 23 // ✅ تم التعديل هنا (كان flutter.minSdkVersion)
         targetSdk = flutter.targetSdkVersion
         // Uses the version code from pubspec.yaml. When using split APKs, 1000 * ABI_VERSION
-        // is added automatically by Flutter. (https://developer.android.com/studio/build/configure-apk-splits#configure-abi-split)
+        // is added automatically by Flutter. (https://developer.android.com/studio/build/configure-apk-splits#configure-abi-splits)
         // You can force using the value of versionCode by specifying the `-P force-version-code-ignoring-abi=true`
         // flag during build.
         versionCode = flutter.versionCode
@@ -39,14 +39,14 @@ android {
             signingConfig = signingConfigs.getByName("debug")
         }
     }
-}
 
-kotlin {
-    compilerOptions {
-        jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17
+    kotlin {
+        compilerOptions {
+            jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17
+        }
     }
-}
 
-flutter {
-    source = "../.."
+    flutter {
+        source = "../.."
+    }
 }
