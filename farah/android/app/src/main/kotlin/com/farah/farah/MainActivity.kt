@@ -1,5 +1,6 @@
-package com.farah.farah
+package com.example.farah // ⚠️ تأكد أن هذا يطابق أول سطر في ملف AndroidManifest.xml
 
-import io.flutter.embedding.android.FlutterActivity
+import io.flutter.embedding.android.FlutterFragmentActivity
 
-class MainActivity : FlutterActivity()
+class MainActivity: FlutterFragmentActivity() {
+}
