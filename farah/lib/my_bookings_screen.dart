@@ -301,7 +301,7 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
                   ],
                 ),
               )
-            // ✅ إضافة أزرار للحجوزات الملغاة والمكتملة (تفاصيل + حذف)
+            // أزرار للحجوزات الملغاة والمكتملة (تفاصيل + حذف)
             else if (canDelete)
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
@@ -490,7 +490,7 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
     }
   }
 
-  // ✅ دالة حذف السجل (الملغى أو المكتمل)
+  // دالة حذف السجل (الملغى أو المكتمل)
   Future<void> _deleteBooking(String docId) async {
     final confirm = await showDialog<bool>(
       context: context,
@@ -552,7 +552,7 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
 }
 
 // ═══════════════════════════════════════════════════════════
-// ✅ الويدجت المخصص للعداد التنازلي (الساعات:الدقائق:الثواني)
+// ✅ الويدجت المخصص للعداد التنازلي (تم إصلاح الخطأ هنا)
 // ═══════════════════════════════════════════════════════════
 class RefundCountdownWidget extends StatefulWidget {
   final DateTime expiryDate;
@@ -563,13 +563,14 @@ class RefundCountdownWidget extends StatefulWidget {
 }
 
 class _RefundCountdownWidgetState extends State<RefundCountdownWidget> {
-  late Timer _timer;
-  late Duration _remaining;
+  Timer? _timer; // ✅ تم التعديل: متغير قابل لـ null
+  Duration _remaining = Duration.zero; // قيمة افتراضية آمنة
 
   @override
   void initState() {
     super.initState();
     _calculateRemaining();
+    _timer?.cancel(); // ✅ تأكد من إلغاء أي مؤقت سابق
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (mounted) {
         setState(() {
@@ -583,7 +584,7 @@ class _RefundCountdownWidgetState extends State<RefundCountdownWidget> {
     final now = DateTime.now();
     if (now.isAfter(widget.expiryDate)) {
       _remaining = Duration.zero;
-      _timer.cancel();
+      _timer?.cancel(); // ✅ استخدام ?. لتجنب الانهيار
     } else {
       _remaining = widget.expiryDate.difference(now);
     }
@@ -591,7 +592,7 @@ class _RefundCountdownWidgetState extends State<RefundCountdownWidget> {
 
   @override
   void dispose() {
-    _timer.cancel();
+    _timer?.cancel(); // ✅ استخدام ?. هنا أيضاً
     super.dispose();
   }
 
@@ -645,7 +646,6 @@ class _RefundCountdownWidgetState extends State<RefundCountdownWidget> {
                 fontWeight: FontWeight.bold,
                 fontFeatures: const [FontFeature.tabularFigures()],
               ),
-              
             ),
         ],
       ),
