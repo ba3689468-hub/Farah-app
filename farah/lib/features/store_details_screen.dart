@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:farah/core/constants/app_colors.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'product_details_screen.dart'; // ✅ استيراد شاشة تفاصيل المنتج
 
 class StoreDetailsScreen extends StatelessWidget {
   final String storeId;
@@ -109,7 +110,7 @@ class StoreDetailsScreen extends StatelessWidget {
                   itemCount: products.length,
                   itemBuilder: (context, i) {
                     final product = products[i].data() as Map<String, dynamic>;
-                    return _buildProductCard(product);
+                    return _buildProductCard(context, product);
                   },
                 );
               },
@@ -120,41 +121,55 @@ class StoreDetailsScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildProductCard(Map<String, dynamic> product) {
+  Widget _buildProductCard(BuildContext context, Map<String, dynamic> product) {
     final name = product['name'] ?? 'منتج';
     final price = product['price'] ?? 0;
     final image = product['image'];
 
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [BoxShadow(color: primary.withValues(alpha: 0.05), blurRadius: 10, offset: const Offset(0, 4))],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          ClipRRect(
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-            child: SizedBox(
-              height: 120, width: double.infinity,
-              child: (image != null && image.toString().isNotEmpty)
-                  ? CachedNetworkImage(imageUrl: image, fit: BoxFit.cover)
-                  : Container(color: primary.withValues(alpha: 0.1), child: const Icon(Icons.image, color: primary, size: 40)),
+    return GestureDetector(
+      onTap: () {
+        // ✅ الانتقال لشاشة تفاصيل المنتج
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => ProductDetailsScreen(
+              productData: product,
+              storeData: storeData,
             ),
           ),
-          Padding(
-            padding: const EdgeInsets.all(10),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(name, style: const TextStyle(fontWeight: FontWeight.bold, color: textDark), maxLines: 1, overflow: TextOverflow.ellipsis),
-                const SizedBox(height: 6),
-                Text('$price د.ل', style: const TextStyle(color: primary, fontWeight: FontWeight.bold, fontSize: 15)),
-              ],
+        );
+      },
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [BoxShadow(color: primary.withValues(alpha: 0.05), blurRadius: 10, offset: const Offset(0, 4))],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            ClipRRect(
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+              child: SizedBox(
+                height: 120, width: double.infinity,
+                child: (image != null && image.toString().isNotEmpty)
+                    ? CachedNetworkImage(imageUrl: image, fit: BoxFit.cover)
+                    : Container(color: primary.withValues(alpha: 0.1), child: const Icon(Icons.image, color: primary, size: 40)),
+              ),
             ),
-          ),
-        ],
+            Padding(
+              padding: const EdgeInsets.all(10),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(name, style: const TextStyle(fontWeight: FontWeight.bold, color: textDark), maxLines: 1, overflow: TextOverflow.ellipsis),
+                  const SizedBox(height: 6),
+                  Text('$price د.ل', style: const TextStyle(color: primary, fontWeight: FontWeight.bold, fontSize: 15)),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
