@@ -33,7 +33,7 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
         backgroundColor: Colors.white,
         elevation: 0,
         centerTitle: true,
-        title: const Text('حجوزاتي', style: TextStyle(color: textDark, fontWeight: FontWeight.w800, fontSize: 20)),
+        title: const Text('حجوزاتي', style: TextStyle(fontFamily: 'Tajawal', color: textDark, fontWeight: FontWeight.w800, fontSize: 20)),
         iconTheme: const IconThemeData(color: textDark),
         actions: [
           IconButton(
@@ -207,7 +207,6 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
         ),
         child: Column(
           children: [
-            // الجزء العلوي (الصورة والاسم)
             Padding(
               padding: const EdgeInsets.all(20),
               child: Row(
@@ -248,13 +247,11 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
               ),
             ),
             
-            // العداد التنازلي
             if (isPending && refundUntil != null)
               RefundCountdownWidget(expiryDate: refundUntil),
 
             const Divider(height: 1, thickness: 1, color: Color(0xFFF0F0F0)),
             
-            // تفاصيل الحجز (شبكة)
             Padding(
               padding: const EdgeInsets.all(20),
               child: Column(
@@ -276,7 +273,6 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
               ),
             ),
             
-            // الأزرار
             if (isPending)
               Padding(
                 padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
@@ -374,21 +370,214 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
     );
   }
 
-  // ... (باقي الدوال المساعدة مثل _showBookingDetails, _cancelBooking, _deleteBooking, _getStatusInfo تبقى كما هي) ...
-  // لضمان عدم الإطالة، سأضع لك الدوال الأساسية فقط هنا، ويمكنك نسخها من الكود القديم
-  // أو طلب الكود كاملاً إذا واجهت مشكلة.
-  
-  // (نسخ الدوال من الكود القديم هنا)
-  void _showBookingDetails(Map<String, dynamic> data, String docId) { /* ... الكود القديم ... */ }
-  Future<void> _cancelBooking(String docId, Map<String, dynamic> data) async { /* ... الكود القديم ... */ }
-  Future<void> _deleteBooking(String docId) async { /* ... الكود القديم ... */ }
-  void _showError(String msg) { /* ... الكود القديم ... */ }
-  Map<String, dynamic> _getStatusInfo(String status) { /* ... الكود القديم ... */ }
-  Widget _buildEmptyState() { /* ... الكود القديم ... */ }
+  // ✅ الدوال المساعدة مكتملة الآن
+  void _showBookingDetails(Map<String, dynamic> data, String docId) {
+    final services = List<String>.from(data['services'] ?? []);
+    final commission = data['commission'] ?? 60;
+    final totalPrice = data['totalPrice'] ?? 0;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+      builder: (context) {
+        return Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text('تفاصيل الحجز', style: TextStyle(fontFamily: 'Tajawal', fontSize: 20, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 16),
+              
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(color: Colors.green.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(12)),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Row(
+                      children: [
+                        Icon(Icons.verified, color: Colors.green),
+                        SizedBox(width: 8),
+                        Text('رسم الحجز (عمولة التطبيق)', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+                      ],
+                    ),
+                    Text('$commission د.ل', style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, color: Colors.green, fontSize: 16)),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 12),
+
+              if (services.isNotEmpty) ...[
+                const Text('الخدمات الإضافية المطلوبة:', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+                const SizedBox(height: 8),
+                ...services.map((s) => Padding(
+                  padding: const EdgeInsets.only(bottom: 4),
+                  child: Row(children: [const Icon(Icons.check, size: 16, color: primary), const SizedBox(width: 8), Text(s, style: const TextStyle(fontFamily: 'Tajawal'))]),
+                )),
+                const Divider(height: 24),
+              ],
+
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text('إجمالي سعر القاعة والخدمات (يُدفع للمزود):', style: TextStyle(fontFamily: 'Tajawal', color: textLight, fontSize: 12)),
+                  Text('$totalPrice د.ل', style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, fontSize: 18)),
+                ],
+              ),
+              const SizedBox(height: 20),
+              
+              SizedBox(
+                width: double.infinity,
+                height: 50,
+                child: ElevatedButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('إغلاق', style: TextStyle(fontFamily: 'Tajawal')),
+                ),
+              )
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _cancelBooking(String docId, Map<String, dynamic> data) async {
+    final expiresAt = data['refundEligibleUntil'] as Timestamp?;
+
+    if (expiresAt == null) {
+      _showError('لا يمكن إلغاء هذا الحجز');
+      return;
+    }
+
+    final isWithin48Hours = DateTime.now().isBefore(expiresAt.toDate());
+
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Text('إلغاء الحجز', style: TextStyle(fontFamily: 'Tajawal')),
+        content: Text(
+          isWithin48Hours 
+            ? 'هل أنت متأكد من إلغاء الحجز؟\nسيتم إرجاع مبلغ 60 د.ل إلى محفظتك فوراً.'
+            : 'انتهت مدة الـ 48 ساعة المسموح بها للإلغاء. لا يمكن استرداد رسم الحجز.',
+          style: const TextStyle(fontFamily: 'Tajawal'),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('تراجع', style: TextStyle(fontFamily: 'Tajawal'))),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent),
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('تأكيد الإلغاء', style: TextStyle(color: Colors.white, fontFamily: 'Tajawal')),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm != true) return;
+
+    try {
+      await FirebaseFirestore.instance.collection('bookings').doc(docId).update({
+        'status': 'cancelled',
+      });
+
+      if (isWithin48Hours) {
+        final userRef = FirebaseFirestore.instance.collection('users').doc(_uid);
+        await FirebaseFirestore.instance.runTransaction((transaction) async {
+          final userSnap = await transaction.get(userRef);
+          if (userSnap.exists) {
+            final currentBalance = (userSnap.data()?['walletBalance'] ?? 0).toDouble();
+            transaction.update(userRef, {'walletBalance': currentBalance + 60.0});
+          }
+        });
+
+        await FirebaseFirestore.instance.collection('transactions').add({
+          'userId': _uid,
+          'amount': 60.0,
+          'type': 'refund',
+          'description': 'استرداد رسم حجز (إلغاء)',
+          'createdAt': FieldValue.serverTimestamp(),
+        });
+      }
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(isWithin48Hours ? 'تم الإلغاء واسترداد 60 د.ل للمحفظة' : 'تم إلغاء الحجز بنجاح', style: const TextStyle(fontFamily: 'Tajawal')),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      _showError('حدث خطأ: $e');
+    }
+  }
+
+  Future<void> _deleteBooking(String docId) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Text('حذف السجل', style: TextStyle(color: Colors.redAccent, fontFamily: 'Tajawal')),
+        content: const Text('هل أنت متأكد من حذف هذا السجل نهائياً من قائمة حجوزاتك؟', style: TextStyle(fontFamily: 'Tajawal')),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('تراجع', style: TextStyle(fontFamily: 'Tajawal'))),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent),
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('نعم، احذف', style: TextStyle(color: Colors.white, fontFamily: 'Tajawal')),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm != true) return;
+
+    try {
+      await FirebaseFirestore.instance.collection('bookings').doc(docId).delete();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('تم حذف السجل بنجاح', style: TextStyle(fontFamily: 'Tajawal')), backgroundColor: Colors.green),
+        );
+      }
+    } catch (e) {
+      _showError('حدث خطأ أثناء الحذف: $e');
+    }
+  }
+
+  void _showError(String msg) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg, style: const TextStyle(fontFamily: 'Tajawal')), backgroundColor: Colors.redAccent));
+  }
+
+  Map<String, dynamic> _getStatusInfo(String status) {
+    switch (status) {
+      case 'confirmed': return {'label': 'مؤكد', 'color': Colors.green, 'icon': Icons.check_circle};
+      case 'completed': return {'label': 'مكتمل', 'color': Colors.blue, 'icon': Icons.done_all};
+      case 'cancelled': return {'label': 'ملغى', 'color': Colors.redAccent, 'icon': Icons.cancel};
+      case 'pending_attendance': return {'label': 'بانتظار الحضور', 'color': Colors.orange, 'icon': Icons.event_available};
+      default: return {'label': 'قيد الانتظار', 'color': Colors.orange, 'icon': Icons.access_time};
+    }
+  }
+
+  Widget _buildEmptyState() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.event_busy, size: 80, color: primary.withValues(alpha: 0.2)),
+          const SizedBox(height: 16),
+          const Text('لا توجد لديك حجوزات حتى الآن', style: TextStyle(fontFamily: 'Tajawal', color: textDark, fontSize: 16, fontWeight: FontWeight.bold)),
+        ],
+      ),
+    );
+  }
 }
 
+// ═══════════════════════════════════════════════════════════
+// ✅ الويدجت المخصص للعداد التنازلي
+// ═══════════════════════════════════════════════════════════
 class RefundCountdownWidget extends StatefulWidget {
-  // ... الكود القديم ...
   final DateTime expiryDate;
   const RefundCountdownWidget({super.key, required this.expiryDate});
 
@@ -397,7 +586,6 @@ class RefundCountdownWidget extends StatefulWidget {
 }
 
 class _RefundCountdownWidgetState extends State<RefundCountdownWidget> {
-  // ... الكود القديم ...
   Timer? _timer; 
   Duration _remaining = Duration.zero; 
 
