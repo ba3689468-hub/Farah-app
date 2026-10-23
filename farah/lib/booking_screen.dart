@@ -38,7 +38,6 @@ class _BookingScreenState extends State<BookingScreen> {
   final List<String> _selectedServices = [];
   bool _loading = false;
 
-  // ✅ هل الفلاتر معبأة مسبقاً؟
   bool get _hasPrefilled =>
       widget.prefilledDate != null ||
       widget.prefilledEventType != null ||
@@ -86,7 +85,6 @@ class _BookingScreenState extends State<BookingScreen> {
   @override
   void initState() {
     super.initState();
-    // ✅ تعبئة القيم المسبقة من البحث
     _selectedDate = widget.prefilledDate;
     _selectedEventType = widget.prefilledEventType;
     _selectedTimeSlot = widget.prefilledTimeSlot;
@@ -114,7 +112,6 @@ class _BookingScreenState extends State<BookingScreen> {
           children: [
             _buildHallSummary(name, basePrice),
             const SizedBox(height: 8),
-            // ✅ إذا كانت الفلاتر معبأة، نعرض بطاقة الملخص بدلاً من الأقسام
             if (_hasPrefilled)
               _buildPrefilledSummary()
             else ...[
@@ -132,9 +129,6 @@ class _BookingScreenState extends State<BookingScreen> {
     );
   }
 
-  // ═══════════════════════════════════════════════════════════
-  // ✅ بطاقة الملخص للفلاتر المعبأة مسبقاً
-  // ═══════════════════════════════════════════════════════════
   Widget _buildPrefilledSummary() {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -246,10 +240,6 @@ class _BookingScreenState extends State<BookingScreen> {
       ),
     );
   }
-
-  // ═══════════════════════════════════════════════════════════
-  // باقي الكود (Hall Summary + Event Type + Calendar + Time Slot + Guests + Services + Confirm Bar)
-  // ═══════════════════════════════════════════════════════════
 
   Widget _buildHallSummary(String name, int basePrice) {
     return Container(
@@ -702,9 +692,8 @@ class _BookingScreenState extends State<BookingScreen> {
     }
 
     // ✅✅✅ إضافة التحقق من توفر الفترة في هذا التاريخ ✅✅✅
-    setState(() => _loading = true); // إظهار التحميل أثناء البحث
+    setState(() => _loading = true);
     try {
-      // تصفير الوقت من التاريخ لضمان التطابق التام (منتصف الليل)
       final normalizedDate = DateTime(_selectedDate!.year, _selectedDate!.month, _selectedDate!.day);
 
       final existingBookings = await FirebaseFirestore.instance
@@ -712,7 +701,6 @@ class _BookingScreenState extends State<BookingScreen> {
           .where('hallId', isEqualTo: widget.hallId ?? '')
           .where('eventDate', isEqualTo: Timestamp.fromDate(normalizedDate))
           .where('timeSlot', isEqualTo: _selectedTimeSlot)
-          // نتحقق من الحجوزات النشطة فقط (تجاهل الملغاة)
           .where('status', whereIn: ['pending', 'confirmed', 'checked_in'])
           .get();
 
@@ -720,7 +708,7 @@ class _BookingScreenState extends State<BookingScreen> {
         if (!mounted) return;
         setState(() => _loading = false);
         _showError('عذراً، هذه الفترة ($_selectedTimeSlot) محجوزة بالفعل في هذا التاريخ. الرجاء اختيار فترة أو تاريخ آخر.');
-        return; // إيقاف العملية
+        return;
       }
     } catch (e) {
       if (!mounted) return;
@@ -729,8 +717,7 @@ class _BookingScreenState extends State<BookingScreen> {
       return;
     }
 
-    // إذا وصلنا هنا، الفترة متاحة ✅
-    setState(() => _loading = false); // إخفاء التحميل قبل فتح نافذة الدفع
+    setState(() => _loading = false);
 
     final bool? shouldPay = await showDialog<bool>(
       context: context,
@@ -806,16 +793,15 @@ class _BookingScreenState extends State<BookingScreen> {
       ),
     );
 
-    if (shouldPay != true) return; // إذا ألغى الزبون الدفع
+    if (shouldPay != true) return;
 
-    setState(() => _loading = true); // إعادة التحميل لحفظ الحجز
+    setState(() => _loading = true);
 
     try {
       final total = _calculateTotal(basePrice);
       const double fixedCommission = 60.0;
       final expiresAt = DateTime.now().add(const Duration(hours: 48));
       
-      // تصفير الوقت من التاريخ لضمان التطابق التام
       final bookingDate = DateTime(_selectedDate!.year, _selectedDate!.month, _selectedDate!.day);
 
       final bookingRef = await FirebaseFirestore.instance.collection('bookings').add({
@@ -825,14 +811,14 @@ class _BookingScreenState extends State<BookingScreen> {
         'hallImage': widget.hallData['image'] ?? widget.hallData['coverImage'] ?? '',
         'eventType': _selectedEventType,
         'timeSlot': _selectedTimeSlot,
-        'eventDate': Timestamp.fromDate(bookingDate), // استخدام التاريخ المصفى
+        'eventDate': Timestamp.fromDate(bookingDate),
         'guestsCount': _guestsCount,
         'services': _selectedServices,
         'basePrice': basePrice,
         'totalPrice': total,
         'commission': fixedCommission,
         'providerNet': total,
-        'status': 'pending',
+        'status': 'confirmed', // ✅ تم التغيير هنا إلى confirmed (قبول تلقائي)
         'paymentStatus': 'unpaid',
         'createdAt': FieldValue.serverTimestamp(),
         'expiresAt': Timestamp.fromDate(expiresAt),
@@ -868,7 +854,7 @@ class _BookingScreenState extends State<BookingScreen> {
             children: [
               Icon(Icons.check_circle, color: Colors.green, size: 28),
               SizedBox(width: 10),
-              Text('تم الحجز المبدئي!', style: TextStyle(color: textDark, fontSize: 18)),
+              Text('تم الحجز بنجاح!', style: TextStyle(color: textDark, fontSize: 18)),
             ],
           ),
           content: Text(
