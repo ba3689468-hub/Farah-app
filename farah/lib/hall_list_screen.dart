@@ -4,7 +4,10 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:flutter_animate/flutter_animate.dart'; // ✅ استيراد مكتبة التأثيرات
+import 'package:flutter_animate/flutter_animate.dart'; 
+import 'package:flutter_riverpod/flutter_riverpod.dart'; // ✅ ضروري لـ Riverpod
+import 'main.dart'; // ✅ ضروري للوصول إلى themeProvider (تأكد من المسار)
+
 import 'features/auth/presentation/screens/login_screen_farah.dart';
 import 'features/favorites_screen.dart';
 import 'features/explore_screen.dart';
@@ -130,7 +133,7 @@ class _HallListScreenState extends State<HallListScreen> {
             const ExploreScreen(),
             const FavoritesScreen(),
             const MyBookingsScreen(),
-            const SimpleProfileScreen(),
+            const SimpleProfileScreen(), // ✅ هذا هو المكان الذي تم تعديله
           ],
         ),
       ),
@@ -909,7 +912,6 @@ class _HallListScreenState extends State<HallListScreen> {
     );
   }
 
-  // ✅ هنا تمت إضافة التأثيرات الحركية
   Widget _buildHallVerticalCard(Map<String, dynamic> hall, {bool prefilled = false}) {
     final name = hall['name'] ?? 'قاعة';
     final city = hall['city'] ?? 'غير محدد';
@@ -1006,10 +1008,7 @@ class _HallListScreenState extends State<HallListScreen> {
           ],
         ),
       ),
-    )
-        .animate()
-        .fadeIn(duration: 600.ms, curve: Curves.easeOut)
-        .slideY(begin: 0.1, end: 0, curve: Curves.easeOut);
+    ).animate().fadeIn(duration: 600.ms, curve: Curves.easeOut).slideY(begin: 0.1, end: 0, curve: Curves.easeOut);
   }
 
   Widget _buildHallGridCard(Map<String, dynamic> hall) {
@@ -1142,13 +1141,16 @@ class _HallListScreenState extends State<HallListScreen> {
   }
 }
 
-class SimpleProfileScreen extends StatefulWidget {
+// ═══════════════════════════════════════════════
+// شاشة الملف الشخصي المبسطة (للزبون)
+// ═══════════════════════════════════════════════
+class SimpleProfileScreen extends ConsumerStatefulWidget {
   const SimpleProfileScreen({super.key});
   @override
-  State<SimpleProfileScreen> createState() => _SimpleProfileScreenState();
+  ConsumerState<SimpleProfileScreen> createState() => _SimpleProfileScreenState();
 }
 
-class _SimpleProfileScreenState extends State<SimpleProfileScreen> {
+class _SimpleProfileScreenState extends ConsumerState<SimpleProfileScreen> {
   static const Color primary = AppColors.primary;
   static const Color primaryDark = AppColors.primaryDark;
   static const Color textDark = AppColors.textPrimary;
@@ -1189,6 +1191,10 @@ class _SimpleProfileScreenState extends State<SimpleProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bgColor = isDark ? const Color(0xFF1E1E1E) : Colors.white;
+    final textColor = isDark ? Colors.white : textDark;
+
     return FutureBuilder<DocumentSnapshot>(
       future: _userFuture,
       builder: (context, snap) {
@@ -1196,6 +1202,7 @@ class _SimpleProfileScreenState extends State<SimpleProfileScreen> {
           return const Center(child: CircularProgressIndicator(color: primary));
         }
         if (!snap.hasData || !snap.data!.exists) return const Center(child: Text('تعذر تحميل البيانات'));
+        
         final user = snap.data!.data() as Map<String, dynamic>;
         final name = user['fullName'] ?? 'مستخدم';
         final phone = user['phone'] ?? '';
@@ -1212,7 +1219,7 @@ class _SimpleProfileScreenState extends State<SimpleProfileScreen> {
                 child: Icon(isProvider ? Icons.storefront : Icons.person, size: 55, color: Colors.white),
               ),
               const SizedBox(height: 16),
-              Text(name, style: const TextStyle(color: textDark, fontSize: 24, fontWeight: FontWeight.bold)),
+              Text(name, style: TextStyle(color: textColor, fontSize: 24, fontWeight: FontWeight.bold)),
               const SizedBox(height: 10),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 6),
@@ -1220,38 +1227,82 @@ class _SimpleProfileScreenState extends State<SimpleProfileScreen> {
                 child: Text(isProvider ? 'مزوّد خدمة' : 'زبون', style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
               ),
               const SizedBox(height: 24),
+              
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: Container(
                   padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20)),
-                  child: _infoRow(Icons.phone_outlined, 'رقم الهاتف', phone.isEmpty ? 'غير محدد' : phone),
+                  decoration: BoxDecoration(color: bgColor, borderRadius: BorderRadius.circular(20)),
+                  child: _infoRow(Icons.phone_outlined, 'رقم الهاتف', phone.isEmpty ? 'غير محدد' : phone, textColor),
                 ),
               ),
               const SizedBox(height: 18),
+              
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: Column(
                   children: [
                     if (isProvider) ...[
-                      _menuItem(Icons.dashboard_outlined, 'لوحة المزود', 'إدارة حجوزاتك وأرباحك', () {
+                      _menuItem(Icons.dashboard_outlined, 'لوحة المزود', 'إدارة حجوزاتك وأرباحك', bgColor, textColor, () {
                         Navigator.push(context, MaterialPageRoute(builder: (_) => const ProviderDashboardScreen()));
                       }),
                       const SizedBox(height: 10),
                     ],
-                    _menuItem(Icons.calendar_month, 'حجوزاتي', 'سجل حجوزاتك السابقة والقادمة', () {}),
+                    
+                    // ✅ ميزة الوضع الليلي
+                    GestureDetector(
+                      onTap: () {
+                        ref.read(themeProvider.notifier).toggleTheme();
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                        decoration: BoxDecoration(color: bgColor, borderRadius: BorderRadius.circular(18)),
+                        child: Row(
+                          children: [
+                            Container(width: 46, height: 46,
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    colors: isDark ? [Colors.indigo, Colors.blue] : [Colors.orange, Colors.amber], 
+                                    begin: Alignment.topLeft, end: Alignment.bottomRight
+                                  ),
+                                  borderRadius: BorderRadius.circular(14),
+                                ),
+                                child: Icon(isDark ? Icons.dark_mode : Icons.light_mode, color: Colors.white, size: 22)),
+                            const SizedBox(width: 14),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text('الوضع الليلي', style: TextStyle(color: textColor, fontSize: 15, fontWeight: FontWeight.bold)),
+                                  const SizedBox(height: 3),
+                                  Text(isDark ? 'مفعل' : 'غير مفعل', style: const TextStyle(color: textLight, fontSize: 11)),
+                                ],
+                              ),
+                            ),
+                            Switch(
+                              value: isDark,
+                              onChanged: (val) {
+                                ref.read(themeProvider.notifier).toggleTheme();
+                              },
+                              activeColor: primary,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
                     const SizedBox(height: 10),
-                    _menuItem(Icons.favorite_border, 'المفضلة', 'القاعات المحفوظة', () {}),
+
+                    _menuItem(Icons.calendar_month, 'حجوزاتي', 'سجل حجوزاتك السابقة والقادمة', bgColor, textColor, () {}),
                     const SizedBox(height: 10),
-                    _menuItem(Icons.account_balance_wallet, 'محفظتي', 'رصيدك وطرق الدفع', () {
+                    _menuItem(Icons.account_balance_wallet, 'محفظتي', 'رصيدك وطرق الدفع', bgColor, textColor, () {
                       Navigator.push(context, MaterialPageRoute(builder: (_) => const WalletScreen()));
                     }),
                     const SizedBox(height: 10),
-                    _menuItem(Icons.notifications_outlined, 'الإشعارات', 'تخصيص التنبيهات', () {
+                    _menuItem(Icons.notifications_outlined, 'الإشعارات', 'تخصيص التنبيهات', bgColor, textColor, () {
                       Navigator.push(context, MaterialPageRoute(builder: (_) => const NotificationsScreen()));
                     }),
                     const SizedBox(height: 10),
-                    _menuItem(Icons.edit_outlined, 'تعديل الملف الشخصي', 'الاسم وكلمة المرور', () async {
+                    _menuItem(Icons.edit_outlined, 'تعديل الملف الشخصي', 'الاسم وكلمة المرور', bgColor, textColor, () async {
                       final result = await Navigator.push(context, MaterialPageRoute(builder: (_) => const EditProfileScreen()));
                       if (result == true && mounted) {
                         setState(() {
@@ -1260,15 +1311,15 @@ class _SimpleProfileScreenState extends State<SimpleProfileScreen> {
                       }
                     }),
                     const SizedBox(height: 10),
-                    _menuItem(Icons.settings_outlined, 'الإعدادات', 'اللغة والمظهر والخصوصية', () {}),
+                    _menuItem(Icons.settings_outlined, 'الإعدادات', 'اللغة والمظهر والخصوصية', bgColor, textColor, () {}),
                     const SizedBox(height: 10),
-                    _menuItem(Icons.help_outline, 'المساعدة والدعم', 'تواصل معنا', () {}),
-                    const SizedBox(height: 10),
-                    _menuItem(Icons.info_outline, 'عن التطبيق', 'فرح — الإصدار 1.0.0', () {}),
+                    _menuItem(Icons.help_outline, 'المساعدة والدعم', 'تواصل معنا', bgColor, textColor, () {}),
                   ],
                 ),
               ),
+              
               const SizedBox(height: 22),
+              
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: GestureDetector(
@@ -1293,8 +1344,6 @@ class _SimpleProfileScreenState extends State<SimpleProfileScreen> {
                   ),
                 ),
               ),
-              const SizedBox(height: 24),
-              const Text('فرح — الإصدار 1.0.0', style: TextStyle(color: textLight, fontSize: 11)),
               const SizedBox(height: 30),
             ],
           ),
@@ -1303,7 +1352,7 @@ class _SimpleProfileScreenState extends State<SimpleProfileScreen> {
     );
   }
 
-  Widget _infoRow(IconData icon, String label, String value) {
+  Widget _infoRow(IconData icon, String label, String value, Color textColor) {
     return Row(
       children: [
         Container(width: 42, height: 42,
@@ -1316,7 +1365,7 @@ class _SimpleProfileScreenState extends State<SimpleProfileScreen> {
             children: [
               Text(label, style: const TextStyle(color: textLight, fontSize: 12)),
               const SizedBox(height: 2),
-              Text(value, style: const TextStyle(color: textDark, fontSize: 14, fontWeight: FontWeight.w600), overflow: TextOverflow.ellipsis),
+              Text(value, style: TextStyle(color: textColor, fontSize: 14, fontWeight: FontWeight.w600), overflow: TextOverflow.ellipsis),
             ],
           ),
         ),
@@ -1324,12 +1373,12 @@ class _SimpleProfileScreenState extends State<SimpleProfileScreen> {
     );
   }
 
-  Widget _menuItem(IconData icon, String title, String subtitle, VoidCallback onTap) {
+  Widget _menuItem(IconData icon, String title, String subtitle, Color bgColor, Color textColor, VoidCallback onTap) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(18)),
+        decoration: BoxDecoration(color: bgColor, borderRadius: BorderRadius.circular(18)),
         child: Row(
           children: [
             Container(width: 46, height: 46,
@@ -1343,7 +1392,7 @@ class _SimpleProfileScreenState extends State<SimpleProfileScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(title, style: const TextStyle(color: textDark, fontSize: 15, fontWeight: FontWeight.bold)),
+                  Text(title, style: TextStyle(color: textColor, fontSize: 15, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 3),
                   Text(subtitle, style: const TextStyle(color: textLight, fontSize: 11), maxLines: 1, overflow: TextOverflow.ellipsis),
                 ],
