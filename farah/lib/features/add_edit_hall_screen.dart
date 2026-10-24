@@ -26,6 +26,11 @@ class _AddEditHallScreenState extends State<AddEditHallScreen> {
   final _nameCtrl = TextEditingController();
   final _descCtrl = TextEditingController();
   final _priceCtrl = TextEditingController();
+  
+  // ✅ حقول الأسعار الجديدة
+  final _weekendPriceCtrl = TextEditingController();
+  final _holidayPriceCtrl = TextEditingController();
+  
   final _capacityCtrl = TextEditingController();
   final _phoneCtrl = TextEditingController();
   final _customAmenityCtrl = TextEditingController();
@@ -78,6 +83,11 @@ class _AddEditHallScreenState extends State<AddEditHallScreen> {
       _phoneCtrl.text = data['providerPhone'] ?? data['phone'] ?? '';
       _existingImageUrl = data['image'] ?? data['coverImage'] ?? '';
       _selectedCity = _cities.contains(data['city']) ? data['city'] : 'طرابلس';
+      
+      // ✅ جلب الأسعار المخزنة مسبقاً (إذا وجدت)
+      _weekendPriceCtrl.text = (data['weekendPrice'] ?? '').toString() != '0' ? (data['weekendPrice'] ?? '').toString() : '';
+      _holidayPriceCtrl.text = (data['holidayPrice'] ?? '').toString() != '0' ? (data['holidayPrice'] ?? '').toString() : '';
+      
       if (data['amenities'] is List) {
         _selectedAmenities.addAll(
           List<String>.from(data['amenities']),
@@ -91,13 +101,14 @@ class _AddEditHallScreenState extends State<AddEditHallScreen> {
     _nameCtrl.dispose();
     _descCtrl.dispose();
     _priceCtrl.dispose();
+    _weekendPriceCtrl.dispose();
+    _holidayPriceCtrl.dispose();
     _capacityCtrl.dispose();
     _phoneCtrl.dispose();
     _customAmenityCtrl.dispose();
     super.dispose();
   }
 
-  // ✅ اختيار صورة من المعرض
   Future<void> _pickImage() async {
     try {
       final XFile? picked = await _picker.pickImage(
@@ -122,7 +133,6 @@ class _AddEditHallScreenState extends State<AddEditHallScreen> {
     }
   }
 
-  // ✅ رفع الصورة إلى Supabase Storage
   Future<String> _uploadImageToSupabase(File image) async {
     final user = FirebaseAuth.instance.currentUser;
     final fileName =
@@ -163,7 +173,6 @@ class _AddEditHallScreenState extends State<AddEditHallScreen> {
   }
 
   Future<void> _save() async {
-    // ✅ إضافة تلقائية لأي نص متبقٍ في حقل المرافق المخصصة
     final pendingText = _customAmenityCtrl.text.trim();
     if (pendingText.isNotEmpty) {
       if (!_selectedAmenities.contains(pendingText)) {
@@ -178,7 +187,6 @@ class _AddEditHallScreenState extends State<AddEditHallScreen> {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
 
-    // ── التحقق من وجود صورة ──
     if (_pickedImage == null && _existingImageUrl.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -192,7 +200,6 @@ class _AddEditHallScreenState extends State<AddEditHallScreen> {
     setState(() => _loading = true);
 
     try {
-      // ✅ رفع الصورة إذا كانت جديدة
       String imageUrl = _existingImageUrl;
       if (_pickedImage != null) {
         setState(() => _uploadingImage = true);
@@ -204,6 +211,11 @@ class _AddEditHallScreenState extends State<AddEditHallScreen> {
         'name': _nameCtrl.text.trim(),
         'description': _descCtrl.text.trim(),
         'price': int.tryParse(_priceCtrl.text.trim()) ?? 0,
+        
+        // ✅ حفظ الأسعار الجديدة (إذا كانت فارغة نحفظها كـ 0)
+        'weekendPrice': int.tryParse(_weekendPriceCtrl.text.trim()) ?? 0,
+        'holidayPrice': int.tryParse(_holidayPriceCtrl.text.trim()) ?? 0,
+        
         'capacity': int.tryParse(_capacityCtrl.text.trim()) ?? 0,
         'city': _selectedCity,
         'type': _hallType,
@@ -282,7 +294,6 @@ class _AddEditHallScreenState extends State<AddEditHallScreen> {
             padding: const EdgeInsets.all(20),
             child: Column(
               children: [
-                // ── المعلومات الأساسية ──
                 _sectionTitle('المعلومات الأساسية', Icons.info_outline),
                 const SizedBox(height: 12),
                 _buildField(
@@ -290,9 +301,7 @@ class _AddEditHallScreenState extends State<AddEditHallScreen> {
                   hint: 'اسم القاعة',
                   icon: Icons.celebration_outlined,
                   validator: (v) {
-                    if (v == null || v.trim().isEmpty) {
-                      return 'الاسم مطلوب';
-                    }
+                    if (v == null || v.trim().isEmpty) return 'الاسم مطلوب';
                     if (v.trim().length < 3) return 'الاسم قصير';
                     return null;
                   },
@@ -304,30 +313,27 @@ class _AddEditHallScreenState extends State<AddEditHallScreen> {
                   icon: Icons.description_outlined,
                   maxLines: 3,
                   validator: (v) {
-                    if (v == null || v.trim().isEmpty) {
-                      return 'الوصف مطلوب';
-                    }
+                    if (v == null || v.trim().isEmpty) return 'الوصف مطلوب';
                     return null;
                   },
                 ),
                 const SizedBox(height: 24),
 
-                // ── التفاصيل ──
-                _sectionTitle('التفاصيل', Icons.tune),
+                _sectionTitle('التفاصيل والأسعار', Icons.tune),
                 const SizedBox(height: 12),
+                
+                // ✅ السعر الأساسي والسعة
                 Row(
                   children: [
                     Expanded(
                       child: _buildField(
                         controller: _priceCtrl,
-                        hint: 'السعر (د.ل)',
+                        hint: 'السعر الأساسي (د.ل)',
                         icon: Icons.attach_money,
                         keyboardType: TextInputType.number,
                         digitsOnly: true,
                         validator: (v) {
-                          if (v == null || v.trim().isEmpty) {
-                            return 'مطلوب';
-                          }
+                          if (v == null || v.trim().isEmpty) return 'مطلوب';
                           return null;
                         },
                       ),
@@ -341,18 +347,35 @@ class _AddEditHallScreenState extends State<AddEditHallScreen> {
                         keyboardType: TextInputType.number,
                         digitsOnly: true,
                         validator: (v) {
-                          if (v == null || v.trim().isEmpty) {
-                            return 'مطلوب';
-                          }
+                          if (v == null || v.trim().isEmpty) return 'مطلوب';
                           return null;
                         },
                       ),
                     ),
                   ],
                 ),
+                
+                const SizedBox(height: 12),
+                
+                // ✅ حقول التسعير الديناميكي (اختياري)
+                _buildField(
+                  controller: _weekendPriceCtrl,
+                  hint: 'سعر ليلة الخميس والجمعة (اختياري)',
+                  icon: Icons.weekend,
+                  keyboardType: TextInputType.number,
+                  digitsOnly: true,
+                ),
+                const SizedBox(height: 12),
+                _buildField(
+                  controller: _holidayPriceCtrl,
+                  hint: 'سعر المواسم والأعياد (اختياري)',
+                  icon: Icons.celebration,
+                  keyboardType: TextInputType.number,
+                  digitsOnly: true,
+                ),
+
                 const SizedBox(height: 16),
 
-                // ── المدينة ──
                 _dropdownTitle('المدينة', Icons.location_city),
                 const SizedBox(height: 8),
                 _buildChips(
@@ -362,7 +385,6 @@ class _AddEditHallScreenState extends State<AddEditHallScreen> {
                 ),
                 const SizedBox(height: 24),
 
-                // ── الصورة ──
                 _sectionTitle('صورة القاعة', Icons.image_outlined),
                 const SizedBox(height: 6),
                 const Text(
@@ -373,7 +395,6 @@ class _AddEditHallScreenState extends State<AddEditHallScreen> {
                 _buildImagePicker(),
                 const SizedBox(height: 24),
 
-                // ── رقم الهاتف ──
                 _sectionTitle('معلومات التواصل', Icons.phone_outlined),
                 const SizedBox(height: 12),
                 _buildField(
@@ -383,16 +404,13 @@ class _AddEditHallScreenState extends State<AddEditHallScreen> {
                   keyboardType: TextInputType.phone,
                   digitsOnly: false,
                   validator: (v) {
-                    if (v == null || v.trim().isEmpty) {
-                      return 'رقم الهاتف مطلوب';
-                    }
+                    if (v == null || v.trim().isEmpty) return 'رقم الهاتف مطلوب';
                     if (v.trim().length < 9) return 'الرقم قصير';
                     return null;
                   },
                 ),
                 const SizedBox(height: 24),
 
-                // ── المرافق ──
                 _sectionTitle('المرافق والخدمات', Icons.room_service_outlined),
                 const SizedBox(height: 6),
                 const Text(
@@ -556,7 +574,6 @@ class _AddEditHallScreenState extends State<AddEditHallScreen> {
                 ),
                 const SizedBox(height: 30),
 
-                // ── زر الحفظ ──
                 SizedBox(
                   width: double.infinity,
                   height: 56,
