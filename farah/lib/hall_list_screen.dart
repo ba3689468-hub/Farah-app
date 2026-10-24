@@ -5,8 +5,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_animate/flutter_animate.dart'; 
-import 'package:flutter_riverpod/flutter_riverpod.dart'; // ✅ ضروري لـ Riverpod
-import 'main.dart'; // ✅ ضروري للوصول إلى themeProvider (تأكد من المسار)
+import 'package:flutter_riverpod/flutter_riverpod.dart'; 
+import 'main.dart'; 
 
 import 'features/auth/presentation/screens/login_screen_farah.dart';
 import 'features/favorites_screen.dart';
@@ -133,7 +133,7 @@ class _HallListScreenState extends State<HallListScreen> {
             const ExploreScreen(),
             const FavoritesScreen(),
             const MyBookingsScreen(),
-            const SimpleProfileScreen(), // ✅ هذا هو المكان الذي تم تعديله
+            const SimpleProfileScreen(), 
           ],
         ),
       ),
@@ -179,17 +179,17 @@ class _HallListScreenState extends State<HallListScreen> {
               shape: BoxShape.circle,
             ),
             child: const Center(
-              child: Text('ف', style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold)),
+              child: Text('ف', style: TextStyle(fontFamily: 'Tajawal', color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold)),
             ),
           ),
           const Spacer(),
           Column(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              const Text('مساء الخير 👋', style: TextStyle(color: textLight, fontSize: 11)),
+              const Text('مساء الخير 👋', style: TextStyle(fontFamily: 'Tajawal', color: textLight, fontSize: 11)),
               const SizedBox(height: 2),
               Text(_userName,
-                  style: const TextStyle(color: primary, fontSize: 15, fontWeight: FontWeight.bold),
+                  style: const TextStyle(fontFamily: 'Tajawal', color: primary, fontSize: 15, fontWeight: FontWeight.bold),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis),
             ],
@@ -267,7 +267,7 @@ class _HallListScreenState extends State<HallListScreen> {
                     ),
                     child: Text(
                       count > 99 ? '99+' : '$count',
-                      style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+                      style: const TextStyle(fontFamily: 'Tajawal', color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
                       textAlign: TextAlign.center,
                     ),
                   ),
@@ -340,7 +340,7 @@ class _HallListScreenState extends State<HallListScreen> {
                         children: [
                           Icon(Icons.search, color: Colors.white, size: 20),
                           SizedBox(width: 8),
-                          Text('ابحث عن قاعة', style: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold)),
+                          Text('ابحث عن قاعة', style: TextStyle(fontFamily: 'Tajawal', color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold)),
                         ],
                       ),
                     ),
@@ -372,7 +372,7 @@ class _HallListScreenState extends State<HallListScreen> {
             Expanded(
               child: Text(
                 hasValue ? value : label,
-                style: TextStyle(color: hasValue ? textDark : textLight, fontSize: 12, fontWeight: hasValue ? FontWeight.bold : FontWeight.normal),
+                style: TextStyle(fontFamily: 'Tajawal', color: hasValue ? textDark : textLight, fontSize: 12, fontWeight: hasValue ? FontWeight.bold : FontWeight.normal),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
@@ -433,7 +433,7 @@ class _HallListScreenState extends State<HallListScreen> {
           children: [
             Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey.withValues(alpha: 0.3), borderRadius: BorderRadius.circular(2))),
             const SizedBox(height: 16),
-            Text(title, style: const TextStyle(color: textDark, fontSize: 18, fontWeight: FontWeight.bold)),
+            Text(title, style: const TextStyle(fontFamily: 'Tajawal', color: textDark, fontSize: 18, fontWeight: FontWeight.bold)),
             const SizedBox(height: 16),
             Flexible(
               child: SingleChildScrollView(
@@ -443,7 +443,7 @@ class _HallListScreenState extends State<HallListScreen> {
                     final itemIcon = icons?[item];
                     return ListTile(
                       leading: itemIcon != null ? Icon(itemIcon, color: isSelected ? primary : textLight, size: 22) : null,
-                      title: Text(item, style: TextStyle(color: isSelected ? primary : textDark, fontWeight: isSelected ? FontWeight.bold : FontWeight.normal)),
+                      title: Text(item, style: TextStyle(fontFamily: 'Tajawal', color: isSelected ? primary : textDark, fontWeight: isSelected ? FontWeight.bold : FontWeight.normal)),
                       trailing: isSelected ? const Icon(Icons.check, color: primary) : null,
                       onTap: () { onSelect(item); Navigator.pop(context); },
                     );
@@ -455,7 +455,7 @@ class _HallListScreenState extends State<HallListScreen> {
               TextButton.icon(
                 onPressed: () { onSelect(''); Navigator.pop(context); },
                 icon: const Icon(Icons.close, color: Colors.redAccent, size: 18),
-                label: const Text('مسح الاختيار', style: TextStyle(color: Colors.redAccent)),
+                label: const Text('مسح الاختيار', style: TextStyle(fontFamily: 'Tajawal', color: Colors.redAccent)),
               ),
           ],
         ),
@@ -478,7 +478,7 @@ class _HallListScreenState extends State<HallListScreen> {
   Future<void> _performAdvancedSearch() async {
     if (_searchCity == null && _searchDate == null && _searchTimeSlot == null && _searchEventType == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('الرجاء اختيار فلتر واحد على الأقل'), backgroundColor: Colors.orange),
+        const SnackBar(content: Text('الرجاء اختيار فلتر واحد على الأقل', style: TextStyle(fontFamily: 'Tajawal')), backgroundColor: Colors.orange),
       );
       return;
     }
@@ -533,7 +533,7 @@ class _HallListScreenState extends State<HallListScreen> {
       if (mounted) {
         setState(() { _filteredHallsFuture = Future.value([]); _filteredCount = 0; });
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('خطأ في البحث: $e'), backgroundColor: Colors.red),
+          SnackBar(content: Text('خطأ في البحث: $e', style: const TextStyle(fontFamily: 'Tajawal')), backgroundColor: Colors.red),
         );
       }
     }
@@ -556,12 +556,12 @@ class _HallListScreenState extends State<HallListScreen> {
               const Icon(Icons.filter_alt, color: primary, size: 18),
               const SizedBox(width: 8),
               Text('تم العثور على $_filteredCount قاعة',
-                  style: const TextStyle(color: textDark, fontSize: 13, fontWeight: FontWeight.bold)),
+                  style: const TextStyle(fontFamily: 'Tajawal', color: textDark, fontSize: 13, fontWeight: FontWeight.bold)),
               const Spacer(),
               GestureDetector(
                 onTap: _clearSearchFilters,
                 child: const Text('إلغاء',
-                    style: TextStyle(color: primary, fontSize: 12, fontWeight: FontWeight.bold, decoration: TextDecoration.underline)),
+                    style: TextStyle(fontFamily: 'Tajawal', color: primary, fontSize: 12, fontWeight: FontWeight.bold, decoration: TextDecoration.underline)),
               ),
             ],
           ),
@@ -589,7 +589,7 @@ class _HallListScreenState extends State<HallListScreen> {
         children: [
           Icon(icon, color: primary, size: 12),
           const SizedBox(width: 4),
-          Text(label, style: const TextStyle(color: textDark, fontSize: 11, fontWeight: FontWeight.w500)),
+          Text(label, style: const TextStyle(fontFamily: 'Tajawal', color: textDark, fontSize: 11, fontWeight: FontWeight.w500)),
         ],
       ),
     );
@@ -618,9 +618,9 @@ class _HallListScreenState extends State<HallListScreen> {
                 children: [
                   Icon(Icons.search_off, size: 70, color: primary.withValues(alpha: 0.3)),
                   const SizedBox(height: 14),
-                  const Text('لا توجد قاعات متاحة', style: TextStyle(color: textDark, fontSize: 15, fontWeight: FontWeight.bold)),
+                  const Text('لا توجد قاعات متاحة', style: TextStyle(fontFamily: 'Tajawal', color: textDark, fontSize: 15, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 8),
-                  const Text('جرب تغيير الفلاتر', style: TextStyle(color: textLight, fontSize: 12)),
+                  const Text('جرب تغيير الفلاتر', style: TextStyle(fontFamily: 'Tajawal', color: textLight, fontSize: 12)),
                 ],
               ),
             ),
@@ -683,9 +683,9 @@ class _HallListScreenState extends State<HallListScreen> {
                         crossAxisAlignment: CrossAxisAlignment.end,
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Text(b['title']!, textAlign: TextAlign.right, style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
+                          Text(b['title']!, textAlign: TextAlign.right, style: const TextStyle(fontFamily: 'Tajawal', color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
                           const SizedBox(height: 10),
-                          Text(b['desc']!, textAlign: TextAlign.right, style: TextStyle(color: Colors.white.withValues(alpha: 0.9), fontSize: 12, height: 1.5)),
+                          Text(b['desc']!, textAlign: TextAlign.right, style: TextStyle(fontFamily: 'Tajawal', color: Colors.white.withValues(alpha: 0.9), fontSize: 12, height: 1.5)),
                           const SizedBox(height: 18),
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
@@ -693,7 +693,7 @@ class _HallListScreenState extends State<HallListScreen> {
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                Text(b['btn']!, style: const TextStyle(color: primary, fontSize: 12, fontWeight: FontWeight.bold)),
+                                Text(b['btn']!, style: const TextStyle(fontFamily: 'Tajawal', color: primary, fontSize: 12, fontWeight: FontWeight.bold)),
                                 const SizedBox(width: 6),
                                 const Icon(Icons.arrow_back_ios, color: primary, size: 12),
                               ],
@@ -773,7 +773,7 @@ class _HallListScreenState extends State<HallListScreen> {
                         errorBuilder: (_, __, ___) => Icon(Icons.image_not_supported, color: color, size: 28)),
                   ),
                   const SizedBox(height: 8),
-                  Text(cat['name'] as String, style: const TextStyle(color: textDark, fontSize: 12, fontWeight: FontWeight.w600)),
+                  Text(cat['name'] as String, style: const TextStyle(fontFamily: 'Tajawal', color: textDark, fontSize: 12, fontWeight: FontWeight.w600)),
                 ],
               ),
             );
@@ -804,7 +804,7 @@ class _HallListScreenState extends State<HallListScreen> {
           const Spacer(),
           Text(
             _isAdvancedFiltering ? 'نتائج البحث' : 'قاعات مميزة',
-            style: const TextStyle(color: textDark, fontSize: 18, fontWeight: FontWeight.bold),
+            style: const TextStyle(fontFamily: 'Tajawal', color: textDark, fontSize: 18, fontWeight: FontWeight.bold),
           ),
         ],
       ),
@@ -897,7 +897,7 @@ class _HallListScreenState extends State<HallListScreen> {
             }
             if (mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(isFav ? 'تم الإزالة من المفضلة' : 'تمت الإضافة للمفضلة'), duration: const Duration(seconds: 1)),
+                SnackBar(content: Text(isFav ? 'تم الإزالة من المفضلة' : 'تمت الإضافة للمفضلة', style: const TextStyle(fontFamily: 'Tajawal')), duration: const Duration(seconds: 1)),
               );
             }
           },
@@ -967,7 +967,7 @@ class _HallListScreenState extends State<HallListScreen> {
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                       decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12)),
-                      child: const Text('مميزة', style: TextStyle(color: primary, fontSize: 10, fontWeight: FontWeight.bold)),
+                      child: const Text('مميزة', style: TextStyle(fontFamily: 'Tajawal', color: primary, fontSize: 10, fontWeight: FontWeight.bold)),
                     ),
                   ),
                   Positioned(
@@ -975,7 +975,7 @@ class _HallListScreenState extends State<HallListScreen> {
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                       decoration: BoxDecoration(color: primary, borderRadius: BorderRadius.circular(12)),
-                      child: Text('$price د.ل', style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.bold)),
+                      child: Text('$price د.ل', style: const TextStyle(fontFamily: 'Tajawal', color: Colors.white, fontSize: 13, fontWeight: FontWeight.bold)),
                     ),
                   ),
                 ],
@@ -988,11 +988,11 @@ class _HallListScreenState extends State<HallListScreen> {
                 children: [
                   Row(
                     children: [
-                      Expanded(child: Text(name, style: const TextStyle(color: textDark, fontSize: 17, fontWeight: FontWeight.bold), maxLines: 1, overflow: TextOverflow.ellipsis)),
+                      Expanded(child: Text(name, style: const TextStyle(fontFamily: 'Tajawal', color: textDark, fontSize: 17, fontWeight: FontWeight.bold), maxLines: 1, overflow: TextOverflow.ellipsis)),
                       Row(children: [
                         const Icon(Icons.star, color: Colors.amber, size: 16),
                         const SizedBox(width: 3),
-                        Text(rating.toStringAsFixed(1), style: const TextStyle(color: textDark, fontSize: 13, fontWeight: FontWeight.bold)),
+                        Text(rating.toStringAsFixed(1), style: const TextStyle(fontFamily: 'Tajawal', color: textDark, fontSize: 13, fontWeight: FontWeight.bold)),
                       ]),
                     ],
                   ),
@@ -1000,7 +1000,7 @@ class _HallListScreenState extends State<HallListScreen> {
                   Row(children: [
                     const Icon(Icons.location_on_outlined, color: textLight, size: 14),
                     const SizedBox(width: 4),
-                    Text(city, style: const TextStyle(color: textLight, fontSize: 12)),
+                    Text(city, style: const TextStyle(fontFamily: 'Tajawal', color: textLight, fontSize: 12)),
                   ]),
                 ],
               ),
@@ -1056,21 +1056,21 @@ class _HallListScreenState extends State<HallListScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(name, style: const TextStyle(color: textDark, fontSize: 12, fontWeight: FontWeight.bold), maxLines: 1, overflow: TextOverflow.ellipsis),
+                  Text(name, style: const TextStyle(fontFamily: 'Tajawal', color: textDark, fontSize: 12, fontWeight: FontWeight.bold), maxLines: 1, overflow: TextOverflow.ellipsis),
                   const SizedBox(height: 4),
                   Row(children: [
                     const Icon(Icons.location_on_outlined, color: textLight, size: 11),
                     const SizedBox(width: 2),
-                    Expanded(child: Text(city, style: const TextStyle(color: textLight, fontSize: 10), maxLines: 1, overflow: TextOverflow.ellipsis)),
+                    Expanded(child: Text(city, style: const TextStyle(fontFamily: 'Tajawal', color: textLight, fontSize: 10), maxLines: 1, overflow: TextOverflow.ellipsis)),
                   ]),
                   const SizedBox(height: 6),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text('$price', style: const TextStyle(color: primary, fontSize: 13, fontWeight: FontWeight.bold)),
+                      Text('$price', style: const TextStyle(fontFamily: 'Tajawal', color: primary, fontSize: 13, fontWeight: FontWeight.bold)),
                       Row(children: [
                         const Icon(Icons.star, color: Colors.amber, size: 11),
-                        Text(rating.toStringAsFixed(1), style: const TextStyle(color: textDark, fontSize: 10, fontWeight: FontWeight.bold)),
+                        Text(rating.toStringAsFixed(1), style: const TextStyle(fontFamily: 'Tajawal', color: textDark, fontSize: 10, fontWeight: FontWeight.bold)),
                       ]),
                     ],
                   ),
@@ -1090,7 +1090,7 @@ class _HallListScreenState extends State<HallListScreen> {
         children: [
           Icon(Icons.storefront_outlined, size: 70, color: primary.withValues(alpha: 0.3)),
           const SizedBox(height: 14),
-          const Text('لا توجد قاعات', style: TextStyle(color: textDark, fontSize: 15, fontWeight: FontWeight.bold)),
+          const Text('لا توجد قاعات', style: TextStyle(fontFamily: 'Tajawal', color: textDark, fontSize: 15, fontWeight: FontWeight.bold)),
         ],
       ),
     );
@@ -1129,7 +1129,7 @@ class _HallListScreenState extends State<HallListScreen> {
                   Icon(active ? items[i]['active'] as IconData : items[i]['icon'] as IconData, color: active ? Colors.white : textLight, size: 20),
                   if (active) ...[
                     const SizedBox(width: 5),
-                    Text(items[i]['label'] as String, style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
+                    Text(items[i]['label'] as String, style: const TextStyle(fontFamily: 'Tajawal', color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
                   ],
                 ],
               ),
@@ -1142,7 +1142,7 @@ class _HallListScreenState extends State<HallListScreen> {
 }
 
 // ═══════════════════════════════════════════════
-// شاشة الملف الشخصي المبسطة (للزبون)
+// شاشة الملف الشخصي المبسطة (تم تصغير الخطوط والأيقونات)
 // ═══════════════════════════════════════════════
 class SimpleProfileScreen extends ConsumerStatefulWidget {
   const SimpleProfileScreen({super.key});
@@ -1171,14 +1171,14 @@ class _SimpleProfileScreenState extends ConsumerState<SimpleProfileScreen> {
       builder: (_) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
         backgroundColor: Colors.white,
-        title: const Text('تسجيل الخروج', textAlign: TextAlign.right, style: TextStyle(color: textDark)),
-        content: const Text('هل أنت متأكد؟', textAlign: TextAlign.right),
+        title: const Text('تسجيل الخروج', textAlign: TextAlign.right, style: TextStyle(fontFamily: 'Tajawal', color: textDark)),
+        content: const Text('هل أنت متأكد؟', textAlign: TextAlign.right, style: TextStyle(fontFamily: 'Tajawal')),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('إلغاء')),
+          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('إلغاء', style: TextStyle(fontFamily: 'Tajawal'))),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: primary, foregroundColor: Colors.white),
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('خروج'),
+            child: const Text('خروج', style: TextStyle(fontFamily: 'Tajawal')),
           ),
         ],
       ),
@@ -1201,7 +1201,7 @@ class _SimpleProfileScreenState extends ConsumerState<SimpleProfileScreen> {
         if (snap.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator(color: primary));
         }
-        if (!snap.hasData || !snap.data!.exists) return const Center(child: Text('تعذر تحميل البيانات'));
+        if (!snap.hasData || !snap.data!.exists) return const Center(child: Text('تعذر تحميل البيانات', style: TextStyle(fontFamily: 'Tajawal')));
         
         final user = snap.data!.data() as Map<String, dynamic>;
         final name = user['fullName'] ?? 'مستخدم';
@@ -1212,31 +1212,32 @@ class _SimpleProfileScreenState extends ConsumerState<SimpleProfileScreen> {
         return SingleChildScrollView(
           child: Column(
             children: [
-              const SizedBox(height: 20),
-              Container(
-                width: 110, height: 110,
-                decoration: const BoxDecoration(shape: BoxShape.circle, gradient: LinearGradient(colors: [primary, primaryDark])),
-                child: Icon(isProvider ? Icons.storefront : Icons.person, size: 55, color: Colors.white),
-              ),
               const SizedBox(height: 16),
-              Text(name, style: TextStyle(color: textColor, fontSize: 24, fontWeight: FontWeight.bold)),
-              const SizedBox(height: 10),
+              // ✅ تصغير حجم صورة البروفايل من 110 إلى 90
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 6),
-                decoration: BoxDecoration(gradient: const LinearGradient(colors: [primary, primaryDark]), borderRadius: BorderRadius.circular(20)),
-                child: Text(isProvider ? 'مزوّد خدمة' : 'زبون', style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
+                width: 90, height: 90,
+                decoration: const BoxDecoration(shape: BoxShape.circle, gradient: LinearGradient(colors: [primary, primaryDark])),
+                child: Icon(isProvider ? Icons.storefront : Icons.person, size: 45, color: Colors.white),
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: 12),
+              Text(name, style: TextStyle(fontFamily: 'Tajawal', color: textColor, fontSize: 20, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+                decoration: BoxDecoration(gradient: const LinearGradient(colors: [primary, primaryDark]), borderRadius: BorderRadius.circular(20)),
+                child: Text(isProvider ? 'مزوّد خدمة' : 'زبون', style: const TextStyle(fontFamily: 'Tajawal', color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold)),
+              ),
+              const SizedBox(height: 20),
               
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: Container(
-                  padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(color: bgColor, borderRadius: BorderRadius.circular(20)),
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(color: bgColor, borderRadius: BorderRadius.circular(16)),
                   child: _infoRow(Icons.phone_outlined, 'رقم الهاتف', phone.isEmpty ? 'غير محدد' : phone, textColor),
                 ),
               ),
-              const SizedBox(height: 18),
+              const SizedBox(height: 16),
               
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -1246,62 +1247,66 @@ class _SimpleProfileScreenState extends ConsumerState<SimpleProfileScreen> {
                       _menuItem(Icons.dashboard_outlined, 'لوحة المزود', 'إدارة حجوزاتك وأرباحك', bgColor, textColor, () {
                         Navigator.push(context, MaterialPageRoute(builder: (_) => const ProviderDashboardScreen()));
                       }),
-                      const SizedBox(height: 10),
+                      const SizedBox(height: 8),
                     ],
                     
-                    // ✅ ميزة الوضع الليلي
+                    // ✅ زر الوضع الليلي (مصغر)
                     GestureDetector(
                       onTap: () {
                         ref.read(themeProvider.notifier).toggleTheme();
                       },
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                        decoration: BoxDecoration(color: bgColor, borderRadius: BorderRadius.circular(18)),
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                        decoration: BoxDecoration(color: bgColor, borderRadius: BorderRadius.circular(16)),
                         child: Row(
                           children: [
-                            Container(width: 46, height: 46,
+                            // ✅ تصغير أيقونة الوضع الليلي من 46 إلى 38
+                            Container(width: 38, height: 38,
                                 decoration: BoxDecoration(
                                   gradient: LinearGradient(
                                     colors: isDark ? [Colors.indigo, Colors.blue] : [Colors.orange, Colors.amber], 
                                     begin: Alignment.topLeft, end: Alignment.bottomRight
                                   ),
-                                  borderRadius: BorderRadius.circular(14),
+                                  borderRadius: BorderRadius.circular(10),
                                 ),
-                                child: Icon(isDark ? Icons.dark_mode : Icons.light_mode, color: Colors.white, size: 22)),
-                            const SizedBox(width: 14),
+                                child: Icon(isDark ? Icons.dark_mode : Icons.light_mode, color: Colors.white, size: 18)),
+                            const SizedBox(width: 12),
                             Expanded(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text('الوضع الليلي', style: TextStyle(color: textColor, fontSize: 15, fontWeight: FontWeight.bold)),
-                                  const SizedBox(height: 3),
-                                  Text(isDark ? 'مفعل' : 'غير مفعل', style: const TextStyle(color: textLight, fontSize: 11)),
+                                  Text('الوضع الليلي', style: TextStyle(fontFamily: 'Tajawal', color: textColor, fontSize: 14, fontWeight: FontWeight.bold)),
+                                  const SizedBox(height: 2),
+                                  Text(isDark ? 'مفعل' : 'غير مفعل', style: const TextStyle(fontFamily: 'Tajawal', color: textLight, fontSize: 10)),
                                 ],
                               ),
                             ),
-                            Switch(
-                              value: isDark,
-                              onChanged: (val) {
-                                ref.read(themeProvider.notifier).toggleTheme();
-                              },
-                              activeColor: primary,
+                            Transform.scale(
+                              scale: 0.8, // ✅ تصغير حجم الزر
+                              child: Switch(
+                                value: isDark,
+                                onChanged: (val) {
+                                  ref.read(themeProvider.notifier).toggleTheme();
+                                },
+                                activeColor: primary,
+                              ),
                             ),
                           ],
                         ),
                       ),
                     ),
-                    const SizedBox(height: 10),
+                    const SizedBox(height: 8),
 
                     _menuItem(Icons.calendar_month, 'حجوزاتي', 'سجل حجوزاتك السابقة والقادمة', bgColor, textColor, () {}),
-                    const SizedBox(height: 10),
+                    const SizedBox(height: 8),
                     _menuItem(Icons.account_balance_wallet, 'محفظتي', 'رصيدك وطرق الدفع', bgColor, textColor, () {
                       Navigator.push(context, MaterialPageRoute(builder: (_) => const WalletScreen()));
                     }),
-                    const SizedBox(height: 10),
+                    const SizedBox(height: 8),
                     _menuItem(Icons.notifications_outlined, 'الإشعارات', 'تخصيص التنبيهات', bgColor, textColor, () {
                       Navigator.push(context, MaterialPageRoute(builder: (_) => const NotificationsScreen()));
                     }),
-                    const SizedBox(height: 10),
+                    const SizedBox(height: 8),
                     _menuItem(Icons.edit_outlined, 'تعديل الملف الشخصي', 'الاسم وكلمة المرور', bgColor, textColor, () async {
                       final result = await Navigator.push(context, MaterialPageRoute(builder: (_) => const EditProfileScreen()));
                       if (result == true && mounted) {
@@ -1310,34 +1315,34 @@ class _SimpleProfileScreenState extends ConsumerState<SimpleProfileScreen> {
                         });
                       }
                     }),
-                    const SizedBox(height: 10),
+                    const SizedBox(height: 8),
                     _menuItem(Icons.settings_outlined, 'الإعدادات', 'اللغة والمظهر والخصوصية', bgColor, textColor, () {}),
-                    const SizedBox(height: 10),
+                    const SizedBox(height: 8),
                     _menuItem(Icons.help_outline, 'المساعدة والدعم', 'تواصل معنا', bgColor, textColor, () {}),
                   ],
                 ),
               ),
               
-              const SizedBox(height: 22),
+              const SizedBox(height: 20),
               
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: GestureDetector(
                   onTap: _logout,
                   child: Container(
-                    width: double.infinity, height: 54,
+                    width: double.infinity, height: 48, // ✅ تصغير زر الخروج
                     decoration: BoxDecoration(
                       color: Colors.red.withValues(alpha: 0.08),
-                      borderRadius: BorderRadius.circular(28),
+                      borderRadius: BorderRadius.circular(24),
                       border: Border.all(color: Colors.redAccent.withValues(alpha: 0.4), width: 1.2),
                     ),
                     child: const Center(
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(Icons.logout, color: Colors.redAccent, size: 20),
-                          SizedBox(width: 10),
-                          Text('تسجيل الخروج', style: TextStyle(color: Colors.redAccent, fontSize: 15, fontWeight: FontWeight.bold)),
+                          Icon(Icons.logout, color: Colors.redAccent, size: 18),
+                          SizedBox(width: 8),
+                          Text('تسجيل الخروج', style: TextStyle(fontFamily: 'Tajawal', color: Colors.redAccent, fontSize: 13, fontWeight: FontWeight.bold)),
                         ],
                       ),
                     ),
@@ -1355,17 +1360,18 @@ class _SimpleProfileScreenState extends ConsumerState<SimpleProfileScreen> {
   Widget _infoRow(IconData icon, String label, String value, Color textColor) {
     return Row(
       children: [
-        Container(width: 42, height: 42,
-            decoration: BoxDecoration(gradient: const LinearGradient(colors: [primary, primaryDark]), borderRadius: BorderRadius.circular(12)),
-            child: Icon(icon, color: Colors.white, size: 20)),
-        const SizedBox(width: 14),
+        // ✅ تصغير أيقونة الهاتف
+        Container(width: 38, height: 38,
+            decoration: BoxDecoration(gradient: const LinearGradient(colors: [primary, primaryDark]), borderRadius: BorderRadius.circular(10)),
+            child: Icon(icon, color: Colors.white, size: 18)),
+        const SizedBox(width: 12),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(label, style: const TextStyle(color: textLight, fontSize: 12)),
+              Text(label, style: const TextStyle(fontFamily: 'Tajawal', color: textLight, fontSize: 10)),
               const SizedBox(height: 2),
-              Text(value, style: TextStyle(color: textColor, fontSize: 14, fontWeight: FontWeight.w600), overflow: TextOverflow.ellipsis),
+              Text(value, style: TextStyle(fontFamily: 'Tajawal', color: textColor, fontSize: 13, fontWeight: FontWeight.w600), overflow: TextOverflow.ellipsis),
             ],
           ),
         ),
@@ -1377,28 +1383,29 @@ class _SimpleProfileScreenState extends ConsumerState<SimpleProfileScreen> {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-        decoration: BoxDecoration(color: bgColor, borderRadius: BorderRadius.circular(18)),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        decoration: BoxDecoration(color: bgColor, borderRadius: BorderRadius.circular(16)),
         child: Row(
           children: [
-            Container(width: 46, height: 46,
+            // ✅ تصغير أيقونة القائمة من 46 إلى 38
+            Container(width: 38, height: 38,
                 decoration: BoxDecoration(
                   gradient: LinearGradient(colors: [primary.withValues(alpha: 0.9), primaryDark], begin: Alignment.topLeft, end: Alignment.bottomRight),
-                  borderRadius: BorderRadius.circular(14),
+                  borderRadius: BorderRadius.circular(10),
                 ),
-                child: Icon(icon, color: Colors.white, size: 22)),
-            const SizedBox(width: 14),
+                child: Icon(icon, color: Colors.white, size: 18)),
+            const SizedBox(width: 12),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(title, style: TextStyle(color: textColor, fontSize: 15, fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 3),
-                  Text(subtitle, style: const TextStyle(color: textLight, fontSize: 11), maxLines: 1, overflow: TextOverflow.ellipsis),
+                  Text(title, style: TextStyle(fontFamily: 'Tajawal', color: textColor, fontSize: 14, fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 2),
+                  Text(subtitle, style: const TextStyle(fontFamily: 'Tajawal', color: textLight, fontSize: 10), maxLines: 1, overflow: TextOverflow.ellipsis),
                 ],
               ),
             ),
-            const Icon(Icons.arrow_back_ios, color: textLight, size: 14),
+            const Icon(Icons.arrow_back_ios, color: textLight, size: 12),
           ],
         ),
       ),
