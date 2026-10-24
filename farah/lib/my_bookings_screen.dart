@@ -16,10 +16,7 @@ class MyBookingsScreen extends StatefulWidget {
 class _MyBookingsScreenState extends State<MyBookingsScreen> {
   static const Color primary = AppColors.primary;
   static const Color primaryDark = AppColors.primaryDark;
-  static const Color textDark = AppColors.textPrimary;
-  static const Color textLight = AppColors.textSecondary;
-  static const Color bgColor = Color(0xFFF9F9FB);
-
+  
   String _filter = 'all';
   final String? _uid = FirebaseAuth.instance.currentUser?.uid;
 
@@ -27,14 +24,21 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
   Widget build(BuildContext context) {
     if (_uid == null) return const Center(child: Text('يجب تسجيل الدخول'));
 
+    // ✅ جلب الألوان من الثيم الحالي (فاتح أو داكن)
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bgColor = Theme.of(context).scaffoldBackgroundColor;
+    final cardColor = Theme.of(context).cardColor;
+    final textColor = Theme.of(context).textTheme.bodyLarge?.color ?? (isDark ? Colors.white : AppColors.textPrimary);
+    final textLight = isDark ? Colors.grey.shade400 : AppColors.textSecondary;
+
     return Scaffold(
       backgroundColor: bgColor,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: isDark ? const Color(0xFF1E1E1E) : Colors.white,
         elevation: 0,
         centerTitle: true,
-        title: const Text('حجوزاتي', style: TextStyle(fontFamily: 'Tajawal', color: textDark, fontWeight: FontWeight.w800, fontSize: 20)),
-        iconTheme: const IconThemeData(color: textDark),
+        title: Text('حجوزاتي', style: TextStyle(fontFamily: 'Tajawal', color: textColor, fontWeight: FontWeight.w800, fontSize: 20)),
+        iconTheme: IconThemeData(color: textColor),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh_rounded, size: 26),
@@ -52,7 +56,7 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
             return const Center(child: CircularProgressIndicator(color: primary));
           }
           if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-            return _buildEmptyState();
+            return _buildEmptyState(textColor, textLight);
           }
 
           final bookings = snapshot.data!.docs.toList()
@@ -72,17 +76,17 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
 
           return Column(
             children: [
-              _buildSummaryHeader(bookings),
-              _buildFilterTabs(),
+              _buildSummaryHeader(bookings, textColor),
+              _buildFilterTabs(isDark, cardColor, textColor, textLight),
               Expanded(
                 child: filteredBookings.isEmpty
-                    ? const Center(child: Text('لا توجد حجوزات في هذا القسم', style: TextStyle(fontFamily: 'Tajawal', color: textLight)))
+                    ? Center(child: Text('لا توجد حجوزات في هذا القسم', style: TextStyle(fontFamily: 'Tajawal', color: textLight)))
                     : ListView.builder(
                         padding: const EdgeInsets.all(16),
                         itemCount: filteredBookings.length,
                         itemBuilder: (context, i) {
                           final data = filteredBookings[i].data() as Map<String, dynamic>;
-                          return _buildBookingCard(data, filteredBookings[i].id);
+                          return _buildBookingCard(data, filteredBookings[i].id, isDark, cardColor, textColor, textLight);
                         },
                       ),
               ),
@@ -93,7 +97,7 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
     );
   }
 
-  Widget _buildSummaryHeader(List<QueryDocumentSnapshot> allBookings) {
+  Widget _buildSummaryHeader(List<QueryDocumentSnapshot> allBookings, Color textColor) {
     int totalHallPrice = 0;
     for (var doc in allBookings) {
       final data = doc.data() as Map;
@@ -136,7 +140,7 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
     );
   }
 
-  Widget _buildFilterTabs() {
+  Widget _buildFilterTabs(bool isDark, Color cardColor, Color textColor, Color textLight) {
     final tabs = [
       {'key': 'all', 'label': 'الكل', 'icon': Icons.grid_view_rounded},
       {'key': 'pending', 'label': 'قيد الانتظار', 'icon': Icons.access_time_rounded},
@@ -161,7 +165,7 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
               duration: const Duration(milliseconds: 250),
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               decoration: BoxDecoration(
-                color: active ? primary : Colors.white,
+                color: active ? primary : cardColor,
                 borderRadius: BorderRadius.circular(30),
                 boxShadow: active ? [BoxShadow(color: primary.withValues(alpha: 0.3), blurRadius: 8, offset: const Offset(0, 3))] : [],
               ),
@@ -169,7 +173,7 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
                 children: [
                   Icon(t['icon'] as IconData, color: active ? Colors.white : textLight, size: 16),
                   const SizedBox(width: 6),
-                  Text(t['label'] as String, style: TextStyle(fontFamily: 'Tajawal', color: active ? Colors.white : textDark, fontSize: 13, fontWeight: active ? FontWeight.bold : FontWeight.w600)),
+                  Text(t['label'] as String, style: TextStyle(fontFamily: 'Tajawal', color: active ? Colors.white : textColor, fontSize: 13, fontWeight: active ? FontWeight.bold : FontWeight.w600)),
                 ],
               ),
             ),
@@ -179,7 +183,7 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
     );
   }
 
-  Widget _buildBookingCard(Map<String, dynamic> data, String docId) {
+  Widget _buildBookingCard(Map<String, dynamic> data, String docId, bool isDark, Color cardColor, Color textColor, Color textLight) {
     final hallName = data['hallName'] ?? 'قاعة';
     final image = data['hallImage'];
     final date = data['eventDate'] is Timestamp ? (data['eventDate'] as Timestamp).toDate() : null;
@@ -197,52 +201,52 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
     final bool canDelete = status == 'cancelled' || status == 'completed';
 
     return GestureDetector(
-      onTap: () => _showBookingDetails(data, docId),
+      onTap: () => _showBookingDetails(data, docId, isDark, textColor, textLight),
       child: Container(
         margin: const EdgeInsets.only(bottom: 20, left: 20, right: 20),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: cardColor,
           borderRadius: BorderRadius.circular(24),
-          boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 20, offset: const Offset(0, 8))],
+          boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.04), blurRadius: 20, offset: const Offset(0, 8))],
         ),
         child: Column(
           children: [
             Padding(
-              padding: const EdgeInsets.all(20),
+              padding: const EdgeInsets.all(16),
               child: Row(
                 children: [
                   ClipRRect(
                     borderRadius: BorderRadius.circular(16),
                     child: SizedBox(
-                      width: 80, height: 80,
+                      width: 70, height: 70,
                       child: image != null && image.toString().isNotEmpty
                           ? CachedNetworkImage(imageUrl: image.toString(), fit: BoxFit.cover)
-                          : Container(color: primary.withValues(alpha: 0.1), child: const Icon(Icons.celebration, color: primary, size: 40)),
+                          : Container(color: primary.withValues(alpha: 0.1), child: const Icon(Icons.celebration, color: primary, size: 30)),
                     ),
                   ),
-                  const SizedBox(width: 16),
+                  const SizedBox(width: 12),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(hallName, style: const TextStyle(fontFamily: 'Tajawal', color: textDark, fontSize: 18, fontWeight: FontWeight.bold), maxLines: 1, overflow: TextOverflow.ellipsis),
+                        Text(hallName, style: TextStyle(fontFamily: 'Tajawal', color: textColor, fontSize: 16, fontWeight: FontWeight.bold), maxLines: 1, overflow: TextOverflow.ellipsis),
                         const SizedBox(height: 8),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                          decoration: BoxDecoration(color: (statusInfo['color'] as Color).withValues(alpha: 0.1), borderRadius: BorderRadius.circular(12)),
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(color: (statusInfo['color'] as Color).withValues(alpha: 0.1), borderRadius: BorderRadius.circular(10)),
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              Icon(statusInfo['icon'] as IconData, color: statusInfo['color'] as Color, size: 14),
-                              const SizedBox(width: 6),
-                              Text(statusInfo['label'] as String, style: TextStyle(fontFamily: 'Tajawal', color: statusInfo['color'] as Color, fontSize: 12, fontWeight: FontWeight.bold)),
+                              Icon(statusInfo['icon'] as IconData, color: statusInfo['color'] as Color, size: 12),
+                              const SizedBox(width: 4),
+                              Text(statusInfo['label'] as String, style: TextStyle(fontFamily: 'Tajawal', color: statusInfo['color'] as Color, fontSize: 11, fontWeight: FontWeight.bold)),
                             ],
                           ),
                         ),
                       ],
                     ),
                   ),
-                  const Icon(Icons.arrow_back_ios_new_rounded, color: textLight, size: 18),
+                  const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.grey, size: 16),
                 ],
               ),
             ),
@@ -250,96 +254,68 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
             if (isPending && refundUntil != null)
               RefundCountdownWidget(expiryDate: refundUntil),
 
-            const Divider(height: 1, thickness: 1, color: Color(0xFFF0F0F0)),
+            Divider(height: 1, thickness: 1, color: isDark ? Colors.grey.shade800 : const Color(0xFFF0F0F0)),
             
             Padding(
-              padding: const EdgeInsets.all(20),
-              child: Column(
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Row(
-                    children: [
-                      Expanded(child: _infoItem(Icons.calendar_today_rounded, 'التاريخ', date != null ? DateFormat('yyyy/MM/dd').format(date) : '-')),
-                      Expanded(child: _infoItem(Icons.access_time_rounded, 'الفترة', timeSlot)),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  Row(
-                    children: [
-                      Expanded(child: _infoItem(Icons.people_alt_rounded, 'الضيوف', '$guests ضيف')),
-                      Expanded(child: _infoItem(Icons.payments_rounded, 'سعر القاعة', '$totalPrice د.ل')),
-                    ],
-                  ),
+                  _infoItem(Icons.calendar_today_rounded, 'التاريخ', date != null ? DateFormat('yyyy/MM/dd').format(date) : '-', textColor, textLight),
+                  _infoItem(Icons.access_time_rounded, 'الفترة', timeSlot, textColor, textLight),
+                  _infoItem(Icons.people_alt_rounded, 'الضيوف', '$guests', textColor, textLight),
                 ],
               ),
             ),
             
-            if (isPending)
+            // ✅ تصميم الأزرار المحسن
+            if (isPending || canDelete)
               Padding(
-                padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
                 child: Row(
                   children: [
                     Expanded(
                       child: OutlinedButton(
-                        onPressed: () => _showBookingDetails(data, docId),
+                        onPressed: () => _showBookingDetails(data, docId, isDark, textColor, textLight),
                         style: OutlinedButton.styleFrom(
-                          side: BorderSide(color: primary.withValues(alpha: 0.5), width: 1.5),
+                          side: BorderSide(color: primary.withValues(alpha: 0.5), width: 1.2),
                           foregroundColor: primary,
-                          minimumSize: const Size(0, 48),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                          minimumSize: const Size(0, 42),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                         ),
-                        child: const Text('التفاصيل', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, fontSize: 15)),
+                        child: const Text('التفاصيل', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, fontSize: 13)),
                       ),
                     ),
-                    const SizedBox(width: 12),
+                    const SizedBox(width: 10),
                     if (status == 'pending')
                       Expanded(
                         child: ElevatedButton(
-                          onPressed: () => _cancelBooking(docId, data),
+                          onPressed: () => _cancelBooking(docId, data, textColor),
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.redAccent,
-                            foregroundColor: Colors.white,
-                            minimumSize: const Size(0, 48),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                            backgroundColor: Colors.redAccent.withValues(alpha: 0.1),
+                            foregroundColor: Colors.redAccent,
                             elevation: 0,
+                            minimumSize: const Size(0, 42),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                           ),
-                          child: const Text('إلغاء', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, fontSize: 15)),
+                          child: const Text('إلغاء', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, fontSize: 13)),
                         ),
                       ),
-                  ],
-                ),
-              )
-            else if (canDelete)
-              Padding(
-                padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: OutlinedButton(
-                        onPressed: () => _showBookingDetails(data, docId),
-                        style: OutlinedButton.styleFrom(
-                          side: BorderSide(color: Colors.grey.shade400, width: 1.5),
-                          foregroundColor: textDark,
-                          minimumSize: const Size(0, 48),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                        ),
-                        child: const Text('التفاصيل', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, fontSize: 15)),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: ElevatedButton.icon(
-                        onPressed: () => _deleteBooking(docId),
-                        icon: const Icon(Icons.delete_outline_rounded, size: 20),
-                        label: const Text('حذف', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, fontSize: 15)),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.red.withValues(alpha: 0.1), 
-                          foregroundColor: Colors.redAccent,
-                          elevation: 0,
-                          minimumSize: const Size(0, 48),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                    if (canDelete)
+                      Expanded(
+                        child: ElevatedButton.icon(
+                          onPressed: () => _deleteBooking(docId),
+                          icon: const Icon(Icons.delete_outline_rounded, size: 16),
+                          label: const Text('حذف', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, fontSize: 13)),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.red.withValues(alpha: 0.1), 
+                            foregroundColor: Colors.redAccent,
+                            elevation: 0,
+                            minimumSize: const Size(0, 42),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          ),
                         ),
                       ),
-                    ),
                   ],
                 ),
               ),
@@ -349,29 +325,28 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
     );
   }
 
-  Widget _infoItem(IconData icon, String label, String value) {
+  Widget _infoItem(IconData icon, String label, String value, Color textColor, Color textLight) {
     return Row(
       children: [
         Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(color: primary.withValues(alpha: 0.08), borderRadius: BorderRadius.circular(10)),
-          child: Icon(icon, color: primary, size: 18),
+          padding: const EdgeInsets.all(6),
+          decoration: BoxDecoration(color: primary.withValues(alpha: 0.08), borderRadius: BorderRadius.circular(8)),
+          child: Icon(icon, color: primary, size: 14),
         ),
-        const SizedBox(width: 10),
+        const SizedBox(width: 6),
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(label, style: const TextStyle(fontFamily: 'Tajawal', color: textLight, fontSize: 11, fontWeight: FontWeight.w500)),
-            const SizedBox(height: 2),
-            Text(value, style: const TextStyle(fontFamily: 'Tajawal', color: textDark, fontSize: 14, fontWeight: FontWeight.bold)),
+            Text(label, style: TextStyle(fontFamily: 'Tajawal', color: textLight, fontSize: 9)),
+            Text(value, style: TextStyle(fontFamily: 'Tajawal', color: textColor, fontSize: 12, fontWeight: FontWeight.bold)),
           ],
         ),
       ],
     );
   }
 
-  // ✅ الدوال المساعدة مكتملة الآن
-  void _showBookingDetails(Map<String, dynamic> data, String docId) {
+  // الدوال المساعدة (محدثة لتستقبل الألوان)
+  void _showBookingDetails(Map<String, dynamic> data, String docId, bool isDark, Color textColor, Color textLight) {
     final services = List<String>.from(data['services'] ?? []);
     final commission = data['commission'] ?? 60;
     final totalPrice = data['totalPrice'] ?? 0;
@@ -379,6 +354,7 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
+      backgroundColor: isDark ? const Color(0xFF1E1E1E) : Colors.white,
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
       builder: (context) {
         return Padding(
@@ -387,7 +363,7 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text('تفاصيل الحجز', style: TextStyle(fontFamily: 'Tajawal', fontSize: 20, fontWeight: FontWeight.bold)),
+              Text('تفاصيل الحجز', style: TextStyle(fontFamily: 'Tajawal', fontSize: 20, fontWeight: FontWeight.bold, color: textColor)),
               const SizedBox(height: 16),
               
               Container(
@@ -410,11 +386,11 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
               const SizedBox(height: 12),
 
               if (services.isNotEmpty) ...[
-                const Text('الخدمات الإضافية المطلوبة:', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+                Text('الخدمات الإضافية المطلوبة:', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, color: textColor)),
                 const SizedBox(height: 8),
                 ...services.map((s) => Padding(
                   padding: const EdgeInsets.only(bottom: 4),
-                  child: Row(children: [const Icon(Icons.check, size: 16, color: primary), const SizedBox(width: 8), Text(s, style: const TextStyle(fontFamily: 'Tajawal'))]),
+                  child: Row(children: [const Icon(Icons.check, size: 16, color: primary), const SizedBox(width: 8), Text(s, style: TextStyle(fontFamily: 'Tajawal', color: textColor))]),
                 )),
                 const Divider(height: 24),
               ],
@@ -422,8 +398,8 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text('إجمالي سعر القاعة والخدمات (يُدفع للمزود):', style: TextStyle(fontFamily: 'Tajawal', color: textLight, fontSize: 12)),
-                  Text('$totalPrice د.ل', style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, fontSize: 18)),
+                  Text('إجمالي سعر القاعة والخدمات (يُدفع للمزود):', style: TextStyle(fontFamily: 'Tajawal', color: textLight, fontSize: 12)),
+                  Text('$totalPrice د.ل', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, fontSize: 18, color: textColor)),
                 ],
               ),
               const SizedBox(height: 20),
@@ -443,25 +419,18 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
     );
   }
 
-  Future<void> _cancelBooking(String docId, Map<String, dynamic> data) async {
+  Future<void> _cancelBooking(String docId, Map<String, dynamic> data, Color textColor) async {
     final expiresAt = data['refundEligibleUntil'] as Timestamp?;
-
-    if (expiresAt == null) {
-      _showError('لا يمكن إلغاء هذا الحجز');
-      return;
-    }
-
+    if (expiresAt == null) { _showError('لا يمكن إلغاء هذا الحجز'); return; }
     final isWithin48Hours = DateTime.now().isBefore(expiresAt.toDate());
 
     final confirm = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text('إلغاء الحجز', style: TextStyle(fontFamily: 'Tajawal')),
+        title: Text('إلغاء الحجز', style: TextStyle(fontFamily: 'Tajawal', color: textColor)),
         content: Text(
-          isWithin48Hours 
-            ? 'هل أنت متأكد من إلغاء الحجز؟\nسيتم إرجاع مبلغ 60 د.ل إلى محفظتك فوراً.'
-            : 'انتهت مدة الـ 48 ساعة المسموح بها للإلغاء. لا يمكن استرداد رسم الحجز.',
+          isWithin48Hours ? 'هل أنت متأكد من إلغاء الحجز؟\nسيتم إرجاع مبلغ 60 د.ل إلى محفظتك فوراً.' : 'انتهت مدة الـ 48 ساعة المسموح بها للإلغاء.',
           style: const TextStyle(fontFamily: 'Tajawal'),
         ),
         actions: [
@@ -474,14 +443,10 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
         ],
       ),
     );
-
     if (confirm != true) return;
 
     try {
-      await FirebaseFirestore.instance.collection('bookings').doc(docId).update({
-        'status': 'cancelled',
-      });
-
+      await FirebaseFirestore.instance.collection('bookings').doc(docId).update({'status': 'cancelled'});
       if (isWithin48Hours) {
         final userRef = FirebaseFirestore.instance.collection('users').doc(_uid);
         await FirebaseFirestore.instance.runTransaction((transaction) async {
@@ -491,27 +456,16 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
             transaction.update(userRef, {'walletBalance': currentBalance + 60.0});
           }
         });
-
         await FirebaseFirestore.instance.collection('transactions').add({
-          'userId': _uid,
-          'amount': 60.0,
-          'type': 'refund',
-          'description': 'استرداد رسم حجز (إلغاء)',
-          'createdAt': FieldValue.serverTimestamp(),
+          'userId': _uid, 'amount': 60.0, 'type': 'refund', 'description': 'استرداد رسم حجز (إلغاء)', 'createdAt': FieldValue.serverTimestamp(),
         });
       }
-
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(isWithin48Hours ? 'تم الإلغاء واسترداد 60 د.ل للمحفظة' : 'تم إلغاء الحجز بنجاح', style: const TextStyle(fontFamily: 'Tajawal')),
-            backgroundColor: Colors.green,
-          ),
+          SnackBar(content: Text(isWithin48Hours ? 'تم الإلغاء واسترداد 60 د.ل' : 'تم إلغاء الحجز', style: const TextStyle(fontFamily: 'Tajawal')), backgroundColor: Colors.green),
         );
       }
-    } catch (e) {
-      _showError('حدث خطأ: $e');
-    }
+    } catch (e) { _showError('حدث خطأ: $e'); }
   }
 
   Future<void> _deleteBooking(String docId) async {
@@ -520,7 +474,7 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
       builder: (_) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: const Text('حذف السجل', style: TextStyle(color: Colors.redAccent, fontFamily: 'Tajawal')),
-        content: const Text('هل أنت متأكد من حذف هذا السجل نهائياً من قائمة حجوزاتك؟', style: TextStyle(fontFamily: 'Tajawal')),
+        content: const Text('هل أنت متأكد من حذف هذا السجل نهائياً؟', style: TextStyle(fontFamily: 'Tajawal')),
         actions: [
           TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('تراجع', style: TextStyle(fontFamily: 'Tajawal'))),
           ElevatedButton(
@@ -531,19 +485,11 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
         ],
       ),
     );
-
     if (confirm != true) return;
-
     try {
       await FirebaseFirestore.instance.collection('bookings').doc(docId).delete();
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('تم حذف السجل بنجاح', style: TextStyle(fontFamily: 'Tajawal')), backgroundColor: Colors.green),
-        );
-      }
-    } catch (e) {
-      _showError('حدث خطأ أثناء الحذف: $e');
-    }
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('تم حذف السجل', style: TextStyle(fontFamily: 'Tajawal')), backgroundColor: Colors.green));
+    } catch (e) { _showError('حدث خطأ: $e'); }
   }
 
   void _showError(String msg) {
@@ -560,23 +506,20 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
     }
   }
 
-  Widget _buildEmptyState() {
+  Widget _buildEmptyState(Color textColor, Color textLight) {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(Icons.event_busy, size: 80, color: primary.withValues(alpha: 0.2)),
           const SizedBox(height: 16),
-          const Text('لا توجد لديك حجوزات حتى الآن', style: TextStyle(fontFamily: 'Tajawal', color: textDark, fontSize: 16, fontWeight: FontWeight.bold)),
+          Text('لا توجد لديك حجوزات حتى الآن', style: TextStyle(fontFamily: 'Tajawal', color: textColor, fontSize: 16, fontWeight: FontWeight.bold)),
         ],
       ),
     );
   }
 }
 
-// ═══════════════════════════════════════════════════════════
-// ✅ الويدجت المخصص للعداد التنازلي
-// ═══════════════════════════════════════════════════════════
 class RefundCountdownWidget extends StatefulWidget {
   final DateTime expiryDate;
   const RefundCountdownWidget({super.key, required this.expiryDate});
@@ -595,11 +538,7 @@ class _RefundCountdownWidgetState extends State<RefundCountdownWidget> {
     _calculateRemaining();
     _timer?.cancel(); 
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      if (mounted) {
-        setState(() {
-          _calculateRemaining();
-        });
-      }
+      if (mounted) setState(() => _calculateRemaining());
     });
   }
 
@@ -621,10 +560,7 @@ class _RefundCountdownWidgetState extends State<RefundCountdownWidget> {
 
   String _formatDuration(Duration duration) {
     String twoDigits(int n) => n.toString().padLeft(2, "0");
-    String twoDigitHours = twoDigits(duration.inHours);
-    String twoDigitMinutes = twoDigits(duration.inMinutes.remainder(60));
-    String twoDigitSeconds = twoDigits(duration.inSeconds.remainder(60));
-    return "$twoDigitHours:$twoDigitMinutes:$twoDigitSeconds";
+    return "${twoDigits(duration.inHours)}:${twoDigits(duration.inMinutes.remainder(60))}:${twoDigits(duration.inSeconds.remainder(60))}";
   }
 
   @override
@@ -634,7 +570,7 @@ class _RefundCountdownWidgetState extends State<RefundCountdownWidget> {
     final color = isExpired ? Colors.grey : (isUrgent ? Colors.redAccent : Colors.green);
 
     return Container(
-      margin: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+      margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.08),
@@ -644,33 +580,16 @@ class _RefundCountdownWidgetState extends State<RefundCountdownWidget> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
-            isExpired ? Icons.timer_off_rounded : Icons.timer_rounded,
-            color: color,
-            size: 20,
-          ),
+          Icon(isExpired ? Icons.timer_off_rounded : Icons.timer_rounded, color: color, size: 20),
           const SizedBox(width: 10),
           Text(
-            isExpired 
-                ? 'انتهى وقت استرداد رسم الحجز (60 د.ل)' 
-                : 'متبقي لاسترداد الرسم: ',
-            style: TextStyle(
-              fontFamily: 'Tajawal',
-              color: isExpired ? color : AppColors.textPrimary,
-              fontSize: 13,
-              fontWeight: isExpired ? FontWeight.bold : FontWeight.w600,
-            ),
+            isExpired ? 'انتهى وقت استرداد رسم الحجز (60 د.ل)' : 'متبقي لاسترداد الرسم: ',
+            style: TextStyle(fontFamily: 'Tajawal', color: isExpired ? color : Theme.of(context).textTheme.bodyLarge?.color, fontSize: 13, fontWeight: isExpired ? FontWeight.bold : FontWeight.w600),
           ),
           if (!isExpired)
             Text(
               _formatDuration(_remaining),
-              style: TextStyle(
-                fontFamily: 'Tajawal',
-                color: color,
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                fontFeatures: const [FontFeature.tabularFigures()],
-              ),
+              style: TextStyle(fontFamily: 'Tajawal', color: color, fontSize: 16, fontWeight: FontWeight.bold, fontFeatures: const [FontFeature.tabularFigures()]),
             ),
         ],
       ),
