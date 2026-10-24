@@ -43,6 +43,30 @@ class _BookingScreenState extends State<BookingScreen> {
       widget.prefilledEventType != null ||
       widget.prefilledTimeSlot != null;
 
+  // ✅ دالة حساب السعر الفعلي (تراعي الخميس والجمعة)
+  int get _effectiveBasePrice {
+    final basePrice = (widget.hallData['price'] ?? 0) is int
+        ? widget.hallData['price'] as int
+        : int.tryParse(widget.hallData['price'].toString()) ?? 0;
+
+    if (_selectedDate != null) {
+      final isWeekend = _selectedDate!.weekday == DateTime.thursday || _selectedDate!.weekday == DateTime.friday;
+      final weekendPrice = (widget.hallData['weekendPrice'] ?? 0) as num;
+      
+      if (isWeekend && weekendPrice > 0) {
+        return weekendPrice.toInt();
+      }
+    }
+    return basePrice;
+  }
+
+  bool get _isWeekendPrice {
+    if (_selectedDate == null) return false;
+    final isWeekend = _selectedDate!.weekday == DateTime.thursday || _selectedDate!.weekday == DateTime.friday;
+    final weekendPrice = (widget.hallData['weekendPrice'] ?? 0) as num;
+    return isWeekend && weekendPrice > 0;
+  }
+
   final List<Map<String, dynamic>> _eventTypes = const [
     {'name': 'حفل زفاف', 'icon': Icons.favorite, 'color': Color(0xFFE91E63)},
     {'name': 'محضر', 'icon': Icons.home_outlined, 'color': Color(0xFF9C27B0)},
@@ -94,9 +118,6 @@ class _BookingScreenState extends State<BookingScreen> {
   Widget build(BuildContext context) {
     final hall = widget.hallData;
     final name = hall['name'] ?? 'صالة';
-    final basePrice = (hall['price'] ?? 0) is int
-        ? hall['price'] as int
-        : int.tryParse(hall['price'].toString()) ?? 0;
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -110,7 +131,7 @@ class _BookingScreenState extends State<BookingScreen> {
       body: SingleChildScrollView(
         child: Column(
           children: [
-            _buildHallSummary(name, basePrice),
+            _buildHallSummary(name),
             const SizedBox(height: 8),
             if (_hasPrefilled)
               _buildPrefilledSummary()
@@ -125,7 +146,7 @@ class _BookingScreenState extends State<BookingScreen> {
           ],
         ),
       ),
-      bottomNavigationBar: _buildConfirmBar(basePrice),
+      bottomNavigationBar: _buildConfirmBar(),
     );
   }
 
@@ -241,7 +262,9 @@ class _BookingScreenState extends State<BookingScreen> {
     );
   }
 
-  Widget _buildHallSummary(String name, int basePrice) {
+  // ✅ تم تحديثها لعرض السعر الديناميكي
+  Widget _buildHallSummary(String name) {
+    final price = _effectiveBasePrice;
     return Container(
       margin: const EdgeInsets.all(16),
       padding: const EdgeInsets.all(16),
@@ -274,12 +297,19 @@ class _BookingScreenState extends State<BookingScreen> {
               ],
             ),
           ),
-          RichText(
-            text: TextSpan(children: [
-              TextSpan(text: '$basePrice ',
-                  style: const TextStyle(color: primary, fontSize: 17, fontWeight: FontWeight.bold)),
-              const TextSpan(text: 'د.ل', style: TextStyle(color: textDark, fontSize: 11)),
-            ]),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              RichText(
+                text: TextSpan(children: [
+                  TextSpan(text: '$price ',
+                      style: const TextStyle(color: primary, fontSize: 17, fontWeight: FontWeight.bold)),
+                  const TextSpan(text: 'د.ل', style: TextStyle(color: textDark, fontSize: 11)),
+                ]),
+              ),
+              if (_isWeekendPrice)
+                const Text('سعر العطلة', style: TextStyle(color: Colors.orange, fontSize: 10, fontWeight: FontWeight.bold)),
+            ],
           ),
         ],
       ),
@@ -619,8 +649,8 @@ class _BookingScreenState extends State<BookingScreen> {
     return basePrice + services;
   }
 
-  Widget _buildConfirmBar(int basePrice) {
-    final total = _calculateTotal(basePrice);
+  Widget _buildConfirmBar() {
+    final total = _calculateTotal(_effectiveBasePrice);
     return Container(
       padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
       decoration: BoxDecoration(
@@ -650,7 +680,7 @@ class _BookingScreenState extends State<BookingScreen> {
               width: double.infinity,
               height: 54,
               child: ElevatedButton(
-                onPressed: _loading ? null : () => _confirmBooking(basePrice),
+                onPressed: _loading ? null : () => _confirmBooking(),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: primary,
                   foregroundColor: Colors.white,
@@ -671,7 +701,7 @@ class _BookingScreenState extends State<BookingScreen> {
     );
   }
 
-  Future<void> _confirmBooking(int basePrice) async {
+  Future<void> _confirmBooking() async {
     if (_selectedEventType == null) {
       _showError('الرجاء اختيار نوع المناسبة');
       return;
@@ -798,7 +828,10 @@ class _BookingScreenState extends State<BookingScreen> {
     setState(() => _loading = true);
 
     try {
-      final total = _calculateTotal(basePrice);
+      // ✅ استخدام السعر الفعلي (الذي قد يكون سعر العطلة)
+      final effectiveBasePrice = _effectiveBasePrice;
+      final total = _calculateTotal(effectiveBasePrice);
+      
       const double fixedCommission = 60.0;
       final expiresAt = DateTime.now().add(const Duration(hours: 48));
       
@@ -814,11 +847,11 @@ class _BookingScreenState extends State<BookingScreen> {
         'eventDate': Timestamp.fromDate(bookingDate),
         'guestsCount': _guestsCount,
         'services': _selectedServices,
-        'basePrice': basePrice,
+        'basePrice': effectiveBasePrice, // ✅ السعر الصحيح المحفوظ
         'totalPrice': total,
         'commission': fixedCommission,
         'providerNet': total,
-        'status': 'confirmed', // ✅ تم التغيير هنا إلى confirmed (قبول تلقائي)
+        'status': 'confirmed',
         'paymentStatus': 'unpaid',
         'createdAt': FieldValue.serverTimestamp(),
         'expiresAt': Timestamp.fromDate(expiresAt),
