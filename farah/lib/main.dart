@@ -5,7 +5,6 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'features/onboarding/onboarding_screen.dart';
 
 // 🟩 إعدادات Firebase
@@ -22,34 +21,6 @@ const FirebaseOptions webFirebaseOptions = FirebaseOptions(
 // 🟩 إعدادات Supabase
 const String supabaseUrl = 'https://tzizhccygtgqbkghbwif.supabase.co';
 const String supabaseAnonKey = 'sb_publishable_HxGzyPlKTAUK5U7Rznlf0Q_EY0du155';
-
-// ✅ مزود حالة الثيم (Theme Provider)
-final themeProvider = StateNotifierProvider<ThemeNotifier, ThemeMode>((ref) {
-  return ThemeNotifier();
-});
-
-class ThemeNotifier extends StateNotifier<ThemeMode> {
-  ThemeNotifier() : super(ThemeMode.light) {
-    _loadTheme();
-  }
-
-  Future<void> _loadTheme() async {
-    final prefs = await SharedPreferences.getInstance();
-    final isDark = prefs.getBool('isDarkMode') ?? false;
-    state = isDark ? ThemeMode.dark : ThemeMode.light;
-  }
-
-  Future<void> toggleTheme() async {
-    final prefs = await SharedPreferences.getInstance();
-    if (state == ThemeMode.light) {
-      state = ThemeMode.dark;
-      await prefs.setBool('isDarkMode', true);
-    } else {
-      state = ThemeMode.light;
-      await prefs.setBool('isDarkMode', false);
-    }
-  }
-}
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -74,8 +45,10 @@ class FarahApp extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final themeMode = ref.watch(themeProvider);
     const Color primaryColor = Color(0xFFD81B60); 
+
+    // ✅ توحيد الخط لكل عناصر التطبيق باستخدام TextTheme
+    final textTheme = GoogleFonts.tajawalTextTheme();
 
     return MaterialApp(
       title: 'فرح',
@@ -88,23 +61,32 @@ class FarahApp extends ConsumerWidget {
         GlobalCupertinoLocalizations.delegate,
       ],
 
-      // 🎨 الثيم الفاتح (Light Mode)
+      // ✅ ثيم موحد (فاتح فقط - بدون وضع ليلي)
       theme: ThemeData(
         brightness: Brightness.light,
         primaryColor: primaryColor,
-        scaffoldBackgroundColor: const Color(0xFFF9F9FB), // خلفية الشاشة
+        scaffoldBackgroundColor: const Color(0xFFF9F9FB),
         fontFamily: GoogleFonts.tajawal().fontFamily,
+        textTheme: textTheme.apply(
+          fontFamily: GoogleFonts.tajawal().fontFamily,
+          bodyColor: const Color(0xFF1A1A1A), // لون النص الأساسي
+          displayColor: const Color(0xFF1A1A1A),
+        ),
         colorScheme: ColorScheme.fromSeed(
           seedColor: primaryColor,
           brightness: Brightness.light,
         ),
-        appBarTheme: const AppBarTheme(
+        appBarTheme: AppBarTheme(
           backgroundColor: primaryColor,
           foregroundColor: Colors.white,
           elevation: 0,
           centerTitle: true,
+          titleTextStyle: GoogleFonts.tajawal(
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
         ),
-        cardColor: Colors.white,
         cardTheme: CardThemeData(
           color: Colors.white,
           elevation: 0,
@@ -114,7 +96,7 @@ class FarahApp extends ConsumerWidget {
           filled: true,
           fillColor: Colors.white,
           contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-          hintStyle: const TextStyle(color: Colors.grey, fontSize: 14),
+          hintStyle: GoogleFonts.tajawal(color: Colors.grey, fontSize: 14),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(16),
             borderSide: BorderSide(color: Colors.grey.withValues(alpha: 0.2)),
@@ -128,59 +110,23 @@ class FarahApp extends ConsumerWidget {
             borderSide: const BorderSide(color: primaryColor, width: 1.5),
           ),
         ),
-      ),
-      
-      // 🎨 الثيم الداكن (Dark Mode) ✅
-      darkTheme: ThemeData(
-        brightness: Brightness.dark,
-        primaryColor: primaryColor,
-        scaffoldBackgroundColor: const Color(0xFF121212), // خلفية الشاشة الداكنة
-        fontFamily: GoogleFonts.tajawal().fontFamily,
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: primaryColor,
-          brightness: Brightness.dark,
-        ),
-        appBarTheme: const AppBarTheme(
-          backgroundColor: Color(0xFF1E1E1E), // شريط التطبيق
-          foregroundColor: Colors.white,
-          elevation: 0,
-          centerTitle: true,
-        ),
-        cardColor: const Color(0xFF1E1E1E), // لون البطاقات
-        cardTheme: CardThemeData(
-          color: const Color(0xFF1E1E1E),
-          elevation: 0,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        ),
-        inputDecorationTheme: InputDecorationTheme(
-          filled: true,
-          fillColor: const Color(0xFF2C2C2C), // لون حقول الإدخال
-          contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-          hintStyle: const TextStyle(color: Colors.grey, fontSize: 14),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(16),
-            borderSide: BorderSide.none,
-          ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(16),
-            borderSide: BorderSide.none,
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(16),
-            borderSide: const BorderSide(color: primaryColor, width: 1.5),
+        elevatedButtonTheme: ElevatedButtonThemeData(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: primaryColor,
+            foregroundColor: Colors.white,
+            textStyle: GoogleFonts.tajawal(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+            ),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            elevation: 2,
+            shadowColor: primaryColor.withValues(alpha: 0.4),
           ),
         ),
-        textTheme: const TextTheme(
-          bodyLarge: TextStyle(color: Colors.white),
-          bodyMedium: TextStyle(color: Colors.white70),
-          titleLarge: TextStyle(color: Colors.white),
-        ),
-        iconTheme: const IconThemeData(color: Colors.white),
-        dividerTheme: const DividerThemeData(color: Color(0xFF2C2C2C)),
       ),
 
-      themeMode: themeMode, // ✅ تطبيق الوضع المختار (فاتح / داكن)
+      // ✅ إزالة الوضع الليلي (لا يوجد darkTheme، لا يوجد themeMode)
       home: const OnboardingScreen(),
     );
   }
-} 
+}
