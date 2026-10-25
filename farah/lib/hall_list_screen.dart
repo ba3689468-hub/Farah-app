@@ -5,8 +5,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_animate/flutter_animate.dart'; 
-import 'package:flutter_riverpod/flutter_riverpod.dart'; 
-import 'main.dart'; 
+import 'package:google_fonts/google_fonts.dart'; 
 
 import 'features/auth/presentation/screens/login_screen_farah.dart';
 import 'features/favorites_screen.dart';
@@ -1142,15 +1141,15 @@ class _HallListScreenState extends State<HallListScreen> {
 }
 
 // ═══════════════════════════════════════════════
-// شاشة الملف الشخصي المبسطة (تم تصغير الخطوط والأيقونات)
+// شاشة الملف الشخصي المبسطة (تم إزالة الوضع الليلي نهائياً)
 // ═══════════════════════════════════════════════
-class SimpleProfileScreen extends ConsumerStatefulWidget {
+class SimpleProfileScreen extends StatefulWidget {
   const SimpleProfileScreen({super.key});
   @override
-  ConsumerState<SimpleProfileScreen> createState() => _SimpleProfileScreenState();
+  State<SimpleProfileScreen> createState() => _SimpleProfileScreenState();
 }
 
-class _SimpleProfileScreenState extends ConsumerState<SimpleProfileScreen> {
+class _SimpleProfileScreenState extends State<SimpleProfileScreen> {
   static const Color primary = AppColors.primary;
   static const Color primaryDark = AppColors.primaryDark;
   static const Color textDark = AppColors.textPrimary;
@@ -1191,10 +1190,6 @@ class _SimpleProfileScreenState extends ConsumerState<SimpleProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final bgColor = isDark ? const Color(0xFF1E1E1E) : Colors.white;
-    final textColor = isDark ? Colors.white : textDark;
-
     return FutureBuilder<DocumentSnapshot>(
       future: _userFuture,
       builder: (context, snap) {
@@ -1213,14 +1208,14 @@ class _SimpleProfileScreenState extends ConsumerState<SimpleProfileScreen> {
           child: Column(
             children: [
               const SizedBox(height: 16),
-              // ✅ تصغير حجم صورة البروفايل من 110 إلى 90
+              // ✅ تصغير حجم صورة البروفايل
               Container(
                 width: 90, height: 90,
                 decoration: const BoxDecoration(shape: BoxShape.circle, gradient: LinearGradient(colors: [primary, primaryDark])),
                 child: Icon(isProvider ? Icons.storefront : Icons.person, size: 45, color: Colors.white),
               ),
               const SizedBox(height: 12),
-              Text(name, style: TextStyle(fontFamily: 'Tajawal', color: textColor, fontSize: 20, fontWeight: FontWeight.bold)),
+              Text(name, style: const TextStyle(fontFamily: 'Tajawal', color: textDark, fontSize: 20, fontWeight: FontWeight.bold)),
               const SizedBox(height: 8),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
@@ -1233,8 +1228,8 @@ class _SimpleProfileScreenState extends ConsumerState<SimpleProfileScreen> {
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: Container(
                   padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(color: bgColor, borderRadius: BorderRadius.circular(16)),
-                  child: _infoRow(Icons.phone_outlined, 'رقم الهاتف', phone.isEmpty ? 'غير محدد' : phone, textColor),
+                  decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),
+                  child: _infoRow(Icons.phone_outlined, 'رقم الهاتف', phone.isEmpty ? 'غير محدد' : phone),
                 ),
               ),
               const SizedBox(height: 16),
@@ -1244,70 +1239,23 @@ class _SimpleProfileScreenState extends ConsumerState<SimpleProfileScreen> {
                 child: Column(
                   children: [
                     if (isProvider) ...[
-                      _menuItem(Icons.dashboard_outlined, 'لوحة المزود', 'إدارة حجوزاتك وأرباحك', bgColor, textColor, () {
+                      _menuItem(Icons.dashboard_outlined, 'لوحة المزود', 'إدارة حجوزاتك وأرباحك', () {
                         Navigator.push(context, MaterialPageRoute(builder: (_) => const ProviderDashboardScreen()));
                       }),
                       const SizedBox(height: 8),
                     ],
-                    
-                    // ✅ زر الوضع الليلي (مصغر)
-                    GestureDetector(
-                      onTap: () {
-                        ref.read(themeProvider.notifier).toggleTheme();
-                      },
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                        decoration: BoxDecoration(color: bgColor, borderRadius: BorderRadius.circular(16)),
-                        child: Row(
-                          children: [
-                            // ✅ تصغير أيقونة الوضع الليلي من 46 إلى 38
-                            Container(width: 38, height: 38,
-                                decoration: BoxDecoration(
-                                  gradient: LinearGradient(
-                                    colors: isDark ? [Colors.indigo, Colors.blue] : [Colors.orange, Colors.amber], 
-                                    begin: Alignment.topLeft, end: Alignment.bottomRight
-                                  ),
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                                child: Icon(isDark ? Icons.dark_mode : Icons.light_mode, color: Colors.white, size: 18)),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text('الوضع الليلي', style: TextStyle(fontFamily: 'Tajawal', color: textColor, fontSize: 14, fontWeight: FontWeight.bold)),
-                                  const SizedBox(height: 2),
-                                  Text(isDark ? 'مفعل' : 'غير مفعل', style: const TextStyle(fontFamily: 'Tajawal', color: textLight, fontSize: 10)),
-                                ],
-                              ),
-                            ),
-                            Transform.scale(
-                              scale: 0.8, // ✅ تصغير حجم الزر
-                              child: Switch(
-                                value: isDark,
-                                onChanged: (val) {
-                                  ref.read(themeProvider.notifier).toggleTheme();
-                                },
-                                activeColor: primary,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
+                    // ❌ تم إزالة زر الوضع الليلي بالكامل هنا
+                    _menuItem(Icons.calendar_month, 'حجوزاتي', 'سجل حجوزاتك السابقة والقادمة', () {}),
                     const SizedBox(height: 8),
-
-                    _menuItem(Icons.calendar_month, 'حجوزاتي', 'سجل حجوزاتك السابقة والقادمة', bgColor, textColor, () {}),
-                    const SizedBox(height: 8),
-                    _menuItem(Icons.account_balance_wallet, 'محفظتي', 'رصيدك وطرق الدفع', bgColor, textColor, () {
+                    _menuItem(Icons.account_balance_wallet, 'محفظتي', 'رصيدك وطرق الدفع', () {
                       Navigator.push(context, MaterialPageRoute(builder: (_) => const WalletScreen()));
                     }),
                     const SizedBox(height: 8),
-                    _menuItem(Icons.notifications_outlined, 'الإشعارات', 'تخصيص التنبيهات', bgColor, textColor, () {
+                    _menuItem(Icons.notifications_outlined, 'الإشعارات', 'تخصيص التنبيهات', () {
                       Navigator.push(context, MaterialPageRoute(builder: (_) => const NotificationsScreen()));
                     }),
                     const SizedBox(height: 8),
-                    _menuItem(Icons.edit_outlined, 'تعديل الملف الشخصي', 'الاسم وكلمة المرور', bgColor, textColor, () async {
+                    _menuItem(Icons.edit_outlined, 'تعديل الملف الشخصي', 'الاسم وكلمة المرور', () async {
                       final result = await Navigator.push(context, MaterialPageRoute(builder: (_) => const EditProfileScreen()));
                       if (result == true && mounted) {
                         setState(() {
@@ -1316,9 +1264,9 @@ class _SimpleProfileScreenState extends ConsumerState<SimpleProfileScreen> {
                       }
                     }),
                     const SizedBox(height: 8),
-                    _menuItem(Icons.settings_outlined, 'الإعدادات', 'اللغة والمظهر والخصوصية', bgColor, textColor, () {}),
+                    _menuItem(Icons.settings_outlined, 'الإعدادات', 'اللغة والمظهر والخصوصية', () {}),
                     const SizedBox(height: 8),
-                    _menuItem(Icons.help_outline, 'المساعدة والدعم', 'تواصل معنا', bgColor, textColor, () {}),
+                    _menuItem(Icons.help_outline, 'المساعدة والدعم', 'تواصل معنا', () {}),
                   ],
                 ),
               ),
@@ -1330,7 +1278,7 @@ class _SimpleProfileScreenState extends ConsumerState<SimpleProfileScreen> {
                 child: GestureDetector(
                   onTap: _logout,
                   child: Container(
-                    width: double.infinity, height: 48, // ✅ تصغير زر الخروج
+                    width: double.infinity, height: 48, 
                     decoration: BoxDecoration(
                       color: Colors.red.withValues(alpha: 0.08),
                       borderRadius: BorderRadius.circular(24),
@@ -1357,10 +1305,9 @@ class _SimpleProfileScreenState extends ConsumerState<SimpleProfileScreen> {
     );
   }
 
-  Widget _infoRow(IconData icon, String label, String value, Color textColor) {
+  Widget _infoRow(IconData icon, String label, String value) {
     return Row(
       children: [
-        // ✅ تصغير أيقونة الهاتف
         Container(width: 38, height: 38,
             decoration: BoxDecoration(gradient: const LinearGradient(colors: [primary, primaryDark]), borderRadius: BorderRadius.circular(10)),
             child: Icon(icon, color: Colors.white, size: 18)),
@@ -1371,7 +1318,7 @@ class _SimpleProfileScreenState extends ConsumerState<SimpleProfileScreen> {
             children: [
               Text(label, style: const TextStyle(fontFamily: 'Tajawal', color: textLight, fontSize: 10)),
               const SizedBox(height: 2),
-              Text(value, style: TextStyle(fontFamily: 'Tajawal', color: textColor, fontSize: 13, fontWeight: FontWeight.w600), overflow: TextOverflow.ellipsis),
+              Text(value, style: const TextStyle(fontFamily: 'Tajawal', color: textDark, fontSize: 13, fontWeight: FontWeight.w600), overflow: TextOverflow.ellipsis),
             ],
           ),
         ),
@@ -1379,15 +1326,14 @@ class _SimpleProfileScreenState extends ConsumerState<SimpleProfileScreen> {
     );
   }
 
-  Widget _menuItem(IconData icon, String title, String subtitle, Color bgColor, Color textColor, VoidCallback onTap) {
+  Widget _menuItem(IconData icon, String title, String subtitle, VoidCallback onTap) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-        decoration: BoxDecoration(color: bgColor, borderRadius: BorderRadius.circular(16)),
+        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),
         child: Row(
           children: [
-            // ✅ تصغير أيقونة القائمة من 46 إلى 38
             Container(width: 38, height: 38,
                 decoration: BoxDecoration(
                   gradient: LinearGradient(colors: [primary.withValues(alpha: 0.9), primaryDark], begin: Alignment.topLeft, end: Alignment.bottomRight),
@@ -1399,7 +1345,7 @@ class _SimpleProfileScreenState extends ConsumerState<SimpleProfileScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(title, style: TextStyle(fontFamily: 'Tajawal', color: textColor, fontSize: 14, fontWeight: FontWeight.bold)),
+                  Text(title, style: const TextStyle(fontFamily: 'Tajawal', color: textDark, fontSize: 14, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 2),
                   Text(subtitle, style: const TextStyle(fontFamily: 'Tajawal', color: textLight, fontSize: 10), maxLines: 1, overflow: TextOverflow.ellipsis),
                 ],
