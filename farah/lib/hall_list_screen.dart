@@ -5,7 +5,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_animate/flutter_animate.dart'; 
-import 'package:google_fonts/google_fonts.dart'; 
 
 import 'features/auth/presentation/screens/login_screen_farah.dart';
 import 'features/favorites_screen.dart';
@@ -40,7 +39,7 @@ class _HallListScreenState extends State<HallListScreen> {
   bool _onlyAvailable = false;
   final _searchCtrl = TextEditingController();
   late Future<QuerySnapshot> _hallsFuture;
-  String _userName = 'فرح';
+  String _userName = 'زائر';
 
   String? _searchCity;
   DateTime? _searchDate;
@@ -100,13 +99,16 @@ class _HallListScreenState extends State<HallListScreen> {
 
   Future<void> _loadUserName() async {
     final user = FirebaseAuth.instance.currentUser;
-    if (user == null) return;
+    if (user == null) {
+      if (mounted) setState(() => _userName = 'زائر');
+      return;
+    }
     try {
       final doc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
       if (doc.exists && mounted) {
         final data = doc.data()!;
         setState(() {
-          _userName = data['fullName'] ?? data['name'] ?? data['phone'] ?? 'فرح';
+          _userName = data['fullName'] ?? data['name'] ?? data['phone'] ?? 'مستخدم';
         });
       }
     } catch (_) {}
@@ -882,6 +884,26 @@ class _HallListScreenState extends State<HallListScreen> {
     return StreamBuilder<DocumentSnapshot>(
       stream: FirebaseFirestore.instance.collection('users').doc(FirebaseAuth.instance.currentUser?.uid).snapshots(),
       builder: (context, snap) {
+        // ✅ إذا كان زائراً (لا يوجد مستخدم)، نتعامل معه بحذر
+        if (FirebaseAuth.instance.currentUser == null) {
+          return GestureDetector(
+            onTap: () {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('الرجاء تسجيل الدخول أولاً لإضافة القاعات للمفضلة', style: TextStyle(fontFamily: 'Tajawal')),
+                  backgroundColor: Colors.orange,
+                ),
+              );
+            },
+            child: Container(
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(color: Colors.white, shape: BoxShape.circle,
+                  boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 6)]),
+              child: const Icon(Icons.favorite_border, color: Colors.redAccent, size: 20),
+            ),
+          );
+        }
+
         final data = snap.data?.data() as Map<String, dynamic>?;
         final favs = List<String>.from(data?['favorites'] ?? []);
         final isFav = favs.contains(id);
@@ -1141,7 +1163,7 @@ class _HallListScreenState extends State<HallListScreen> {
 }
 
 // ═══════════════════════════════════════════════
-// شاشة الملف الشخصي المبسطة (تم إزالة الوضع الليلي نهائياً)
+// شاشة الملف الشخصي المبسطة (تم تعديلها لتدعم الزوار)
 // ═══════════════════════════════════════════════
 class SimpleProfileScreen extends StatefulWidget {
   const SimpleProfileScreen({super.key});
@@ -1161,7 +1183,10 @@ class _SimpleProfileScreenState extends State<SimpleProfileScreen> {
   void initState() {
     super.initState();
     final uid = FirebaseAuth.instance.currentUser?.uid;
-    _userFuture = uid == null ? Future.error('no user') : FirebaseFirestore.instance.collection('users').doc(uid).get();
+    // إذا لم يكن هناك مستخدم، لا نحاول جلب بيانات
+    _userFuture = uid == null 
+        ? Future.error('no user') 
+        : FirebaseFirestore.instance.collection('users').doc(uid).get();
   }
 
   Future<void> _logout() async {
@@ -1190,6 +1215,48 @@ class _SimpleProfileScreenState extends State<SimpleProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // ✅ التحقق مما إذا كان المستخدم زائراً (غير مسجل دخول)
+    if (FirebaseAuth.instance.currentUser == null) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.account_circle_outlined, size: 100, color: textLight),
+            const SizedBox(height: 20),
+            const Text(
+              'أنت تتصفح كزائر',
+              style: TextStyle(fontFamily: 'Tajawal', color: textDark, fontSize: 22, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 10),
+            const Text(
+              'سجل دخولك أو أنشئ حساباً للوصول إلى\nحجوزاتك، محفظتك، ومفضلتك.',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontFamily: 'Tajawal', color: textLight, fontSize: 14, height: 1.5),
+            ),
+            const SizedBox(height: 30),
+            ElevatedButton.icon(
+              onPressed: () {
+                Navigator.pushAndRemoveUntil(
+                  context,
+                  MaterialPageRoute(builder: (_) => const FarahGlassLoginScreen()),
+                  (route) => false,
+                );
+              },
+              icon: const Icon(Icons.login, size: 20),
+              label: const Text('تسجيل الدخول / إنشاء حساب', style: TextStyle(fontFamily: 'Tajawal', fontSize: 16)),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: primary,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    // هنا يبدأ الكود القديم إذا كان المستخدم مسجلاً
     return FutureBuilder<DocumentSnapshot>(
       future: _userFuture,
       builder: (context, snap) {
@@ -1208,7 +1275,6 @@ class _SimpleProfileScreenState extends State<SimpleProfileScreen> {
           child: Column(
             children: [
               const SizedBox(height: 16),
-              // ✅ تصغير حجم صورة البروفايل
               Container(
                 width: 90, height: 90,
                 decoration: const BoxDecoration(shape: BoxShape.circle, gradient: LinearGradient(colors: [primary, primaryDark])),
@@ -1244,8 +1310,10 @@ class _SimpleProfileScreenState extends State<SimpleProfileScreen> {
                       }),
                       const SizedBox(height: 8),
                     ],
-                    // ❌ تم إزالة زر الوضع الليلي بالكامل هنا
-                    _menuItem(Icons.calendar_month, 'حجوزاتي', 'سجل حجوزاتك السابقة والقادمة', () {}),
+                    _menuItem(Icons.calendar_month, 'حجوزاتي', 'سجل حجوزاتك السابقة والقادمة', () {
+                      // ملاحظة: عند النقر هنا، سينتقل لتبويب "حجوزاتي" وهو محمي أصلاً
+                      // إذا كان الزائر، فلن يعمل. يمكننا إضافة تحقق هنا، لكن الأفضل الاعتماد على تبويب حجوزاتي نفسه.
+                    }),
                     const SizedBox(height: 8),
                     _menuItem(Icons.account_balance_wallet, 'محفظتي', 'رصيدك وطرق الدفع', () {
                       Navigator.push(context, MaterialPageRoute(builder: (_) => const WalletScreen()));
