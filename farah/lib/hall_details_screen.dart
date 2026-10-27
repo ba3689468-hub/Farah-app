@@ -9,6 +9,7 @@ import 'package:share_plus/share_plus.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'features/add_review_screen.dart';
+import 'features/auth/presentation/screens/login_screen_farah.dart'; // ✅ استيراد شاشة تسجيل الدخول
 
 class HallDetailsScreen extends StatefulWidget {
   final Map<String, dynamic> hallData;
@@ -38,9 +39,8 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
 
   static const double APP_COMMISSION = 60.0;
 
-  // ✅ رابط Supabase Edge Function للإرسال
   static const String NOTIFY_HALL_URL =
-      'https://tzizhccygtgqbkgkhbwif.supabase.co/functions/v1/notifyHallSystem';
+      'https://tzizhccygtgqbkghbwif.supabase.co/functions/v1/notifyHallSystem';
 
   DateTime? _selectedDate;
   String? _selectedEventType;
@@ -137,6 +137,32 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
     return _bookedDates.contains(key);
   }
 
+  // ✅ دالة إظهار نافذة طلب تسجيل الدخول للزوار
+  void _showLoginPrompt() {
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Text('تسجيل الدخول مطلوب', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+        content: const Text('لإتمام هذه العملية، يرجى تسجيل الدخول أو إنشاء حساب جديد.', style: TextStyle(fontFamily: 'Tajawal')),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('إلغاء', style: TextStyle(fontFamily: 'Tajawal', color: Colors.grey)),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              Navigator.push(context, MaterialPageRoute(builder: (_) => const FarahGlassLoginScreen()));
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: primary),
+            child: const Text('تسجيل الدخول', style: TextStyle(fontFamily: 'Tajawal', color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final name = _hall['name'] ?? 'صالة بدون اسم';
@@ -202,9 +228,6 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
     );
   }
 
-  // ═══════════════════════════════════════════════════════════
-  // 🖼️ معرض الصور
-  // ═══════════════════════════════════════════════════════════
   List<String> _getImages(Map<String, dynamic> hall) {
     final gallery = hall['gallery'];
     if (gallery is List && gallery.isNotEmpty) return List<String>.from(gallery);
@@ -278,7 +301,7 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
               boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.2), blurRadius: 8)],
             ),
             child: Text('$_basePrice د.ل / ليلة',
-                style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.bold)),
+                style: const TextStyle(fontFamily: 'Tajawal', color: Colors.white, fontSize: 13, fontWeight: FontWeight.bold)),
           ),
         ),
         Positioned(
@@ -296,7 +319,7 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
                 const Icon(Icons.star, color: Colors.amber, size: 16),
                 const SizedBox(width: 4),
                 Text((_hall['rating'] ?? 0).toStringAsFixed(1),
-                    style: const TextStyle(color: textDark, fontSize: 13, fontWeight: FontWeight.bold)),
+                    style: const TextStyle(fontFamily: 'Tajawal', color: textDark, fontSize: 13, fontWeight: FontWeight.bold)),
               ],
             ),
           ),
@@ -315,7 +338,7 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
                 const Icon(Icons.photo_library, color: Colors.white, size: 14),
                 const SizedBox(width: 4),
                 Text('${_currentImage + 1}/${images.length}',
-                    style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
+                    style: const TextStyle(fontFamily: 'Tajawal', color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
               ],
             ),
           ),
@@ -363,9 +386,6 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
     );
   }
 
-  // ═══════════════════════════════════════════════════════════
-  // 📋 المعلومات الأساسية
-  // ═══════════════════════════════════════════════════════════
   Widget _buildInfoSection(String name, String city, double rating, int capacity, String description) {
     return Container(
       margin: const EdgeInsets.all(16),
@@ -381,14 +401,14 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
           Row(
             children: [
               Expanded(child: Text(name,
-                  style: const TextStyle(color: textDark, fontSize: 24, fontWeight: FontWeight.bold))),
+                  style: const TextStyle(fontFamily: 'Tajawal', color: textDark, fontSize: 24, fontWeight: FontWeight.bold))),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
                   color: primary.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: const Text('مميزة', style: TextStyle(color: primary, fontSize: 11, fontWeight: FontWeight.bold)),
+                child: const Text('مميزة', style: TextStyle(fontFamily: 'Tajawal', color: primary, fontSize: 11, fontWeight: FontWeight.bold)),
               ),
             ],
           ),
@@ -397,7 +417,7 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
             children: [
               const Icon(Icons.location_on_outlined, color: primary, size: 18),
               const SizedBox(width: 4),
-              Expanded(child: Text(city, style: const TextStyle(color: textLight, fontSize: 14))),
+              Expanded(child: Text(city, style: const TextStyle(fontFamily: 'Tajawal', color: textLight, fontSize: 14))),
               GestureDetector(
                 onTap: () => _openDirections(city, name),
                 child: Container(
@@ -411,7 +431,7 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
                     children: [
                       Icon(Icons.directions, color: primary, size: 16),
                       SizedBox(width: 4),
-                      Text('الاتجاهات', style: TextStyle(color: primary, fontSize: 12, fontWeight: FontWeight.bold)),
+                      Text('الاتجاهات', style: TextStyle(fontFamily: 'Tajawal', color: primary, fontSize: 12, fontWeight: FontWeight.bold)),
                     ],
                   ),
                 ),
@@ -433,17 +453,17 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
             children: [
               Icon(Icons.description_outlined, color: primary, size: 20),
               SizedBox(width: 6),
-              Text('الوصف', style: TextStyle(color: textDark, fontSize: 18, fontWeight: FontWeight.bold)),
+              Text('الوصف', style: TextStyle(fontFamily: 'Tajawal', color: textDark, fontSize: 18, fontWeight: FontWeight.bold)),
             ],
           ),
           const SizedBox(height: 10),
-          Text(description, style: const TextStyle(color: textDark, fontSize: 14, height: 1.7)),
+          Text(description, style: const TextStyle(fontFamily: 'Tajawal', color: textDark, fontSize: 14, height: 1.7)),
           const SizedBox(height: 24),
           const Row(
             children: [
               Icon(Icons.room_service_outlined, color: primary, size: 20),
               SizedBox(width: 6),
-              Text('المرافق والخدمات', style: TextStyle(color: textDark, fontSize: 18, fontWeight: FontWeight.bold)),
+              Text('المرافق والخدمات', style: TextStyle(fontFamily: 'Tajawal', color: textDark, fontSize: 18, fontWeight: FontWeight.bold)),
             ],
           ),
           const SizedBox(height: 12),
@@ -456,7 +476,7 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
   List<Widget> _buildAmenitiesFromData() {
     final amenities = _hall['amenities'];
     if (amenities == null || amenities is! List || amenities.isEmpty) {
-      return [const Text('لم يتم إضافة مرافق', style: TextStyle(color: textLight, fontSize: 13))];
+      return [const Text('لم يتم إضافة مرافق', style: TextStyle(fontFamily: 'Tajawal', color: textLight, fontSize: 13))];
     }
     return amenities.map<Widget>((a) => _amenityChip(a.toString())).toList();
   }
@@ -474,8 +494,8 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
           children: [
             Icon(icon, color: color, size: 18),
             const SizedBox(height: 4),
-            Text(value, style: TextStyle(color: color, fontSize: 14, fontWeight: FontWeight.bold)),
-            Text(label, style: const TextStyle(color: textLight, fontSize: 10)),
+            Text(value, style: TextStyle(fontFamily: 'Tajawal', color: color, fontSize: 14, fontWeight: FontWeight.bold)),
+            Text(label, style: const TextStyle(fontFamily: 'Tajawal', color: textLight, fontSize: 10)),
           ],
         ),
       ),
@@ -495,15 +515,12 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
         children: [
           const Icon(Icons.check_circle, color: primary, size: 14),
           const SizedBox(width: 5),
-          Text(name, style: const TextStyle(color: textDark, fontSize: 12)),
+          Text(name, style: const TextStyle(fontFamily: 'Tajawal', color: textDark, fontSize: 12)),
         ],
       ),
     );
   }
 
-  // ═══════════════════════════════════════════════════════════
-  // 📅 بطاقة الحجز
-  // ═══════════════════════════════════════════════════════════
   Widget _buildBookingCard() {
     return Container(
       margin: const EdgeInsets.fromLTRB(16, 0, 16, 8),
@@ -521,12 +538,12 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
               Icon(Icons.event_available, color: primary, size: 22),
               SizedBox(width: 8),
               Text('تفاصيل الحجز',
-                  style: TextStyle(color: textDark, fontSize: 18, fontWeight: FontWeight.bold)),
+                  style: TextStyle(fontFamily: 'Tajawal', color: textDark, fontSize: 18, fontWeight: FontWeight.bold)),
             ],
           ),
           const SizedBox(height: 16),
 
-          const Text('نوع المناسبة', style: TextStyle(color: textDark, fontSize: 13, fontWeight: FontWeight.bold)),
+          const Text('نوع المناسبة', style: TextStyle(fontFamily: 'Tajawal', color: textDark, fontSize: 13, fontWeight: FontWeight.bold)),
           const SizedBox(height: 8),
           Wrap(
             spacing: 8,
@@ -556,6 +573,7 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
                       Text(
                         type['name'] as String,
                         style: TextStyle(
+                          fontFamily: 'Tajawal',
                           color: selected ? color : textDark,
                           fontSize: 12,
                           fontWeight: selected ? FontWeight.bold : FontWeight.w500,
@@ -601,7 +619,7 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
                 const Icon(Icons.people_outline, color: primary, size: 20),
                 const SizedBox(width: 8),
                 const Text('عدد الضيوف',
-                    style: TextStyle(color: textDark, fontSize: 13, fontWeight: FontWeight.bold)),
+                    style: TextStyle(fontFamily: 'Tajawal', color: textDark, fontSize: 13, fontWeight: FontWeight.bold)),
                 const Spacer(),
                 _counterBtn(
                   icon: Icons.remove,
@@ -612,7 +630,7 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 12),
                   child: Text('$_guestsCount',
-                      style: const TextStyle(color: primary, fontSize: 18, fontWeight: FontWeight.bold)),
+                      style: const TextStyle(fontFamily: 'Tajawal', color: primary, fontSize: 18, fontWeight: FontWeight.bold)),
                 ),
                 _counterBtn(
                   icon: Icons.add,
@@ -626,7 +644,7 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
           const SizedBox(height: 16),
 
           const Text('تقويم التوفر',
-              style: TextStyle(color: textDark, fontSize: 13, fontWeight: FontWeight.bold)),
+              style: TextStyle(fontFamily: 'Tajawal', color: textDark, fontSize: 13, fontWeight: FontWeight.bold)),
           const SizedBox(height: 8),
           _buildVisualCalendar(),
         ],
@@ -651,7 +669,7 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
               Icon(Icons.receipt_long, color: primary, size: 22),
               SizedBox(width: 8),
               Text('ملخص الدفع',
-                  style: TextStyle(color: textDark, fontSize: 17, fontWeight: FontWeight.bold)),
+                  style: TextStyle(fontFamily: 'Tajawal', color: textDark, fontSize: 17, fontWeight: FontWeight.bold)),
             ],
           ),
           const SizedBox(height: 14),
@@ -689,10 +707,10 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
                 const SizedBox(width: 10),
                 const Expanded(
                   child: Text('المطلوب دفعه الآن',
-                      style: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold)),
+                      style: TextStyle(fontFamily: 'Tajawal', color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold)),
                 ),
                 Text('${APP_COMMISSION.toInt()} د.ل',
-                    style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
+                    style: const TextStyle(fontFamily: 'Tajawal', color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
               ],
             ),
           ),
@@ -713,7 +731,7 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
                     Icon(Icons.policy_outlined, color: Colors.orange, size: 20),
                     SizedBox(width: 8),
                     Text('سياسة الإلغاء',
-                        style: TextStyle(color: Colors.orange, fontSize: 14, fontWeight: FontWeight.bold)),
+                        style: TextStyle(fontFamily: 'Tajawal', color: Colors.orange, fontSize: 14, fontWeight: FontWeight.bold)),
                   ],
                 ),
                 const SizedBox(height: 10),
@@ -764,6 +782,7 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
           child: Text(
             label,
             style: TextStyle(
+              fontFamily: 'Tajawal',
               color: textDark,
               fontSize: 13,
               fontWeight: bold ? FontWeight.bold : FontWeight.w500,
@@ -773,6 +792,7 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
         Text(
           value,
           style: TextStyle(
+            fontFamily: 'Tajawal',
             color: color,
             fontSize: bold ? 18 : 15,
             fontWeight: FontWeight.bold,
@@ -790,7 +810,7 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
         Expanded(
           child: Text(
             text,
-            style: const TextStyle(color: textDark, fontSize: 12, height: 1.4),
+            style: const TextStyle(fontFamily: 'Tajawal', color: textDark, fontSize: 12, height: 1.4),
           ),
         ),
       ],
@@ -824,6 +844,7 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
               child: Text(
                 hasValue ? value : label,
                 style: TextStyle(
+                  fontFamily: 'Tajawal',
                   color: hasValue ? textDark : textLight,
                   fontSize: 12,
                   fontWeight: hasValue ? FontWeight.bold : FontWeight.normal,
@@ -854,9 +875,6 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
     );
   }
 
-  // ═══════════════════════════════════════════════════════════
-  // 📅 التقويم — كل الأيام بيضاء، اليوم المختار أخضر
-  // ═══════════════════════════════════════════════════════════
   Widget _buildVisualCalendar() {
     final firstDay = DateTime(_calendarMonth.year, _calendarMonth.month, 1);
     final daysInMonth = DateTime(_calendarMonth.year, _calendarMonth.month + 1, 0).day;
@@ -913,6 +931,7 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
               child: Text(
                 '$day',
                 style: TextStyle(
+                  fontFamily: 'Tajawal',
                   color: fg,
                   fontSize: 12,
                   fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
@@ -946,7 +965,7 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
               Expanded(
                 child: Center(
                   child: Text(monthName,
-                      style: const TextStyle(color: textDark, fontSize: 14, fontWeight: FontWeight.bold)),
+                      style: const TextStyle(fontFamily: 'Tajawal', color: textDark, fontSize: 14, fontWeight: FontWeight.bold)),
                 ),
               ),
               GestureDetector(
@@ -966,7 +985,7 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
                 .map((d) => Expanded(
                       child: Center(
                         child: Text(d,
-                            style: const TextStyle(color: textLight, fontSize: 11, fontWeight: FontWeight.bold)),
+                            style: const TextStyle(fontFamily: 'Tajawal', color: textLight, fontSize: 11, fontWeight: FontWeight.bold)),
                       ),
                     ))
                 .toList(),
@@ -980,7 +999,6 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
             children: cells,
           ),
 
-          // ✅ عرض "محجوز" فقط عند اختيار يوم محجوز فعلياً
           if (_selectedDate != null && _isDateBooked(_selectedDate!)) ...[
             const SizedBox(height: 10),
             Container(
@@ -998,6 +1016,7 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
                   Text(
                     'محجوز — ${DateFormat('EEEE d MMMM yyyy', 'ar').format(_selectedDate!)}',
                     style: const TextStyle(
+                      fontFamily: 'Tajawal',
                       color: Colors.red,
                       fontSize: 13,
                       fontWeight: FontWeight.bold,
@@ -1012,9 +1031,6 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
     );
   }
 
-  // ═══════════════════════════════════════════════════════════
-  // ⭐ التقييمات
-  // ═══════════════════════════════════════════════════════════
   Widget _buildReviewsSection() {
     final rating = (_hall['rating'] ?? 0).toDouble();
     final reviewsCount = _hall['reviewsCount'] ?? 0;
@@ -1035,7 +1051,7 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
               const Icon(Icons.reviews_outlined, color: primary, size: 20),
               const SizedBox(width: 6),
               const Text('التقييمات',
-                  style: TextStyle(color: textDark, fontSize: 17, fontWeight: FontWeight.bold)),
+                  style: TextStyle(fontFamily: 'Tajawal', color: textDark, fontSize: 17, fontWeight: FontWeight.bold)),
               const Spacer(),
               GestureDetector(
                 onTap: _openAddReview,
@@ -1051,7 +1067,7 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
                       Icon(Icons.add, color: primary, size: 16),
                       SizedBox(width: 4),
                       Text('أضف تقييم',
-                          style: TextStyle(color: primary, fontSize: 12, fontWeight: FontWeight.bold)),
+                          style: TextStyle(fontFamily: 'Tajawal', color: primary, fontSize: 12, fontWeight: FontWeight.bold)),
                     ],
                   ),
                 ),
@@ -1071,7 +1087,7 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                   decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12)),
                   child: Text(rating.toStringAsFixed(1),
-                      style: const TextStyle(color: primary, fontSize: 32, fontWeight: FontWeight.bold)),
+                      style: const TextStyle(fontFamily: 'Tajawal', color: primary, fontSize: 32, fontWeight: FontWeight.bold)),
                 ),
                 const SizedBox(width: 14),
                 Expanded(
@@ -1086,7 +1102,7 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
                       ),
                       const SizedBox(height: 6),
                       Text('$reviewsCount مراجعة',
-                          style: const TextStyle(color: textLight, fontSize: 12)),
+                          style: const TextStyle(fontFamily: 'Tajawal', color: textLight, fontSize: 12)),
                     ],
                   ),
                 ),
@@ -1112,7 +1128,7 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
                       Icon(Icons.info_outline, color: textLight, size: 18),
                       SizedBox(width: 8),
                       Expanded(child: Text('لا توجد مراجعات بعد. كن أول من يشارك تجربته!',
-                          style: TextStyle(color: textLight, fontSize: 12))),
+                          style: TextStyle(fontFamily: 'Tajawal', color: textLight, fontSize: 12))),
                     ],
                   ),
                 );
@@ -1139,6 +1155,10 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
   }
 
   Future<void> _openAddReview() async {
+    if (FirebaseAuth.instance.currentUser == null) {
+      _showLoginPrompt();
+      return;
+    }
     if (_hallId.isEmpty) return;
     final result = await Navigator.push(
       context,
@@ -1184,12 +1204,12 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
                 child: Center(
                   child: Text(
                     userName.isNotEmpty ? userName[0] : 'م',
-                    style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold),
+                    style: const TextStyle(fontFamily: 'Tajawal', color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold),
                   ),
                 ),
               ),
               const SizedBox(width: 10),
-              Expanded(child: Text(userName, style: const TextStyle(color: textDark, fontSize: 13, fontWeight: FontWeight.bold))),
+              Expanded(child: Text(userName, style: const TextStyle(fontFamily: 'Tajawal', color: textDark, fontSize: 13, fontWeight: FontWeight.bold))),
               Row(children: List.generate(5, (i) {
                 return Icon(i < rating ? Icons.star : Icons.star_border, color: Colors.amber, size: 12);
               })),
@@ -1197,16 +1217,13 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
           ),
           if (comment.isNotEmpty) ...[
             const SizedBox(height: 8),
-            Text(comment, style: const TextStyle(color: textDark, fontSize: 12, height: 1.5)),
+            Text(comment, style: const TextStyle(fontFamily: 'Tajawal', color: textDark, fontSize: 12, height: 1.5)),
           ],
         ],
       ),
     );
   }
 
-  // ═══════════════════════════════════════════════════════════
-  // 🏛️ قاعات مشابهة
-  // ═══════════════════════════════════════════════════════════
   Widget _buildSimilarHallsSection(String city) {
     return Padding(
       padding: const EdgeInsets.only(top: 16),
@@ -1221,7 +1238,7 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
                     decoration: BoxDecoration(color: primary, borderRadius: BorderRadius.circular(2))),
                 const SizedBox(width: 8),
                 const Text('قاعات مشابهة',
-                    style: TextStyle(color: textDark, fontSize: 18, fontWeight: FontWeight.bold)),
+                    style: TextStyle(fontFamily: 'Tajawal', color: textDark, fontSize: 18, fontWeight: FontWeight.bold)),
               ],
             ),
           ),
@@ -1295,20 +1312,20 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(name, style: const TextStyle(color: textDark, fontSize: 12, fontWeight: FontWeight.bold),
+                  Text(name, style: const TextStyle(fontFamily: 'Tajawal', color: textDark, fontSize: 12, fontWeight: FontWeight.bold),
                       maxLines: 1, overflow: TextOverflow.ellipsis),
                   const SizedBox(height: 4),
-                  Text(city, style: const TextStyle(color: textLight, fontSize: 10),
+                  Text(city, style: const TextStyle(fontFamily: 'Tajawal', color: textLight, fontSize: 10),
                       maxLines: 1, overflow: TextOverflow.ellipsis),
                   const SizedBox(height: 6),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text('$price د.ل', style: const TextStyle(color: primary, fontSize: 11, fontWeight: FontWeight.bold)),
+                      Text('$price د.ل', style: const TextStyle(fontFamily: 'Tajawal', color: primary, fontSize: 11, fontWeight: FontWeight.bold)),
                       Row(children: [
                         const Icon(Icons.star, color: Colors.amber, size: 10),
                         Text(rating.toStringAsFixed(1),
-                            style: const TextStyle(color: textDark, fontSize: 10, fontWeight: FontWeight.bold)),
+                            style: const TextStyle(fontFamily: 'Tajawal', color: textDark, fontSize: 10, fontWeight: FontWeight.bold)),
                       ]),
                     ],
                   ),
@@ -1321,9 +1338,6 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
     );
   }
 
-  // ═══════════════════════════════════════════════════════════
-  // 💰 شريط الحجز السفلي
-  // ═══════════════════════════════════════════════════════════
   Widget _buildBottomBar() {
     return Container(
       padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
@@ -1340,16 +1354,16 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   const Text('المطلوب دفعه الآن',
-                      style: TextStyle(color: textLight, fontSize: 11)),
+                      style: TextStyle(fontFamily: 'Tajawal', color: textLight, fontSize: 11)),
                   RichText(
                     text: TextSpan(children: [
                       TextSpan(text: '${APP_COMMISSION.toInt()} ',
-                          style: const TextStyle(color: primary, fontSize: 22, fontWeight: FontWeight.bold)),
-                      const TextSpan(text: 'د.ل', style: TextStyle(color: textDark, fontSize: 13)),
+                          style: const TextStyle(fontFamily: 'Tajawal', color: primary, fontSize: 22, fontWeight: FontWeight.bold)),
+                      const TextSpan(text: 'د.ل', style: TextStyle(fontFamily: 'Tajawal', color: textDark, fontSize: 13)),
                     ]),
                   ),
                   Text('+ $_basePrice د.ل في القاعة',
-                      style: const TextStyle(color: textLight, fontSize: 10)),
+                      style: const TextStyle(fontFamily: 'Tajawal', color: textLight, fontSize: 10)),
                 ],
               ),
             ),
@@ -1383,7 +1397,7 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
                           Icon(Icons.calendar_month, color: Colors.white, size: 18),
                           SizedBox(width: 6),
                           Text('احجز الآن',
-                              style: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold)),
+                              style: TextStyle(fontFamily: 'Tajawal', color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold)),
                         ],
                       ),
               ),
@@ -1394,9 +1408,6 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
     );
   }
 
-  // ═══════════════════════════════════════════════════════════
-  // 📅 اختيارات
-  // ═══════════════════════════════════════════════════════════
   Future<void> _pickDate() async {
     final now = DateTime.now();
     final picked = await showDatePicker(
@@ -1431,7 +1442,7 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
                 decoration: BoxDecoration(color: Colors.grey.withValues(alpha: 0.3), borderRadius: BorderRadius.circular(2))),
             const SizedBox(height: 16),
             const Text('اختر الفترة الزمنية',
-                style: TextStyle(color: textDark, fontSize: 18, fontWeight: FontWeight.bold)),
+                style: TextStyle(fontFamily: 'Tajawal', color: textDark, fontSize: 18, fontWeight: FontWeight.bold)),
             const SizedBox(height: 16),
             ..._timeSlots.map((slot) {
               final isSelected = _selectedTimeSlot == slot;
@@ -1443,7 +1454,7 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
               return ListTile(
                 leading: Icon(icons[slot] ?? Icons.access_time, color: isSelected ? primary : textLight),
                 title: Text(slot,
-                    style: TextStyle(color: isSelected ? primary : textDark,
+                    style: TextStyle(fontFamily: 'Tajawal', color: isSelected ? primary : textDark,
                         fontWeight: isSelected ? FontWeight.bold : FontWeight.normal)),
                 trailing: isSelected ? const Icon(Icons.check, color: primary) : null,
                 onTap: () {
@@ -1458,10 +1469,15 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
     );
   }
 
-  // ═══════════════════════════════════════════════════════════
-  // ✅ تنفيذ الحجز
-  // ═══════════════════════════════════════════════════════════
   Future<void> _confirmBooking() async {
+    // ✅✅✅ حماية صفحة الحجز للزوار ✅✅✅
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) {
+      _showLoginPrompt(); // استدعاء نافذة تسجيل الدخول الأنيقة
+      return;
+    }
+    // ✅✅✅ نهاية الحماية ✅✅✅
+
     if (_selectedEventType == null) {
       _showError('الرجاء اختيار نوع المناسبة');
       return;
@@ -1480,12 +1496,6 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
       return;
     }
 
-    final uid = FirebaseAuth.instance.currentUser?.uid;
-    if (uid == null) {
-      _showError('الرجاء تسجيل الدخول');
-      return;
-    }
-
     final bool? shouldPay = await showDialog<bool>(
       context: context,
       barrierDismissible: false,
@@ -1496,7 +1506,7 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
           children: [
             Icon(Icons.payment, color: primary, size: 28),
             SizedBox(width: 10),
-            Text('دفع رسم الحجز', style: TextStyle(color: textDark, fontSize: 18)),
+            Text('دفع رسم الحجز', style: TextStyle(fontFamily: 'Tajawal', color: textDark, fontSize: 18)),
           ],
         ),
         content: Column(
@@ -1504,20 +1514,20 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text('لإتمام الحجز المبدئي، يجب دفع رسم حجز قدره:',
-                style: TextStyle(color: textDark, fontSize: 14)),
+                style: TextStyle(fontFamily: 'Tajawal', color: textDark, fontSize: 14)),
             const SizedBox(height: 12),
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(color: primary.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(12)),
               child: const Center(
                 child: Text('60 دينار ليبي',
-                    style: TextStyle(color: primary, fontSize: 22, fontWeight: FontWeight.bold)),
+                    style: TextStyle(fontFamily: 'Tajawal', color: primary, fontSize: 22, fontWeight: FontWeight.bold)),
               ),
             ),
             const SizedBox(height: 12),
             const Text(
               'هذا المبلغ هو رسم حجز مبدئي للتطبيق فقط.\nسعر القاعة الكامل يُدفع نقداً لصاحب القاعة عند الحضور.',
-              style: TextStyle(color: textLight, fontSize: 12, height: 1.5),
+              style: TextStyle(fontFamily: 'Tajawal', color: textLight, fontSize: 12, height: 1.5),
             ),
             const SizedBox(height: 8),
             Container(
@@ -1528,7 +1538,7 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
                   Icon(Icons.info_outline, color: Colors.orange, size: 16),
                   SizedBox(width: 6),
                   Expanded(child: Text('يحق لك استرداد المبلغ كاملاً خلال 48 ساعة من الحجز',
-                      style: TextStyle(color: Colors.orange, fontSize: 11))),
+                      style: TextStyle(fontFamily: 'Tajawal', color: Colors.orange, fontSize: 11))),
                 ],
               ),
             ),
@@ -1537,7 +1547,7 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('إلغاء', style: TextStyle(color: Colors.grey)),
+            child: const Text('إلغاء', style: TextStyle(fontFamily: 'Tajawal', color: Colors.grey)),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
@@ -1546,7 +1556,7 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             ),
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('دفع 60 د.ل'),
+            child: const Text('دفع 60 د.ل', style: TextStyle(fontFamily: 'Tajawal')),
           ),
         ],
       ),
@@ -1582,9 +1592,6 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
 
       await bookingRef.update({'paymentStatus': 'commission_paid'});
 
-      // ═══════════════════════════════════════════════════════════
-      // 🆕 إشعار نظام القاعة بالحجز الجديد
-      // ═══════════════════════════════════════════════════════════
       try {
         await http.post(
           Uri.parse(NOTIFY_HALL_URL),
@@ -1593,7 +1600,6 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
         ).timeout(const Duration(seconds: 10));
         print('✅ تم إرسال إشعار لنظام القاعة');
       } catch (e) {
-        // لا نوقف الحجز إذا فشل الإشعار
         print('⚠️ فشل إشعار نظام القاعة: $e');
       }
 
@@ -1631,14 +1637,14 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
             children: [
               Icon(Icons.check_circle, color: Colors.green, size: 28),
               SizedBox(width: 10),
-              Text('تم الحجز المبدئي!', style: TextStyle(color: textDark, fontSize: 18)),
+              Text('تم الحجز المبدئي!', style: TextStyle(fontFamily: 'Tajawal', color: textDark, fontSize: 18)),
             ],
           ),
           content: Text(
             'تم دفع رسم الحجز بنجاح (60 د.ل).\n\n'
             'لديك 48 ساعة للتوجه إلى "${_hall['name'] ?? 'القاعة'}" ودفع سعر القاعة كاملاً ($total د.ل).\n\n'
             'خلال هذه المدة يمكنك إلغاء الحجز واسترداد 60 د.ل كاملة من "حجوزاتي".',
-            style: const TextStyle(color: textDark, fontSize: 14, height: 1.6),
+            style: const TextStyle(fontFamily: 'Tajawal', color: textDark, fontSize: 14, height: 1.6),
           ),
           actions: [
             ElevatedButton(
@@ -1648,7 +1654,7 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               ),
               onPressed: () => Navigator.pop(context),
-              child: const Text('حسناً'),
+              child: const Text('حسناً', style: TextStyle(fontFamily: 'Tajawal')),
             ),
           ],
         ),
@@ -1664,13 +1670,10 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
 
   void _showError(String msg) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(msg), backgroundColor: Colors.redAccent),
+      SnackBar(content: Text(msg, style: const TextStyle(fontFamily: 'Tajawal')), backgroundColor: Colors.redAccent),
     );
   }
 
-  // ═══════════════════════════════════════════════════════════
-  // الاتصال والاتجاهات والمشاركة
-  // ═══════════════════════════════════════════════════════════
   Future<void> _callProvider() async {
     final phone = _hall['providerPhone'] ?? _hall['phone'] ?? _hall['contactPhone'] ?? '';
     if (phone.toString().trim().isEmpty) {
