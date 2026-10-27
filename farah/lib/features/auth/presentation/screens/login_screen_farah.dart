@@ -11,7 +11,8 @@ import 'register_screen.dart';
 import 'package:farah/features/provider_dashboard_screen.dart';
 import 'package:farah/features/provider_choice_screen.dart'; 
 import 'package:farah/features/store_dashboard_screen.dart'; 
-import '../../../core/services/biometric_auth_service.dart'; 
+// ✅ تم تصحيح مسار الاستيراد هنا ليتطابق مع المجلد الصحيح
+import 'package:farah/core/services/biometric_auth_service.dart'; 
 
 class FarahGlassLoginScreen extends ConsumerStatefulWidget {
   const FarahGlassLoginScreen({super.key});
@@ -39,6 +40,7 @@ class _FarahGlassLoginScreenState extends ConsumerState<FarahGlassLoginScreen> {
   static const Color lightGold = AppColors.background;
   static const Color deepRose = AppColors.primary;
   static const Color chocolate = AppColors.primary;
+  static const Color textLight = AppColors.textSecondary;
 
   @override
   void initState() {
@@ -380,7 +382,7 @@ class _FarahGlassLoginScreenState extends ConsumerState<FarahGlassLoginScreen> {
                   ],
                 ),
 
-                // ✅ زر الدخول كزائر
+                // ✅ زر الدخول كزائر (تم إزالة const من الأيقونة لحل الخطأ)
                 const SizedBox(height: 20),
                 TextButton.icon(
                   onPressed: () {
@@ -389,7 +391,7 @@ class _FarahGlassLoginScreenState extends ConsumerState<FarahGlassLoginScreen> {
                       MaterialPageRoute(builder: (_) => const HallListScreen()),
                     );
                   },
-                  icon: const Icon(Icons.person_outline, color: textLight),
+                  icon: Icon(Icons.person_outline, color: textLight),
                   label: const Text(
                     'الدخول كزائر (تصفح فقط)',
                     style: TextStyle(
