@@ -11,8 +11,7 @@ import 'register_screen.dart';
 import 'package:farah/features/provider_dashboard_screen.dart';
 import 'package:farah/features/provider_choice_screen.dart'; 
 import 'package:farah/features/store_dashboard_screen.dart'; 
-// ✅ استيراد خدمة البصمة
-import 'package:farah/core/services/biometric_auth_service.dart';
+import '../../../core/services/biometric_auth_service.dart'; 
 
 class FarahGlassLoginScreen extends ConsumerStatefulWidget {
   const FarahGlassLoginScreen({super.key});
@@ -32,7 +31,6 @@ class _FarahGlassLoginScreenState extends ConsumerState<FarahGlassLoginScreen> {
   bool _loading = false;
   String? _error;
 
-  // ✅ متغيرات البصمة
   final BiometricAuthService _bioService = BiometricAuthService();
   bool _canUseBiometrics = false;
   bool _hasSavedCredentials = false;
@@ -66,13 +64,12 @@ class _FarahGlassLoginScreenState extends ConsumerState<FarahGlassLoginScreen> {
     super.dispose();
   }
 
-  // دالة الدخول بالبصمة
   Future<void> _loginWithBiometrics() async {
     final credentials = await _bioService.loginWithBiometrics();
     if (credentials != null) {
       _phoneCtrl.text = credentials['phone']!;
       _passCtrl.text = credentials['password']!;
-      await _login(); // استدعاء دالة تسجيل الدخول العادية
+      await _login(); 
     }
   }
 
@@ -112,7 +109,6 @@ class _FarahGlassLoginScreenState extends ConsumerState<FarahGlassLoginScreen> {
           });
         }
 
-        // ✅ عرض نافذة تفعيل البصمة إذا كان الجهاز يدعمها ولم يتم تفعيلها مسبقاً
         if (_canUseBiometrics && !_hasSavedCredentials && mounted) {
           final enableBio = await showDialog<bool>(
             context: context,
@@ -123,15 +119,15 @@ class _FarahGlassLoginScreenState extends ConsumerState<FarahGlassLoginScreen> {
                 children: [
                   Icon(Icons.fingerprint, color: Colors.blue, size: 30),
                   SizedBox(width: 10),
-                  Text('تسجيل الدخول السريع'),
+                  Text('تسجيل الدخول السريع', style: TextStyle(fontFamily: 'Tajawal')),
                 ],
               ),
-              content: const Text('هل تريد تفعيل الدخول ببصمة الإصبع في المرات القادمة لتوفير الوقت؟'),
+              content: const Text('هل تريد تفعيل الدخول ببصمة الإصبع في المرات القادمة لتوفير الوقت؟', style: TextStyle(fontFamily: 'Tajawal')),
               actions: [
-                TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('لاحقاً')),
+                TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('لاحقاً', style: TextStyle(fontFamily: 'Tajawal'))),
                 ElevatedButton(
                   onPressed: () => Navigator.pop(context, true),
-                  child: const Text('تفعيل'),
+                  child: const Text('تفعيل', style: TextStyle(fontFamily: 'Tajawal')),
                 ),
               ],
             ),
@@ -255,7 +251,7 @@ class _FarahGlassLoginScreenState extends ConsumerState<FarahGlassLoginScreen> {
               children: [
                 const Text(
                   'تسجيل الدخول',
-                  style: TextStyle(color: chocolate, fontSize: 30, fontWeight: FontWeight.bold),
+                  style: TextStyle(fontFamily: 'Tajawal', color: chocolate, fontSize: 30, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 6),
                 Container(
@@ -288,16 +284,16 @@ class _FarahGlassLoginScreenState extends ConsumerState<FarahGlassLoginScreen> {
                       ),
                     ),
                     const SizedBox(width: 8),
-                    const Text('تذكرني', style: TextStyle(color: chocolate, fontSize: 13)),
+                    const Text('تذكرني', style: TextStyle(fontFamily: 'Tajawal', color: chocolate, fontSize: 13)),
                     const Spacer(),
                     TextButton(
                       onPressed: _loading ? null : () {
-                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('قريباً: استعادة كلمة المرور')));
+                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('قريباً: استعادة كلمة المرور', style: TextStyle(fontFamily: 'Tajawal'))));
                       },
                       style: TextButton.styleFrom(padding: EdgeInsets.zero, minimumSize: const Size(0, 0), tapTargetSize: MaterialTapTargetSize.shrinkWrap),
                       child: const Text(
                         'نسيت كلمة المرور؟',
-                        style: TextStyle(color: deepRose, fontSize: 13, fontWeight: FontWeight.w600, decoration: TextDecoration.underline, decorationColor: deepRose),
+                        style: TextStyle(fontFamily: 'Tajawal', color: deepRose, fontSize: 13, fontWeight: FontWeight.w600, decoration: TextDecoration.underline, decorationColor: deepRose),
                       ),
                     ),
                   ],
@@ -316,7 +312,7 @@ class _FarahGlassLoginScreenState extends ConsumerState<FarahGlassLoginScreen> {
                       children: [
                         const Icon(Icons.error_outline, color: Colors.red, size: 20),
                         const SizedBox(width: 8),
-                        Expanded(child: Text(_error!, style: const TextStyle(color: Colors.red, fontSize: 13))),
+                        Expanded(child: Text(_error!, style: const TextStyle(fontFamily: 'Tajawal', color: Colors.red, fontSize: 13))),
                       ],
                     ),
                   ),
@@ -324,7 +320,6 @@ class _FarahGlassLoginScreenState extends ConsumerState<FarahGlassLoginScreen> {
 
                 const SizedBox(height: 26),
 
-                // ✅ زر الدخول العادي
                 Container(
                   width: 200,
                   height: 54,
@@ -345,7 +340,7 @@ class _FarahGlassLoginScreenState extends ConsumerState<FarahGlassLoginScreen> {
                                 children: [
                                   Icon(Icons.celebration, color: Colors.white, size: 20),
                                   SizedBox(width: 10),
-                                  Text('دخول', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 17, letterSpacing: 2)),
+                                  Text('دخول', style: TextStyle(fontFamily: 'Tajawal', color: Colors.white, fontWeight: FontWeight.bold, fontSize: 17, letterSpacing: 2)),
                                 ],
                               ),
                       ),
@@ -353,14 +348,12 @@ class _FarahGlassLoginScreenState extends ConsumerState<FarahGlassLoginScreen> {
                   ),
                 ),
 
-                // ✅ زر الدخول بالبصمة (يظهر فقط إذا كان مفعلاً)
                 if (_canUseBiometrics && _hasSavedCredentials) ...[
                   const SizedBox(height: 16),
                   GestureDetector(
                     onTap: _loading ? null : _loginWithBiometrics,
                     child: Container(
-                      width: 54,
-                      height: 54,
+                      width: 54, height: 54,
                       decoration: BoxDecoration(
                         color: Colors.blue.withValues(alpha: 0.1),
                         shape: BoxShape.circle,
@@ -376,15 +369,36 @@ class _FarahGlassLoginScreenState extends ConsumerState<FarahGlassLoginScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text('ليس لديك حساب؟ ', style: TextStyle(color: chocolate.withValues(alpha: 0.75), fontSize: 13)),
+                    const Text('ليس لديك حساب؟ ', style: TextStyle(fontFamily: 'Tajawal', color: chocolate, fontSize: 13)),
                     GestureDetector(
                       onTap: _loading ? null : _goToRegister,
                       child: const Text(
                         'أنشئ حساباً الآن',
-                        style: TextStyle(color: deepRose, fontSize: 13, fontWeight: FontWeight.bold, decoration: TextDecoration.underline, decorationColor: deepRose),
+                        style: TextStyle(fontFamily: 'Tajawal', color: deepRose, fontSize: 13, fontWeight: FontWeight.bold, decoration: TextDecoration.underline, decorationColor: deepRose),
                       ),
                     ),
                   ],
+                ),
+
+                // ✅ زر الدخول كزائر
+                const SizedBox(height: 20),
+                TextButton.icon(
+                  onPressed: () {
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(builder: (_) => const HallListScreen()),
+                    );
+                  },
+                  icon: const Icon(Icons.person_outline, color: textLight),
+                  label: const Text(
+                    'الدخول كزائر (تصفح فقط)',
+                    style: TextStyle(
+                      fontFamily: 'Tajawal',
+                      color: textLight,
+                      fontSize: 13,
+                      decoration: TextDecoration.underline,
+                    ),
+                  ),
                 ),
               ],
             ),
@@ -394,8 +408,7 @@ class _FarahGlassLoginScreenState extends ConsumerState<FarahGlassLoginScreen> {
         Positioned(
           top: 0,
           child: Container(
-            width: 95,
-            height: 95,
+            width: 95, height: 95,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               color: Colors.white,
@@ -422,8 +435,7 @@ class _FarahGlassLoginScreenState extends ConsumerState<FarahGlassLoginScreen> {
         children: [
           const SizedBox(width: 6),
           Container(
-            width: 46,
-            height: 46,
+            width: 46, height: 46,
             decoration: BoxDecoration(
               gradient: const LinearGradient(colors: [AppColors.primary, AppColors.primaryDark], begin: Alignment.topLeft, end: Alignment.bottomRight),
               borderRadius: BorderRadius.circular(14),
@@ -440,7 +452,7 @@ class _FarahGlassLoginScreenState extends ConsumerState<FarahGlassLoginScreen> {
               textDirection: TextDirection.rtl,
               maxLength: 10,
               inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-              style: const TextStyle(color: chocolate, fontSize: 15, fontWeight: FontWeight.w500),
+              style: const TextStyle(fontFamily: 'Tajawal', color: chocolate, fontSize: 15, fontWeight: FontWeight.w500),
               validator: (v) {
                 if (v == null || v.isEmpty) return 'رقم الهاتف مطلوب';
                 if (v.length < 10) return 'رقم الهاتف يجب أن يكون 10 أرقام';
@@ -448,9 +460,9 @@ class _FarahGlassLoginScreenState extends ConsumerState<FarahGlassLoginScreen> {
               },
               decoration: InputDecoration(
                 hintText: '9X XXXXXXX',
-                hintStyle: TextStyle(color: chocolate.withValues(alpha: 0.5), fontSize: 14),
+                hintStyle: TextStyle(fontFamily: 'Tajawal', color: chocolate.withValues(alpha: 0.5), fontSize: 14),
                 counterText: '',
-                errorStyle: const TextStyle(color: Colors.red, fontSize: 11, height: 0.8),
+                errorStyle: const TextStyle(fontFamily: 'Tajawal', color: Colors.red, fontSize: 11, height: 0.8),
                 border: InputBorder.none,
                 enabledBorder: InputBorder.none,
                 focusedBorder: InputBorder.none,
@@ -478,8 +490,7 @@ class _FarahGlassLoginScreenState extends ConsumerState<FarahGlassLoginScreen> {
         children: [
           const SizedBox(width: 6),
           Container(
-            width: 46,
-            height: 46,
+            width: 46, height: 46,
             decoration: BoxDecoration(
               gradient: const LinearGradient(colors: [AppColors.primary, AppColors.primaryDark], begin: Alignment.topLeft, end: Alignment.bottomRight),
               borderRadius: BorderRadius.circular(14),
@@ -494,7 +505,7 @@ class _FarahGlassLoginScreenState extends ConsumerState<FarahGlassLoginScreen> {
               enabled: !_loading,
               textAlign: TextAlign.right,
               textDirection: TextDirection.rtl,
-              style: const TextStyle(color: chocolate, fontSize: 15, fontWeight: FontWeight.w500),
+              style: const TextStyle(fontFamily: 'Tajawal', color: chocolate, fontSize: 15, fontWeight: FontWeight.w500),
               validator: (v) {
                 if (v == null || v.isEmpty) return 'كلمة المرور مطلوبة';
                 if (v.length < 6) return 'كلمة المرور قصيرة';
@@ -502,8 +513,8 @@ class _FarahGlassLoginScreenState extends ConsumerState<FarahGlassLoginScreen> {
               },
               decoration: InputDecoration(
                 hintText: '••••••••••••••',
-                hintStyle: TextStyle(color: chocolate.withValues(alpha: 0.5), fontSize: 14),
-                errorStyle: const TextStyle(color: Colors.red, fontSize: 11, height: 0.8),
+                hintStyle: TextStyle(fontFamily: 'Tajawal', color: chocolate.withValues(alpha: 0.5), fontSize: 14),
+                errorStyle: const TextStyle(fontFamily: 'Tajawal', color: Colors.red, fontSize: 11, height: 0.8),
                 border: InputBorder.none,
                 enabledBorder: InputBorder.none,
                 focusedBorder: InputBorder.none,
