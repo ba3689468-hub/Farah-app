@@ -63,9 +63,6 @@ class _AddEditHallScreenState extends State<AddEditHallScreen> {
 
   bool get _isEdit => widget.hallId != null && widget.hallData != null;
 
-  List<String> get _customAmenities =>
-      _selectedAmenities.where((a) => !_amenitiesList.contains(a)).toList();
-
   @override
   void initState() {
     super.initState();
@@ -721,7 +718,11 @@ class _AddEditHallScreenState extends State<AddEditHallScreen> {
     );
   }
 
-  Widget _buildChips(List<String> items, String selected, Function(String) onSelect) {
+  Widget _buildChips({
+    required List<String> items, 
+    required String selected, 
+    required Function(String) onSelect
+  }) {
     return Wrap(
       spacing: 8,
       runSpacing: 8,
@@ -753,17 +754,15 @@ class _AddEditHallScreenState extends State<AddEditHallScreen> {
     );
   }
 
-  Widget _buildField(
-    TextEditingController controller, 
-    String hint, 
-    IconData icon, 
-    {
-      TextInputType? keyboardType, 
-      bool digitsOnly = false, 
-      int maxLines = 1, 
-      String? Function(String?)? validator
-    }
-  ) {
+  Widget _buildField({
+    required TextEditingController controller,
+    required String hint,
+    required IconData icon,
+    TextInputType? keyboardType,
+    bool digitsOnly = false,
+    int maxLines = 1,
+    String? Function(String?)? validator,
+  }) {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white, 
