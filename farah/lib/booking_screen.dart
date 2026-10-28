@@ -35,37 +35,13 @@ class _BookingScreenState extends State<BookingScreen> {
   String? _selectedTimeSlot;
   String? _selectedEventType;
   int _guestsCount = 50;
-  final List<String> _selectedServices = [];
+  final List<String> _selectedServices = []; // نخزن أسماء الخدمات المختارة
   bool _loading = false;
 
   bool get _hasPrefilled =>
       widget.prefilledDate != null ||
       widget.prefilledEventType != null ||
       widget.prefilledTimeSlot != null;
-
-  // ✅ دالة حساب السعر الفعلي (تراعي الخميس والجمعة)
-  int get _effectiveBasePrice {
-    final basePrice = (widget.hallData['price'] ?? 0) is int
-        ? widget.hallData['price'] as int
-        : int.tryParse(widget.hallData['price'].toString()) ?? 0;
-
-    if (_selectedDate != null) {
-      final isWeekend = _selectedDate!.weekday == DateTime.thursday || _selectedDate!.weekday == DateTime.friday;
-      final weekendPrice = (widget.hallData['weekendPrice'] ?? 0) as num;
-      
-      if (isWeekend && weekendPrice > 0) {
-        return weekendPrice.toInt();
-      }
-    }
-    return basePrice;
-  }
-
-  bool get _isWeekendPrice {
-    if (_selectedDate == null) return false;
-    final isWeekend = _selectedDate!.weekday == DateTime.thursday || _selectedDate!.weekday == DateTime.friday;
-    final weekendPrice = (widget.hallData['weekendPrice'] ?? 0) as num;
-    return isWeekend && weekendPrice > 0;
-  }
 
   final List<Map<String, dynamic>> _eventTypes = const [
     {'name': 'حفل زفاف', 'icon': Icons.favorite, 'color': Color(0xFFE91E63)},
@@ -97,14 +73,17 @@ class _BookingScreenState extends State<BookingScreen> {
     },
   ];
 
-  final List<Map<String, dynamic>> _availableServices = const [
-    {'name': 'خدمة الضيافة الكاملة', 'price': 500, 'icon': Icons.restaurant},
-    {'name': 'تصوير احترافي', 'price': 800, 'icon': Icons.camera_alt},
-    {'name': 'دي جي وموسيقى', 'price': 600, 'icon': Icons.music_note},
-    {'name': 'تزيين القاعة', 'price': 1200, 'icon': Icons.auto_awesome},
-    {'name': 'كوشة العروسين', 'price': 1500, 'icon': Icons.favorite},
-    {'name': 'خدمة صف السيارات', 'price': 300, 'icon': Icons.local_parking},
-  ];
+  // ✅ دالة لجلب الخدمات الإضافية من بيانات القاعة
+  List<Map<String, dynamic>> get _availableServices {
+    final services = widget.hallData['additionalServices'];
+    if (services is List) {
+      return services.map((s) => {
+        'name': s['name'] ?? 'خدمة',
+        'price': (s['price'] ?? 0).toDouble(),
+      }).toList();
+    }
+    return [];
+  }
 
   @override
   void initState() {
@@ -118,6 +97,9 @@ class _BookingScreenState extends State<BookingScreen> {
   Widget build(BuildContext context) {
     final hall = widget.hallData;
     final name = hall['name'] ?? 'صالة';
+    final basePrice = (hall['price'] ?? 0) is int
+        ? hall['price'] as int
+        : int.tryParse(hall['price'].toString()) ?? 0;
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -125,13 +107,13 @@ class _BookingScreenState extends State<BookingScreen> {
         backgroundColor: primary,
         foregroundColor: Colors.white,
         elevation: 0,
-        title: const Text('حجز القاعة', style: TextStyle(fontWeight: FontWeight.bold)),
+        title: const Text('حجز القاعة', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
         centerTitle: true,
       ),
       body: SingleChildScrollView(
         child: Column(
           children: [
-            _buildHallSummary(name),
+            _buildHallSummary(name, basePrice),
             const SizedBox(height: 8),
             if (_hasPrefilled)
               _buildPrefilledSummary()
@@ -141,12 +123,15 @@ class _BookingScreenState extends State<BookingScreen> {
               _buildTimeSlotSection(),
             ],
             _buildGuestsSection(),
-            _buildServicesSection(),
+            
+            // ✅ عرض الخدمات الإضافية (فقط إذا كانت موجودة)
+            if (_availableServices.isNotEmpty) _buildServicesSection(),
+            
             const SizedBox(height: 100),
           ],
         ),
       ),
-      bottomNavigationBar: _buildConfirmBar(),
+      bottomNavigationBar: _buildConfirmBar(basePrice),
     );
   }
 
@@ -179,7 +164,7 @@ class _BookingScreenState extends State<BookingScreen> {
               const Expanded(
                 child: Text(
                   'تفاصيل حجزك',
-                  style: TextStyle(color: textDark, fontSize: 16, fontWeight: FontWeight.bold),
+                  style: TextStyle(fontFamily: 'Tajawal', color: textDark, fontSize: 16, fontWeight: FontWeight.bold),
                 ),
               ),
               GestureDetector(
@@ -187,6 +172,7 @@ class _BookingScreenState extends State<BookingScreen> {
                 child: const Text(
                   'تعديل',
                   style: TextStyle(
+                    fontFamily: 'Tajawal',
                     color: primary,
                     fontSize: 12,
                     fontWeight: FontWeight.bold,
@@ -221,7 +207,7 @@ class _BookingScreenState extends State<BookingScreen> {
                 Expanded(
                   child: Text(
                     'يمكنك الآن إضافة عدد الضيوف والخدمات الإضافية، ثم تأكيد الحجز.',
-                    style: TextStyle(color: Colors.orange, fontSize: 11),
+                    style: TextStyle(fontFamily: 'Tajawal', color: Colors.orange, fontSize: 11),
                   ),
                 ),
               ],
@@ -246,12 +232,12 @@ class _BookingScreenState extends State<BookingScreen> {
             child: Icon(icon, color: primary, size: 16),
           ),
           const SizedBox(width: 10),
-          Text(label, style: const TextStyle(color: textLight, fontSize: 12)),
+          Text(label, style: const TextStyle(fontFamily: 'Tajawal', color: textLight, fontSize: 12)),
           const SizedBox(width: 10),
           Expanded(
             child: Text(
               value,
-              style: const TextStyle(color: textDark, fontSize: 13, fontWeight: FontWeight.bold),
+              style: const TextStyle(fontFamily: 'Tajawal', color: textDark, fontSize: 13, fontWeight: FontWeight.bold),
               textAlign: TextAlign.left,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
@@ -262,9 +248,7 @@ class _BookingScreenState extends State<BookingScreen> {
     );
   }
 
-  // ✅ تم تحديثها لعرض السعر الديناميكي
-  Widget _buildHallSummary(String name) {
-    final price = _effectiveBasePrice;
+  Widget _buildHallSummary(String name, int basePrice) {
     return Container(
       margin: const EdgeInsets.all(16),
       padding: const EdgeInsets.all(16),
@@ -288,28 +272,21 @@ class _BookingScreenState extends State<BookingScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('أنت تحجز في', style: TextStyle(color: textLight, fontSize: 11)),
+                const Text('أنت تحجز في', style: TextStyle(fontFamily: 'Tajawal', color: textLight, fontSize: 11)),
                 const SizedBox(height: 3),
                 Text(name,
-                    style: const TextStyle(color: textDark, fontSize: 17, fontWeight: FontWeight.bold),
+                    style: const TextStyle(fontFamily: 'Tajawal', color: textDark, fontSize: 17, fontWeight: FontWeight.bold),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis),
               ],
             ),
           ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              RichText(
-                text: TextSpan(children: [
-                  TextSpan(text: '$price ',
-                      style: const TextStyle(color: primary, fontSize: 17, fontWeight: FontWeight.bold)),
-                  const TextSpan(text: 'د.ل', style: TextStyle(color: textDark, fontSize: 11)),
-                ]),
-              ),
-              if (_isWeekendPrice)
-                const Text('سعر العطلة', style: TextStyle(color: Colors.orange, fontSize: 10, fontWeight: FontWeight.bold)),
-            ],
+          RichText(
+            text: TextSpan(children: [
+              TextSpan(text: '$basePrice ',
+                  style: const TextStyle(fontFamily: 'Tajawal', color: primary, fontSize: 17, fontWeight: FontWeight.bold)),
+              const TextSpan(text: 'د.ل', style: TextStyle(fontFamily: 'Tajawal', color: textDark, fontSize: 11)),
+            ]),
           ),
         ],
       ),
@@ -347,6 +324,7 @@ class _BookingScreenState extends State<BookingScreen> {
                   Text(
                     type['name'] as String,
                     style: TextStyle(
+                      fontFamily: 'Tajawal',
                       color: selected ? color : textDark,
                       fontSize: 13,
                       fontWeight: selected ? FontWeight.bold : FontWeight.w500,
@@ -399,7 +377,7 @@ class _BookingScreenState extends State<BookingScreen> {
                   Expanded(
                     child: Text(
                       'التاريخ المختار: ${DateFormat('EEEE، d MMMM yyyy', 'ar').format(_selectedDate!)}',
-                      style: const TextStyle(color: textDark, fontSize: 13, fontWeight: FontWeight.w600),
+                      style: const TextStyle(fontFamily: 'Tajawal', color: textDark, fontSize: 13, fontWeight: FontWeight.w600),
                     ),
                   ),
                 ],
@@ -450,9 +428,9 @@ class _BookingScreenState extends State<BookingScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(slot['name'] as String,
-                              style: TextStyle(color: selected ? color : textDark, fontSize: 15, fontWeight: FontWeight.bold)),
+                              style: TextStyle(fontFamily: 'Tajawal', color: selected ? color : textDark, fontSize: 15, fontWeight: FontWeight.bold)),
                           const SizedBox(height: 2),
-                          Text(slot['time'] as String, style: const TextStyle(color: textLight, fontSize: 12)),
+                          Text(slot['time'] as String, style: const TextStyle(fontFamily: 'Tajawal', color: textLight, fontSize: 12)),
                         ],
                       ),
                     ),
@@ -506,8 +484,8 @@ class _BookingScreenState extends State<BookingScreen> {
               child: Column(
                 children: [
                   Text('$_guestsCount',
-                      style: const TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.bold)),
-                  const Text('ضيف', style: TextStyle(color: Colors.white70, fontSize: 11)),
+                      style: const TextStyle(fontFamily: 'Tajawal', color: Colors.white, fontSize: 28, fontWeight: FontWeight.bold)),
+                  const Text('ضيف', style: TextStyle(fontFamily: 'Tajawal', color: Colors.white70, fontSize: 11)),
                 ],
               ),
             ),
@@ -536,6 +514,7 @@ class _BookingScreenState extends State<BookingScreen> {
     );
   }
 
+  // ✅ قسم عرض الخدمات الديناميكية
   Widget _buildServicesSection() {
     return _buildSection(
       title: 'خدمات إضافية',
@@ -543,13 +522,16 @@ class _BookingScreenState extends State<BookingScreen> {
       subtitle: '(اختياري)',
       child: Column(
         children: _availableServices.map((service) {
-          final selected = _selectedServices.contains(service['name']);
+          final serviceName = service['name'] as String;
+          final servicePrice = service['price'] as double;
+          final selected = _selectedServices.contains(serviceName);
+          
           return GestureDetector(
             onTap: () => setState(() {
               if (selected) {
-                _selectedServices.remove(service['name']);
+                _selectedServices.remove(serviceName);
               } else {
-                _selectedServices.add(service['name'] as String);
+                _selectedServices.add(serviceName);
               }
             }),
             child: Container(
@@ -572,17 +554,16 @@ class _BookingScreenState extends State<BookingScreen> {
                       borderRadius: BorderRadius.circular(10),
                       border: Border.all(color: primary.withValues(alpha: 0.2), width: 1),
                     ),
-                    child: Icon(service['icon'] as IconData,
-                        color: selected ? Colors.white : primary, size: 20),
+                    child: Icon(Icons.room_service, color: selected ? Colors.white : primary, size: 20),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
-                    child: Text(service['name'] as String,
-                        style: TextStyle(color: textDark, fontSize: 13,
+                    child: Text(serviceName,
+                        style: TextStyle(fontFamily: 'Tajawal', color: textDark, fontSize: 13,
                             fontWeight: selected ? FontWeight.bold : FontWeight.w500)),
                   ),
-                  Text('${service['price']} د.ل',
-                      style: TextStyle(color: selected ? primary : textDark, fontSize: 13, fontWeight: FontWeight.bold)),
+                  Text('${servicePrice.toStringAsFixed(0)} د.ل',
+                      style: TextStyle(fontFamily: 'Tajawal', color: selected ? primary : textDark, fontSize: 13, fontWeight: FontWeight.bold)),
                   const SizedBox(width: 8),
                   Icon(selected ? Icons.check_circle : Icons.radio_button_unchecked,
                       color: selected ? primary : Colors.black26, size: 20),
@@ -623,10 +604,10 @@ class _BookingScreenState extends State<BookingScreen> {
                 child: Icon(icon, color: primary, size: 18),
               ),
               const SizedBox(width: 10),
-              Text(title, style: const TextStyle(color: textDark, fontSize: 16, fontWeight: FontWeight.bold)),
+              Text(title, style: const TextStyle(fontFamily: 'Tajawal', color: textDark, fontSize: 16, fontWeight: FontWeight.bold)),
               if (subtitle != null) ...[
                 const SizedBox(width: 6),
-                Text(subtitle, style: const TextStyle(color: textLight, fontSize: 11)),
+                Text(subtitle, style: const TextStyle(fontFamily: 'Tajawal', color: textLight, fontSize: 11)),
               ],
             ],
           ),
@@ -637,20 +618,21 @@ class _BookingScreenState extends State<BookingScreen> {
     );
   }
 
+  // ✅ حساب الإجمالي مع الخدمات الديناميكية
   int _calculateTotal(int basePrice) {
-    int services = 0;
+    int servicesTotal = 0;
     for (final name in _selectedServices) {
       final service = _availableServices.firstWhere(
         (s) => s['name'] == name,
-        orElse: () => {'price': 0},
+        orElse: () => {'price': 0.0},
       );
-      services += service['price'] as int;
+      servicesTotal += (service['price'] as double).toInt();
     }
-    return basePrice + services;
+    return basePrice + servicesTotal;
   }
 
-  Widget _buildConfirmBar() {
-    final total = _calculateTotal(_effectiveBasePrice);
+  Widget _buildConfirmBar(int basePrice) {
+    final total = _calculateTotal(basePrice);
     return Container(
       padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
       decoration: BoxDecoration(
@@ -665,12 +647,12 @@ class _BookingScreenState extends State<BookingScreen> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 const Text('الإجمالي',
-                    style: TextStyle(color: textDark, fontSize: 15, fontWeight: FontWeight.bold)),
+                    style: TextStyle(fontFamily: 'Tajawal', color: textDark, fontSize: 15, fontWeight: FontWeight.bold)),
                 RichText(
                   text: TextSpan(children: [
                     TextSpan(text: '$total ',
-                        style: const TextStyle(color: primary, fontSize: 22, fontWeight: FontWeight.bold)),
-                    const TextSpan(text: 'د.ل', style: TextStyle(color: textDark, fontSize: 13)),
+                        style: const TextStyle(fontFamily: 'Tajawal', color: primary, fontSize: 22, fontWeight: FontWeight.bold)),
+                    const TextSpan(text: 'د.ل', style: TextStyle(fontFamily: 'Tajawal', color: textDark, fontSize: 13)),
                   ]),
                 ),
               ],
@@ -680,7 +662,7 @@ class _BookingScreenState extends State<BookingScreen> {
               width: double.infinity,
               height: 54,
               child: ElevatedButton(
-                onPressed: _loading ? null : () => _confirmBooking(),
+                onPressed: _loading ? null : () => _confirmBooking(basePrice),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: primary,
                   foregroundColor: Colors.white,
@@ -692,7 +674,7 @@ class _BookingScreenState extends State<BookingScreen> {
                     ? const SizedBox(width: 22, height: 22,
                         child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5))
                     : const Text('تأكيد الحجز',
-                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                        style: TextStyle(fontFamily: 'Tajawal', fontSize: 16, fontWeight: FontWeight.bold)),
               ),
             ),
           ],
@@ -701,7 +683,7 @@ class _BookingScreenState extends State<BookingScreen> {
     );
   }
 
-  Future<void> _confirmBooking() async {
+  Future<void> _confirmBooking(int basePrice) async {
     if (_selectedEventType == null) {
       _showError('الرجاء اختيار نوع المناسبة');
       return;
@@ -721,7 +703,7 @@ class _BookingScreenState extends State<BookingScreen> {
       return;
     }
 
-    // ✅✅✅ إضافة التحقق من توفر الفترة في هذا التاريخ ✅✅✅
+    // ✅ التحقق من توفر الفترة في هذا التاريخ
     setState(() => _loading = true);
     try {
       final normalizedDate = DateTime(_selectedDate!.year, _selectedDate!.month, _selectedDate!.day);
@@ -759,7 +741,7 @@ class _BookingScreenState extends State<BookingScreen> {
           children: [
             Icon(Icons.payment, color: primary, size: 28),
             SizedBox(width: 10),
-            Text('دفع رسم الحجز', style: TextStyle(color: textDark, fontSize: 18)),
+            Text('دفع رسم الحجز', style: TextStyle(fontFamily: 'Tajawal', color: textDark, fontSize: 18)),
           ],
         ),
         content: Column(
@@ -767,7 +749,7 @@ class _BookingScreenState extends State<BookingScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text('لإتمام الحجز المبدئي، يجب دفع رسم حجز قدره:',
-                style: TextStyle(color: textDark, fontSize: 14)),
+                style: TextStyle(fontFamily: 'Tajawal', color: textDark, fontSize: 14)),
             const SizedBox(height: 12),
             Container(
               padding: const EdgeInsets.all(12),
@@ -777,13 +759,13 @@ class _BookingScreenState extends State<BookingScreen> {
               ),
               child: const Center(
                 child: Text('60 دينار ليبي',
-                    style: TextStyle(color: primary, fontSize: 22, fontWeight: FontWeight.bold)),
+                    style: TextStyle(fontFamily: 'Tajawal', color: primary, fontSize: 22, fontWeight: FontWeight.bold)),
               ),
             ),
             const SizedBox(height: 12),
             const Text(
               'هذا المبلغ هو رسم حجز مبدئي للتطبيق فقط.\n\nسعر القاعة الكامل يُدفع نقداً لصاحب القاعة عند الحضور.',
-              style: TextStyle(color: textLight, fontSize: 12, height: 1.5),
+              style: TextStyle(fontFamily: 'Tajawal', color: textLight, fontSize: 12, height: 1.5),
             ),
             const SizedBox(height: 8),
             Container(
@@ -798,7 +780,7 @@ class _BookingScreenState extends State<BookingScreen> {
                   SizedBox(width: 6),
                   Expanded(
                     child: Text('يحق لك استرداد المبلغ كاملاً خلال 48 ساعة من الحجز',
-                        style: TextStyle(color: Colors.orange, fontSize: 11)),
+                        style: TextStyle(fontFamily: 'Tajawal', color: Colors.orange, fontSize: 11)),
                   ),
                 ],
               ),
@@ -808,7 +790,7 @@ class _BookingScreenState extends State<BookingScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('إلغاء', style: TextStyle(color: Colors.grey)),
+            child: const Text('إلغاء', style: TextStyle(fontFamily: 'Tajawal', color: Colors.grey)),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
@@ -817,7 +799,7 @@ class _BookingScreenState extends State<BookingScreen> {
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             ),
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('دفع 60 د.ل'),
+            child: const Text('دفع 60 د.ل', style: TextStyle(fontFamily: 'Tajawal')),
           ),
         ],
       ),
@@ -828,10 +810,7 @@ class _BookingScreenState extends State<BookingScreen> {
     setState(() => _loading = true);
 
     try {
-      // ✅ استخدام السعر الفعلي (الذي قد يكون سعر العطلة)
-      final effectiveBasePrice = _effectiveBasePrice;
-      final total = _calculateTotal(effectiveBasePrice);
-      
+      final total = _calculateTotal(basePrice);
       const double fixedCommission = 60.0;
       final expiresAt = DateTime.now().add(const Duration(hours: 48));
       
@@ -846,8 +825,8 @@ class _BookingScreenState extends State<BookingScreen> {
         'timeSlot': _selectedTimeSlot,
         'eventDate': Timestamp.fromDate(bookingDate),
         'guestsCount': _guestsCount,
-        'services': _selectedServices,
-        'basePrice': effectiveBasePrice, // ✅ السعر الصحيح المحفوظ
+        'services': _selectedServices, // ✅ حفظ الخدمات المختارة
+        'basePrice': basePrice,
         'totalPrice': total,
         'commission': fixedCommission,
         'providerNet': total,
@@ -887,14 +866,14 @@ class _BookingScreenState extends State<BookingScreen> {
             children: [
               Icon(Icons.check_circle, color: Colors.green, size: 28),
               SizedBox(width: 10),
-              Text('تم الحجز بنجاح!', style: TextStyle(color: textDark, fontSize: 18)),
+              Text('تم الحجز بنجاح!', style: TextStyle(fontFamily: 'Tajawal', color: textDark, fontSize: 18)),
             ],
           ),
           content: Text(
             'تم دفع رسم الحجز بنجاح (60 د.ل).\n\n'
             'لديك 48 ساعة للتوجه إلى "${widget.hallData['name'] ?? 'القاعة'}" ودفع سعر القاعة كاملاً ($total د.ل).\n\n'
             'خلال هذه المدة يمكنك إلغاء الحجز واسترداد 60 د.ل كاملة من "حجوزاتي".',
-            style: const TextStyle(color: textDark, fontSize: 14, height: 1.6),
+            style: const TextStyle(fontFamily: 'Tajawal', color: textDark, fontSize: 14, height: 1.6),
           ),
           actions: [
             ElevatedButton(
@@ -904,7 +883,7 @@ class _BookingScreenState extends State<BookingScreen> {
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               ),
               onPressed: () => Navigator.pop(context),
-              child: const Text('حسناً'),
+              child: const Text('حسناً', style: TextStyle(fontFamily: 'Tajawal')),
             ),
           ],
         ),
@@ -920,7 +899,7 @@ class _BookingScreenState extends State<BookingScreen> {
 
   void _showError(String msg) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(msg), backgroundColor: Colors.redAccent),
+      SnackBar(content: Text(msg, style: const TextStyle(fontFamily: 'Tajawal')), backgroundColor: Colors.redAccent),
     );
   }
 }
