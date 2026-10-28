@@ -9,11 +9,9 @@ import 'add_edit_hall_screen.dart';
 import 'add_manual_booking_screen.dart';
 import 'api_integration_screen.dart';
 import 'edit_profile_screen.dart';
-import 'wallet_screen.dart';
 import 'notifications_screen.dart';
-// ✅ استيراد الشاشات الجديدة الخاصة بالمتاجر
 import 'select_store_type_screen.dart'; 
-import 'store_management_screen.dart';
+import 'store_management_screen.dart'; 
 import 'auth/presentation/screens/login_screen_farah.dart';
 
 class ProviderDashboardScreen extends StatefulWidget {
@@ -38,6 +36,7 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
   void initState() {
     super.initState();
     _loadData();
+    // تحديث تلقائي كل دقيقة لتحديث العدادات التنازلية
     _ticker = Timer.periodic(const Duration(minutes: 1), (_) {
       if (mounted) setState(() {});
     });
@@ -59,6 +58,7 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
     final uid = FirebaseAuth.instance.currentUser?.uid;
     if (uid == null) throw 'no user';
 
+    // 1. جلب القاعات
     List<QueryDocumentSnapshot<Map<String, dynamic>>> halls = [];
     for (final field in ['providerId', 'ownerId', 'userId']) {
       final snap = await FirebaseFirestore.instance
@@ -71,27 +71,36 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
       }
     }
 
-    if (halls.isEmpty) {
-      return {
-        'halls': <QueryDocumentSnapshot<Map<String, dynamic>>>[],
-        'bookings': <QueryDocumentSnapshot<Map<String, dynamic>>>[],
-        'userMap': <String, String>{},
-      };
-    }
-
-    final hallIds = halls.map((d) => d.id).toList();
-
+    // 2. جلب الحجوزات
     final List<QueryDocumentSnapshot<Map<String, dynamic>>> allBookings = [];
-    for (int i = 0; i < hallIds.length; i += 10) {
-      final end = (i + 10 > hallIds.length) ? hallIds.length : i + 10;
-      final chunk = hallIds.sublist(i, end);
-      final snap = await FirebaseFirestore.instance
-          .collection('bookings')
-          .where('hallId', whereIn: chunk)
-          .get();
-      allBookings.addAll(snap.docs);
+    if (halls.isNotEmpty) {
+      final hallIds = halls.map((d) => d.id).toList();
+      for (int i = 0; i < hallIds.length; i += 10) {
+        final end = (i + 10 > hallIds.length) ? hallIds.length : i + 10;
+        final chunk = hallIds.sublist(i, end);
+        final snap = await FirebaseFirestore.instance
+            .collection('bookings')
+            .where('hallId', whereIn: chunk)
+            .get();
+        allBookings.addAll(snap.docs);
+      }
     }
 
+    // ✅ 3. تسجيل الحجوزات المنتهية تلقائياً
+    for (var booking in allBookings) {
+      final data = booking.data();
+      final status = data['status'] ?? '';
+      final eventDate = data['eventDate'] is Timestamp ? (data['eventDate'] as Timestamp).toDate() : null;
+
+      if (status == 'confirmed' && eventDate != null && eventDate.isBefore(DateTime.now())) {
+        // تحديث الحالة في قاعدة البيانات
+        await booking.reference.update({'status': 'completed'});
+        // تحديث الحالة في الذاكرة لكي تظهر فوراً في الواجهة
+        data['status'] = 'completed'; 
+      }
+    }
+
+    // 4. جلب أسماء الزبائن
     final userIds = <String>{};
     for (final b in allBookings) {
       final u = (b.data()['userId'] ?? '') as String;
@@ -101,16 +110,14 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
     }
     final Map<String, String> userMap = {};
     for (final u in userIds) {
-      final doc = await FirebaseFirestore.instance
-          .collection('users')
-          .doc(u)
-          .get();
+      final doc = await FirebaseFirestore.instance.collection('users').doc(u).get();
       if (doc.exists) {
         final data = doc.data() as Map<String, dynamic>?;
         userMap[u] = data?['fullName'] ?? 'مستخدم';
       }
     }
 
+    // 5. ترتيب الحجوزات
     allBookings.sort((a, b) {
       final aT = a.data()['createdAt'] as Timestamp?;
       final bT = b.data()['createdAt'] as Timestamp?;
@@ -146,6 +153,9 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
     );
   }
 
+  // ═══════════════════════════════════════════════════════════
+  // 📊 تبويب الرئيسية
+  // ═══════════════════════════════════════════════════════════
   Widget _buildDashboardTab() {
     return FutureBuilder<Map<String, dynamic>>(
       future: _dataFuture,
@@ -173,10 +183,10 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text('أحدث الحجوزات', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: textDark)),
+                      const Text('أحدث الحجوزات', style: TextStyle(fontFamily: 'Tajawal', fontSize: 16, fontWeight: FontWeight.bold, color: textDark)),
                       GestureDetector(
                         onTap: () => setState(() => _currentTab = 2),
-                        child: const Text('عرض الكل', style: TextStyle(fontSize: 12, color: primary, fontWeight: FontWeight.bold)),
+                        child: const Text('عرض الكل', style: TextStyle(fontFamily: 'Tajawal', fontSize: 12, color: primary, fontWeight: FontWeight.bold)),
                       ),
                     ],
                   ),
@@ -205,6 +215,9 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
     );
   }
 
+  // ═══════════════════════════════════════════════════════════
+  // ⚡ إجراءات سريعة
+  // ═══════════════════════════════════════════════════════════
   Widget _buildQuickActions() {
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
@@ -228,7 +241,7 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
                   children: [
                     Icon(Icons.bookmark_add_outlined, color: Colors.blue, size: 20),
                     SizedBox(width: 8),
-                    Text('حجز يدوي', style: TextStyle(color: textDark, fontSize: 13, fontWeight: FontWeight.bold)),
+                    Text('حجز يدوي', style: TextStyle(fontFamily: 'Tajawal', color: textDark, fontSize: 13, fontWeight: FontWeight.bold)),
                   ],
                 ),
               ),
@@ -252,7 +265,7 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
                   children: [
                     Icon(Icons.api, color: Colors.purple, size: 20),
                     SizedBox(width: 8),
-                    Text('ربط API', style: TextStyle(color: textDark, fontSize: 13, fontWeight: FontWeight.bold)),
+                    Text('ربط API', style: TextStyle(fontFamily: 'Tajawal', color: textDark, fontSize: 13, fontWeight: FontWeight.bold)),
                   ],
                 ),
               ),
@@ -263,6 +276,9 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
     );
   }
 
+  // ═══════════════════════════════════════════════════════════
+  // 🏛️ تبويب قاعاتي
+  // ═══════════════════════════════════════════════════════════
   Widget _buildMyHallsTab() {
     return FutureBuilder<Map<String, dynamic>>(
       future: _dataFuture,
@@ -303,6 +319,9 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
     );
   }
 
+  // ═══════════════════════════════════════════════════════════
+  // 📅 تبويب الحجوزات
+  // ═══════════════════════════════════════════════════════════
   Widget _buildBookingsTab() {
     return FutureBuilder<Map<String, dynamic>>(
       future: _dataFuture,
@@ -358,6 +377,9 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
     );
   }
 
+  // ═══════════════════════════════════════════════════════════
+  // 🎨 دوال مساعدة للواجهة
+  // ═══════════════════════════════════════════════════════════
   Widget _buildAppBar(String title) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
@@ -372,7 +394,7 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
             child: const Icon(Icons.storefront, color: Colors.white, size: 22),
           ),
           const SizedBox(width: 12),
-          Text(title, style: const TextStyle(color: textDark, fontSize: 22, fontWeight: FontWeight.bold)),
+          Text(title, style: const TextStyle(fontFamily: 'Tajawal', color: textDark, fontSize: 22, fontWeight: FontWeight.bold)),
           const Spacer(),
           _providerNotificationButton(),
           
@@ -389,13 +411,12 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Text('ماذا تريد أن تضيف؟', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                          const Text('ماذا تريد أن تضيف؟', style: TextStyle(fontFamily: 'Tajawal', fontSize: 18, fontWeight: FontWeight.bold)),
                           const SizedBox(height: 20),
                           
-                          // 1. إضافة قاعة
                           ListTile(
                             leading: const Icon(Icons.storefront, color: primary, size: 30),
-                            title: const Text('إضافة قاعة أفراح', style: TextStyle(fontWeight: FontWeight.bold)),
+                            title: const Text('إضافة قاعة أفراح', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
                             onTap: () async {
                               Navigator.pop(context);
                               final result = await Navigator.push(context, MaterialPageRoute(builder: (_) => const AddEditHallScreen()));
@@ -404,10 +425,9 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
                           ),
                           const Divider(),
                           
-                          // 2. إضافة متجر جديد (يذهب لاختيار النوع)
                           ListTile(
                             leading: const Icon(Icons.local_mall, color: Colors.blue, size: 30),
-                            title: const Text('إضافة متجر جديد', style: TextStyle(fontWeight: FontWeight.bold)),
+                            title: const Text('إضافة متجر جديد', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
                             onTap: () async {
                               Navigator.pop(context);
                               final result = await Navigator.push(context, MaterialPageRoute(builder: (_) => const SelectStoreTypeScreen()));
@@ -416,10 +436,9 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
                           ),
                           const Divider(),
 
-                          // 3. إدارة المتاجر
                           ListTile(
                             leading: const Icon(Icons.inventory, color: Colors.purple, size: 30),
-                            title: const Text('إدارة المتاجر والمنتجات', style: TextStyle(fontWeight: FontWeight.bold)),
+                            title: const Text('إدارة المتاجر والمنتجات', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
                             onTap: () async {
                               Navigator.pop(context);
                               final result = await Navigator.push(context, MaterialPageRoute(builder: (_) => const StoreManagementScreen()));
@@ -477,8 +496,7 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
               ),
               if (count > 0)
                 Positioned(
-                  top: -4,
-                  right: -4,
+                  top: -4, right: -4,
                   child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                     constraints: const BoxConstraints(minWidth: 20),
@@ -489,7 +507,7 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
                     ),
                     child: Text(
                       count > 99 ? '99+' : '$count',
-                      style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+                      style: const TextStyle(fontFamily: 'Tajawal', color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
                       textAlign: TextAlign.center,
                     ),
                   ),
@@ -519,6 +537,7 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
         ],
       ),
       child: Row(
+        textDirection: TextDirection.rtl,
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: List.generate(items.length, (i) {
           final active = i == _currentTab;
@@ -542,7 +561,7 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
                   if (active) ...[
                     const SizedBox(width: 5),
                     Text(items[i]['label'] as String,
-                        style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
+                        style: const TextStyle(fontFamily: 'Tajawal', color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
                   ],
                 ],
               ),
@@ -614,9 +633,9 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
               child: Icon(icon, color: color, size: 18),
             ),
             const SizedBox(height: 8),
-            Text(value, style: const TextStyle(color: textDark, fontSize: 16, fontWeight: FontWeight.bold)),
+            Text(value, style: const TextStyle(fontFamily: 'Tajawal', color: textDark, fontSize: 16, fontWeight: FontWeight.bold)),
             const SizedBox(height: 2),
-            Text(label, style: const TextStyle(color: textLight, fontSize: 11), textAlign: TextAlign.center),
+            Text(label, style: const TextStyle(fontFamily: 'Tajawal', color: textLight, fontSize: 11), textAlign: TextAlign.center),
           ],
         ),
       ),
@@ -660,7 +679,7 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
                   Icon(t['icon'] as IconData, color: active ? Colors.white : primary, size: 14),
                   const SizedBox(width: 6),
                   Text(t['label'] as String,
-                      style: TextStyle(color: active ? Colors.white : textDark, fontSize: 12,
+                      style: TextStyle(fontFamily: 'Tajawal', color: active ? Colors.white : textDark, fontSize: 12,
                           fontWeight: active ? FontWeight.bold : FontWeight.w500)),
                 ],
               ),
@@ -717,7 +736,7 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Expanded(
-                            child: Text(name, style: const TextStyle(color: textDark, fontSize: 16, fontWeight: FontWeight.bold), maxLines: 1, overflow: TextOverflow.ellipsis),
+                            child: Text(name, style: const TextStyle(fontFamily: 'Tajawal', color: textDark, fontSize: 16, fontWeight: FontWeight.bold), maxLines: 1, overflow: TextOverflow.ellipsis),
                           ),
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -726,7 +745,7 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Text(isAvailable ? 'متاحة' : 'مغلقة',
-                                style: TextStyle(color: isAvailable ? Colors.green : Colors.redAccent, fontSize: 10, fontWeight: FontWeight.bold)),
+                                style: TextStyle(fontFamily: 'Tajawal', color: isAvailable ? Colors.green : Colors.redAccent, fontSize: 10, fontWeight: FontWeight.bold)),
                           ),
                         ],
                       ),
@@ -735,19 +754,19 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
                         children: [
                           const Icon(Icons.location_on_outlined, color: textLight, size: 14),
                           const SizedBox(width: 4),
-                          Text(city, style: const TextStyle(color: textLight, fontSize: 12)),
+                          Text(city, style: const TextStyle(fontFamily: 'Tajawal', color: textLight, fontSize: 12)),
                         ],
                       ),
                       const SizedBox(height: 12),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text('$price د.ل', style: const TextStyle(color: primary, fontSize: 15, fontWeight: FontWeight.bold)),
+                          Text('$price د.ل', style: const TextStyle(fontFamily: 'Tajawal', color: primary, fontSize: 15, fontWeight: FontWeight.bold)),
                           Row(
                             children: [
                               const Icon(Icons.star, color: Colors.amber, size: 16),
                               const SizedBox(width: 4),
-                              Text(rating.toStringAsFixed(1), style: const TextStyle(color: textDark, fontSize: 12, fontWeight: FontWeight.bold)),
+                              Text(rating.toStringAsFixed(1), style: const TextStyle(fontFamily: 'Tajawal', color: textDark, fontSize: 12, fontWeight: FontWeight.bold)),
                             ],
                           ),
                         ],
@@ -778,7 +797,7 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
                         children: [
                           Icon(Icons.edit, color: primary, size: 16),
                           SizedBox(width: 6),
-                          Text('تعديل القاعة', style: TextStyle(color: primary, fontSize: 12, fontWeight: FontWeight.bold)),
+                          Text('تعديل القاعة', style: TextStyle(fontFamily: 'Tajawal', color: primary, fontSize: 12, fontWeight: FontWeight.bold)),
                         ],
                       ),
                     ),
@@ -850,6 +869,8 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
     final eventIcon = eventInfo['icon'] as IconData;
     final eventColor = eventInfo['color'] as Color;
     final dateStr = eventDate != null ? DateFormat('yyyy/MM/dd').format(eventDate) : 'غير محدد';
+    
+    // عرض العداد التنازلي فقط إذا كان بانتظار الحضور
     final showCountdown = isActuallyWaiting && !isManual;
     final remainingTime = showCountdown ? _getRemainingTime(data) : '';
 
@@ -887,7 +908,7 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
-                      Text(hallName, style: const TextStyle(color: textDark, fontSize: 15, fontWeight: FontWeight.bold), maxLines: 1, overflow: TextOverflow.ellipsis),
+                      Text(hallName, style: const TextStyle(fontFamily: 'Tajawal', color: textDark, fontSize: 15, fontWeight: FontWeight.bold), maxLines: 1, overflow: TextOverflow.ellipsis),
                       const SizedBox(height: 4),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.end,
@@ -896,11 +917,11 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
                             Container(
                               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                               decoration: BoxDecoration(color: Colors.blue.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(6)),
-                              child: const Text('يدوي', style: TextStyle(color: Colors.blue, fontSize: 9, fontWeight: FontWeight.bold)),
+                              child: const Text('يدوي', style: TextStyle(fontFamily: 'Tajawal', color: Colors.blue, fontSize: 9, fontWeight: FontWeight.bold)),
                             ),
                             const SizedBox(width: 6),
                           ],
-                          Flexible(child: Text(customerName, style: const TextStyle(color: textLight, fontSize: 12), maxLines: 1, overflow: TextOverflow.ellipsis)),
+                          Flexible(child: Text(customerName, style: const TextStyle(fontFamily: 'Tajawal', color: textLight, fontSize: 12), maxLines: 1, overflow: TextOverflow.ellipsis)),
                           const SizedBox(width: 4),
                           const Icon(Icons.person_outline, color: textLight, size: 13),
                         ],
@@ -912,7 +933,7 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Text(statusLabel, style: TextStyle(color: statusColor, fontSize: 11, fontWeight: FontWeight.bold)),
+                            Text(statusLabel, style: TextStyle(fontFamily: 'Tajawal', color: statusColor, fontSize: 11, fontWeight: FontWeight.bold)),
                             const SizedBox(width: 4),
                             Icon(statusIcon, color: statusColor, size: 12),
                           ],
@@ -934,9 +955,9 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
                 children: [
                   const Icon(Icons.timer_outlined, color: Colors.orange, size: 18),
                   const SizedBox(width: 8),
-                  const Text('يجب أن يحضر العميل خلال:', style: TextStyle(color: textDark, fontSize: 11)),
+                  const Text('يجب أن يحضر العميل خلال:', style: TextStyle(fontFamily: 'Tajawal', color: textDark, fontSize: 11)),
                   const Spacer(),
-                  Text(remainingTime, style: const TextStyle(color: Colors.orange, fontSize: 12, fontWeight: FontWeight.bold)),
+                  Text(remainingTime, style: const TextStyle(fontFamily: 'Tajawal', color: Colors.orange, fontSize: 12, fontWeight: FontWeight.bold)),
                 ],
               ),
             ),
@@ -969,8 +990,8 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  const Text('المناسبة', style: TextStyle(color: textLight, fontSize: 9)),
-                                  Text(eventType, style: const TextStyle(color: textDark, fontSize: 12, fontWeight: FontWeight.bold), maxLines: 1, overflow: TextOverflow.ellipsis),
+                                  const Text('المناسبة', style: TextStyle(fontFamily: 'Tajawal', color: textLight, fontSize: 9)),
+                                  Text(eventType, style: const TextStyle(fontFamily: 'Tajawal', color: textDark, fontSize: 12, fontWeight: FontWeight.bold), maxLines: 1, overflow: TextOverflow.ellipsis),
                                 ],
                               ),
                             ),
@@ -1009,7 +1030,7 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
                             children: [
                               Icon(Icons.delete_outline, color: Colors.redAccent, size: 16),
                               SizedBox(width: 6),
-                              Text('حذف الحجز اليدوي', style: TextStyle(color: Colors.redAccent, fontSize: 12, fontWeight: FontWeight.bold)),
+                              Text('حذف الحجز اليدوي', style: TextStyle(fontFamily: 'Tajawal', color: Colors.redAccent, fontSize: 12, fontWeight: FontWeight.bold)),
                             ],
                           ),
                         ),
@@ -1028,7 +1049,7 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
                    width: double.infinity,
                    padding: const EdgeInsets.symmetric(vertical: 8),
                    decoration: BoxDecoration(color: primary.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(10)),
-                   child: const Center(child: Text('إدارة الحجز', style: TextStyle(color: primary, fontSize: 12, fontWeight: FontWeight.bold))),
+                   child: const Center(child: Text('إدارة الحجز', style: TextStyle(fontFamily: 'Tajawal', color: primary, fontSize: 12, fontWeight: FontWeight.bold))),
                  ),
                ),
              )
@@ -1058,7 +1079,7 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
                   children: [
                     Icon(Icons.close, color: Colors.redAccent, size: 16),
                     SizedBox(width: 6),
-                    Text('رفض', style: TextStyle(color: Colors.redAccent, fontSize: 13, fontWeight: FontWeight.bold)),
+                    Text('رفض', style: TextStyle(fontFamily: 'Tajawal', color: Colors.redAccent, fontSize: 13, fontWeight: FontWeight.bold)),
                   ],
                 ),
               ),
@@ -1080,7 +1101,7 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
                   children: [
                     Icon(Icons.check, color: Colors.green, size: 16),
                     SizedBox(width: 6),
-                    Text('قبول', style: TextStyle(color: Colors.green, fontSize: 13, fontWeight: FontWeight.bold)),
+                    Text('قبول', style: TextStyle(fontFamily: 'Tajawal', color: Colors.green, fontSize: 13, fontWeight: FontWeight.bold)),
                   ],
                 ),
               ),
@@ -1111,7 +1132,7 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
                   children: [
                     Icon(Icons.close, color: Colors.redAccent, size: 16),
                     SizedBox(width: 6),
-                    Text('رفض', style: TextStyle(color: Colors.redAccent, fontSize: 12, fontWeight: FontWeight.bold)),
+                    Text('رفض', style: TextStyle(fontFamily: 'Tajawal', color: Colors.redAccent, fontSize: 12, fontWeight: FontWeight.bold)),
                   ],
                 ),
               ),
@@ -1134,7 +1155,7 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
                   children: [
                     Icon(Icons.login, color: Colors.white, size: 18),
                     SizedBox(width: 6),
-                    Text('تأكيد الحضور', style: TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.bold)),
+                    Text('تأكيد الحضور', style: TextStyle(fontFamily: 'Tajawal', color: Colors.white, fontSize: 13, fontWeight: FontWeight.bold)),
                   ],
                 ),
               ),
@@ -1166,7 +1187,7 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
               Icon(Icons.done_all, color: isEventPassed ? Colors.blue : Colors.grey, size: 16),
               const SizedBox(width: 6),
               Text(isEventPassed ? 'إتمام الحجز' : 'انتظر انتهاء المناسبة',
-                  style: TextStyle(color: isEventPassed ? Colors.blue : Colors.grey, fontSize: 13, fontWeight: FontWeight.bold)),
+                  style: TextStyle(fontFamily: 'Tajawal', color: isEventPassed ? Colors.blue : Colors.grey, fontSize: 13, fontWeight: FontWeight.bold)),
             ],
           ),
         ),
@@ -1184,20 +1205,20 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
           children: [
             Icon(Icons.login, color: Colors.green, size: 26),
             SizedBox(width: 10),
-            Text('تأكيد الحضور', style: TextStyle(color: textDark, fontSize: 18)),
+            Text('تأكيد الحضور', style: TextStyle(fontFamily: 'Tajawal', color: textDark, fontSize: 18)),
           ],
         ),
         content: const Text(
           'هل وصل العميل إلى القاعة وقام بدفع العربون؟\n\n'
           'بالضغط على "تأكيد"، ستصبح الحالة "مؤكد" ويتم إغلاق الحجز رسمياً.',
-          style: TextStyle(color: textDark, fontSize: 14, height: 1.6),
+          style: TextStyle(fontFamily: 'Tajawal', color: textDark, fontSize: 14, height: 1.6),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('لم يصل بعد', style: TextStyle(color: Colors.grey))),
+          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('لم يصل بعد', style: TextStyle(fontFamily: 'Tajawal', color: Colors.grey))),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: Colors.green, foregroundColor: Colors.white, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('نعم، وصل'),
+            child: const Text('نعم، وصل', style: TextStyle(fontFamily: 'Tajawal')),
           ),
         ],
       ),
@@ -1222,11 +1243,11 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
       } catch (_) {}
 
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('✅ تم تأكيد الحضور بنجاح'), backgroundColor: Colors.green));
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('✅ تم تأكيد الحضور بنجاح', style: TextStyle(fontFamily: 'Tajawal')), backgroundColor: Colors.green));
       _loadData();
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('خطأ: $e'), backgroundColor: Colors.redAccent));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('خطأ: $e', style: TextStyle(fontFamily: 'Tajawal')), backgroundColor: Colors.redAccent));
     }
   }
 
@@ -1243,8 +1264,8 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(label, style: const TextStyle(color: textLight, fontSize: 9)),
-              Text(value, style: const TextStyle(color: textDark, fontSize: 12, fontWeight: FontWeight.bold), maxLines: 1, overflow: TextOverflow.ellipsis),
+              Text(label, style: const TextStyle(fontFamily: 'Tajawal', color: textLight, fontSize: 9)),
+              Text(value, style: const TextStyle(fontFamily: 'Tajawal', color: textDark, fontSize: 12, fontWeight: FontWeight.bold), maxLines: 1, overflow: TextOverflow.ellipsis),
             ],
           ),
         ),
@@ -1268,14 +1289,14 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
       builder: (_) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         backgroundColor: Colors.white,
-        title: Text(title, textAlign: TextAlign.right, style: const TextStyle(color: textDark)),
-        content: Text(message, textAlign: TextAlign.right),
+        title: Text(title, textAlign: TextAlign.right, style: const TextStyle(fontFamily: 'Tajawal', color: textDark)),
+        content: Text(message, textAlign: TextAlign.right, style: const TextStyle(fontFamily: 'Tajawal')),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('لا')),
+          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('لا', style: TextStyle(fontFamily: 'Tajawal'))),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: isComplete ? Colors.blue : (isConfirm ? Colors.green : Colors.redAccent), foregroundColor: Colors.white),
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('نعم'),
+            child: const Text('نعم', style: TextStyle(fontFamily: 'Tajawal')),
           ),
         ],
       ),
@@ -1302,12 +1323,12 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
 
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(isConfirm ? '✅ تم تأكيد الحجز' : (isComplete ? '✅ تم إتمام الحجز' : '✅ تم رفض الحجز')), backgroundColor: Colors.green),
+        SnackBar(content: Text(isConfirm ? '✅ تم تأكيد الحجز' : (isComplete ? '✅ تم إتمام الحجز' : '✅ تم رفض الحجز'), style: const TextStyle(fontFamily: 'Tajawal')), backgroundColor: Colors.green),
       );
       _loadData();
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('خطأ: $e'), backgroundColor: Colors.redAccent));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('خطأ: $e', style: const TextStyle(fontFamily: 'Tajawal')), backgroundColor: Colors.redAccent));
     }
   }
 
@@ -1317,14 +1338,14 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
       builder: (_) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         backgroundColor: Colors.white,
-        title: const Text('حذف الحجز اليدوي', textAlign: TextAlign.right, style: TextStyle(color: textDark)),
-        content: const Text('هل أنت متأكد من حذف هذا الحجز اليدوي؟\n\nسيتم فتح التاريخ مرة أخرى للحجز عبر التطبيق.', textAlign: TextAlign.right),
+        title: const Text('حذف الحجز اليدوي', textAlign: TextAlign.right, style: TextStyle(fontFamily: 'Tajawal', color: textDark)),
+        content: const Text('هل أنت متأكد من حذف هذا الحجز اليدوي؟\n\nسيتم فتح التاريخ مرة أخرى للحجز عبر التطبيق.', textAlign: TextAlign.right, style: TextStyle(fontFamily: 'Tajawal')),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('إلغاء')),
+          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('إلغاء', style: TextStyle(fontFamily: 'Tajawal'))),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent, foregroundColor: Colors.white),
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('نعم، حذف'),
+            child: const Text('نعم، حذف', style: TextStyle(fontFamily: 'Tajawal')),
           ),
         ],
       ),
@@ -1334,11 +1355,11 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
     try {
       await FirebaseFirestore.instance.collection('bookings').doc(docId).delete();
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('✅ تم حذف الحجز اليدوي'), backgroundColor: Colors.green));
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('✅ تم حذف الحجز اليدوي', style: TextStyle(fontFamily: 'Tajawal')), backgroundColor: Colors.green));
       _loadData();
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('خطأ: $e'), backgroundColor: Colors.redAccent));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('خطأ: $e', style: TextStyle(fontFamily: 'Tajawal')), backgroundColor: Colors.redAccent));
     }
   }
 
@@ -1348,14 +1369,14 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
       builder: (_) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         backgroundColor: Colors.white,
-        title: const Text('حذف القاعة', textAlign: TextAlign.right, style: TextStyle(color: textDark)),
-        content: Text('هل أنت متأكد من حذف "$hallName"؟\nلا يمكن التراجع عن هذا الإجراء.', textAlign: TextAlign.right),
+        title: const Text('حذف القاعة', textAlign: TextAlign.right, style: TextStyle(fontFamily: 'Tajawal', color: textDark)),
+        content: Text('هل أنت متأكد من حذف "$hallName"؟\nلا يمكن التراجع عن هذا الإجراء.', textAlign: TextAlign.right, style: TextStyle(fontFamily: 'Tajawal')),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('إلغاء')),
+          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('إلغاء', style: TextStyle(fontFamily: 'Tajawal'))),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent, foregroundColor: Colors.white),
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('نعم، حذف'),
+            child: const Text('نعم، حذف', style: TextStyle(fontFamily: 'Tajawal')),
           ),
         ],
       ),
@@ -1365,11 +1386,11 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
     try {
       await FirebaseFirestore.instance.collection('halls').doc(hallId).delete();
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('✅ تم حذف القاعة'), backgroundColor: Colors.green));
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('✅ تم حذف القاعة', style: TextStyle(fontFamily: 'Tajawal')), backgroundColor: Colors.green));
       _loadData();
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('خطأ: $e'), backgroundColor: Colors.redAccent));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('خطأ: $e', style: TextStyle(fontFamily: 'Tajawal')), backgroundColor: Colors.redAccent));
     }
   }
 
@@ -1386,9 +1407,9 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
               child: const Icon(Icons.storefront_outlined, size: 70, color: primary),
             ),
             const SizedBox(height: 20),
-            const Text('لا توجد قاعات مسجلة', style: TextStyle(color: textDark, fontSize: 18, fontWeight: FontWeight.bold)),
+            const Text('لا توجد قاعات مسجلة', style: TextStyle(fontFamily: 'Tajawal', color: textDark, fontSize: 18, fontWeight: FontWeight.bold)),
             const SizedBox(height: 8),
-            const Text('أضف قاعتك الأولى من الزر أعلاه', style: TextStyle(color: textLight, fontSize: 13)),
+            const Text('أضف قاعتك الأولى من الزر أعلاه', style: TextStyle(fontFamily: 'Tajawal', color: textLight, fontSize: 13)),
           ],
         ),
       ),
@@ -1404,7 +1425,7 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
           children: [
             Icon(Icons.event_busy_outlined, size: 70, color: primary.withValues(alpha: 0.3)),
             const SizedBox(height: 14),
-            const Text('لا توجد حجوزات', style: TextStyle(color: textDark, fontSize: 15, fontWeight: FontWeight.bold)),
+            const Text('لا توجد حجوزات', style: TextStyle(fontFamily: 'Tajawal', color: textDark, fontSize: 15, fontWeight: FontWeight.bold)),
           ],
         ),
       ),
@@ -1418,12 +1439,12 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
         children: [
           const Icon(Icons.error_outline, size: 60, color: Colors.redAccent),
           const SizedBox(height: 16),
-          const Text('تعذر تحميل بيانات المزود', style: TextStyle(color: textDark, fontSize: 14)),
+          const Text('تعذر تحميل بيانات المزود', style: TextStyle(fontFamily: 'Tajawal', color: textDark, fontSize: 14)),
           const SizedBox(height: 16),
           ElevatedButton(
             onPressed: _loadData,
             style: ElevatedButton.styleFrom(backgroundColor: primary, foregroundColor: Colors.white),
-            child: const Text('حاول مرة أخرى'),
+            child: const Text('حاول مرة أخرى', style: TextStyle(fontFamily: 'Tajawal')),
           ),
         ],
       ),
@@ -1443,7 +1464,7 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
 }
 
 // ═══════════════════════════════════════════════
-// شاشة حسابي الخاصة بالمزود
+// شاشة حسابي الخاصة بالمزود (تم إزالة المحفظة)
 // ═══════════════════════════════════════════════
 class ProviderProfileScreen extends StatefulWidget {
   const ProviderProfileScreen({super.key});
@@ -1472,14 +1493,14 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen> {
       builder: (_) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
         backgroundColor: Colors.white,
-        title: const Text('تسجيل الخروج', textAlign: TextAlign.right, style: TextStyle(color: textDark)),
-        content: const Text('هل أنت متأكد؟', textAlign: TextAlign.right),
+        title: const Text('تسجيل الخروج', textAlign: TextAlign.right, style: TextStyle(fontFamily: 'Tajawal', color: textDark)),
+        content: const Text('هل أنت متأكد؟', textAlign: TextAlign.right, style: TextStyle(fontFamily: 'Tajawal')),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('إلغاء')),
+          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('إلغاء', style: TextStyle(fontFamily: 'Tajawal'))),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: primary, foregroundColor: Colors.white),
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('خروج'),
+            child: const Text('خروج', style: TextStyle(fontFamily: 'Tajawal')),
           ),
         ],
       ),
@@ -1499,7 +1520,7 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen> {
           return const Center(child: CircularProgressIndicator(color: primary));
         }
         if (!snap.hasData || !snap.data!.exists) {
-          return const Center(child: Text('تعذر تحميل البيانات'));
+          return const Center(child: Text('تعذر تحميل البيانات', style: TextStyle(fontFamily: 'Tajawal')));
         }
         final user = snap.data!.data() as Map<String, dynamic>;
         final name = user['fullName'] ?? 'مزود';
@@ -1508,46 +1529,46 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen> {
         return SingleChildScrollView(
           child: Column(
             children: [
-              const SizedBox(height: 20),
+              const SizedBox(height: 16),
               Container(
-                width: 110,
-                height: 110,
+                width: 90, height: 90,
                 decoration: const BoxDecoration(
                   shape: BoxShape.circle,
                   gradient: LinearGradient(colors: [primary, primaryDark]),
                 ),
-                child: const Icon(Icons.storefront, size: 55, color: Colors.white),
+                child: const Icon(Icons.storefront, size: 45, color: Colors.white),
               ),
-              const SizedBox(height: 16),
-              Text(name, style: const TextStyle(color: textDark, fontSize: 24, fontWeight: FontWeight.bold)),
-              const SizedBox(height: 10),
+              const SizedBox(height: 12),
+              Text(name, style: const TextStyle(fontFamily: 'Tajawal', color: textDark, fontSize: 20, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 8),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 6),
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
                 decoration: BoxDecoration(gradient: const LinearGradient(colors: [primary, primaryDark]), borderRadius: BorderRadius.circular(20)),
-                child: const Text('مزود خدمة', style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
+                child: const Text('مزود خدمة', style: TextStyle(fontFamily: 'Tajawal', color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold)),
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: 20),
+              
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: Container(
-                  padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20)),
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),
                   child: _infoRow(Icons.phone_outlined, 'رقم الهاتف', phone.isEmpty ? 'غير محدد' : phone),
                 ),
               ),
-              const SizedBox(height: 18),
+              const SizedBox(height: 16),
+              
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: Column(
                   children: [
-                    _menuItem(Icons.account_balance_wallet, 'محفظتي والأرباح', 'رصيدك وطرق الدفع', () {
-                      Navigator.push(context, MaterialPageRoute(builder: (_) => const WalletScreen()));
-                    }),
-                    const SizedBox(height: 10),
+                    // ❌ تم إزالة زر المحفظة بالكامل من هنا
+                    
                     _menuItem(Icons.notifications_outlined, 'الإشعارات', 'تخصيص التنبيهات', () {
                       Navigator.push(context, MaterialPageRoute(builder: (_) => const NotificationsScreen()));
                     }),
-                    const SizedBox(height: 10),
+                    const SizedBox(height: 8),
+                    
                     _menuItem(Icons.edit_outlined, 'تعديل الملف الشخصي', 'الاسم وكلمة المرور', () async {
                       final result = await Navigator.push(context, MaterialPageRoute(builder: (_) => const EditProfileScreen()));
                       if (result == true && mounted) {
@@ -1556,43 +1577,45 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen> {
                         });
                       }
                     }),
-                    const SizedBox(height: 10),
+                    const SizedBox(height: 8),
+                    
                     _menuItem(Icons.settings_outlined, 'الإعدادات', 'اللغة والمظهر والخصوصية', () {}),
-                    const SizedBox(height: 10),
+                    const SizedBox(height: 8),
+                    
                     _menuItem(Icons.help_outline, 'المساعدة والدعم', 'تواصل معنا', () {}),
-                    const SizedBox(height: 10),
+                    const SizedBox(height: 8),
+                    
                     _menuItem(Icons.info_outline, 'عن التطبيق', 'فرح — الإصدار 1.0.0', () {}),
                   ],
                 ),
               ),
-              const SizedBox(height: 22),
+              
+              const SizedBox(height: 20),
+              
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: GestureDetector(
                   onTap: _logout,
                   child: Container(
-                    width: double.infinity,
-                    height: 54,
+                    width: double.infinity, height: 48, 
                     decoration: BoxDecoration(
                       color: Colors.red.withValues(alpha: 0.08),
-                      borderRadius: BorderRadius.circular(28),
+                      borderRadius: BorderRadius.circular(24),
                       border: Border.all(color: Colors.redAccent.withValues(alpha: 0.4), width: 1.2),
                     ),
                     child: const Center(
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(Icons.logout, color: Colors.redAccent, size: 20),
-                          SizedBox(width: 10),
-                          Text('تسجيل الخروج', style: TextStyle(color: Colors.redAccent, fontSize: 15, fontWeight: FontWeight.bold)),
+                          Icon(Icons.logout, color: Colors.redAccent, size: 18),
+                          SizedBox(width: 8),
+                          Text('تسجيل الخروج', style: TextStyle(fontFamily: 'Tajawal', color: Colors.redAccent, fontSize: 13, fontWeight: FontWeight.bold)),
                         ],
                       ),
                     ),
                   ),
                 ),
               ),
-              const SizedBox(height: 24),
-              const Text('فرح — الإصدار 1.0.0', style: TextStyle(color: textLight, fontSize: 11)),
               const SizedBox(height: 30),
             ],
           ),
@@ -1604,20 +1627,17 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen> {
   Widget _infoRow(IconData icon, String label, String value) {
     return Row(
       children: [
-        Container(
-          width: 42,
-          height: 42,
-          decoration: BoxDecoration(gradient: const LinearGradient(colors: [primary, primaryDark]), borderRadius: BorderRadius.circular(12)),
-          child: Icon(icon, color: Colors.white, size: 20),
-        ),
-        const SizedBox(width: 14),
+        Container(width: 38, height: 38,
+            decoration: BoxDecoration(gradient: const LinearGradient(colors: [primary, primaryDark]), borderRadius: BorderRadius.circular(10)),
+            child: Icon(icon, color: Colors.white, size: 18)),
+        const SizedBox(width: 12),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(label, style: const TextStyle(color: textLight, fontSize: 12)),
+              Text(label, style: const TextStyle(fontFamily: 'Tajawal', color: textLight, fontSize: 10)),
               const SizedBox(height: 2),
-              Text(value, style: const TextStyle(color: textDark, fontSize: 14, fontWeight: FontWeight.w600), overflow: TextOverflow.ellipsis),
+              Text(value, style: const TextStyle(fontFamily: 'Tajawal', color: textDark, fontSize: 13, fontWeight: FontWeight.w600), overflow: TextOverflow.ellipsis),
             ],
           ),
         ),
@@ -1629,35 +1649,28 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen> {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(18)),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),
         child: Row(
           children: [
-            Container(
-              width: 46,
-              height: 46,
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [primary.withValues(alpha: 0.9), primaryDark],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
+            Container(width: 38, height: 38,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(colors: [primary.withValues(alpha: 0.9), primaryDark], begin: Alignment.topLeft, end: Alignment.bottomRight),
+                  borderRadius: BorderRadius.circular(10),
                 ),
-                borderRadius: BorderRadius.circular(14),
-              ),
-              child: Icon(icon, color: Colors.white, size: 22),
-            ),
-            const SizedBox(width: 14),
+                child: Icon(icon, color: Colors.white, size: 18)),
+            const SizedBox(width: 12),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(title, style: const TextStyle(color: textDark, fontSize: 15, fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 3),
-                  Text(subtitle, style: const TextStyle(color: textLight, fontSize: 11), maxLines: 1, overflow: TextOverflow.ellipsis),
+                  Text(title, style: const TextStyle(fontFamily: 'Tajawal', color: textDark, fontSize: 14, fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 2),
+                  Text(subtitle, style: const TextStyle(fontFamily: 'Tajawal', color: textLight, fontSize: 10), maxLines: 1, overflow: TextOverflow.ellipsis),
                 ],
               ),
             ),
-            const Icon(Icons.arrow_back_ios, color: textLight, size: 14),
+            const Icon(Icons.arrow_back_ios, color: textLight, size: 12),
           ],
         ),
       ),
