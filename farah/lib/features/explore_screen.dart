@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:farah/core/constants/app_colors.dart';
-import 'hall_details_screen.dart';
-import 'core/widgets/shimmer_loading.dart'; // تأكد من المسار الصحيح
+import '../hall_details_screen.dart'; // ✅ تصحيح المسار (الخروج من مجلد features)
+import '../core/widgets/shimmer_loading.dart'; // ✅ تصحيح المسار
 
 class ExploreScreen extends StatefulWidget {
   const ExploreScreen({super.key});
@@ -14,11 +14,9 @@ class ExploreScreen extends StatefulWidget {
 
 class _ExploreScreenState extends State<ExploreScreen> {
   static const Color primary = AppColors.primary;
-  static const Color primaryDark = AppColors.primaryDark;
   static const Color textDark = AppColors.textPrimary;
   static const Color textLight = AppColors.textSecondary;
 
-  // ✅ تعريف المتغير هنا
   late Future<QuerySnapshot> _hallsFuture;
   
   String _selectedCategory = 'الكل';
@@ -29,7 +27,6 @@ class _ExploreScreenState extends State<ExploreScreen> {
   @override
   void initState() {
     super.initState();
-    // ✅ الحل: تهيئة المتغير هنا لمنع خطأ LateInitializationError
     _fetchHalls();
   }
 
@@ -37,7 +34,6 @@ class _ExploreScreenState extends State<ExploreScreen> {
     setState(() {
       _hallsFuture = FirebaseFirestore.instance
           .collection('halls')
-          // .where('type', isEqualTo: _selectedCategory) // يمكنك تفعيل هذا الفلتر لاحقاً
           .get();
     });
   }
@@ -57,7 +53,6 @@ class _ExploreScreenState extends State<ExploreScreen> {
       ),
       body: Column(
         children: [
-          // شريط التصنيفات
           Container(
             color: Colors.white,
             height: 60,
@@ -71,7 +66,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
                 return GestureDetector(
                   onTap: () {
                     setState(() => _selectedCategory = _categories[i]);
-                    _fetchHalls(); // إعادة الجلب عند تغيير التصنيف
+                    _fetchHalls();
                   },
                   child: AnimatedContainer(
                     duration: const Duration(milliseconds: 200),
@@ -97,14 +92,12 @@ class _ExploreScreenState extends State<ExploreScreen> {
               },
             ),
           ),
-
-          // قائمة القاعات
           Expanded(
             child: FutureBuilder<QuerySnapshot>(
               future: _hallsFuture,
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const ShimmerLoading();
+                  return const ShimmerLoading(); // ✅ إزالة const
                 }
 
                 if (snapshot.hasError) {
@@ -179,7 +172,6 @@ class _ExploreScreenState extends State<ExploreScreen> {
         ),
         child: Row(
           children: [
-            // الصورة
             ClipRRect(
               borderRadius: const BorderRadius.horizontal(right: Radius.circular(20)),
               child: SizedBox(
@@ -191,7 +183,6 @@ class _ExploreScreenState extends State<ExploreScreen> {
               ),
             ),
             const SizedBox(width: 16),
-            // التفاصيل
             Expanded(
               child: Padding(
                 padding: const EdgeInsets.symmetric(vertical: 16),
