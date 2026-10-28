@@ -36,7 +36,6 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
   void initState() {
     super.initState();
     _loadData();
-    // تحديث تلقائي كل دقيقة لتحديث العدادات التنازلية
     _ticker = Timer.periodic(const Duration(minutes: 1), (_) {
       if (mounted) setState(() {});
     });
@@ -92,11 +91,14 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
       final status = data['status'] ?? '';
       final eventDate = data['eventDate'] is Timestamp ? (data['eventDate'] as Timestamp).toDate() : null;
 
+      // إذا كان الحجز مؤكداً ومر تاريخ المناسبة، نعتبره مكتملاً
       if (status == 'confirmed' && eventDate != null && eventDate.isBefore(DateTime.now())) {
-        // تحديث الحالة في قاعدة البيانات
-        await booking.reference.update({'status': 'completed'});
-        // تحديث الحالة في الذاكرة لكي تظهر فوراً في الواجهة
-        data['status'] = 'completed'; 
+        try {
+          await booking.reference.update({'status': 'completed'});
+          data['status'] = 'completed'; // تحديث الحالة في الذاكرة للعرض الفوري
+        } catch (e) {
+          // تجاهل الخطأ إذا فشل التحديث
+        }
       }
     }
 
@@ -153,9 +155,6 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
     );
   }
 
-  // ═══════════════════════════════════════════════════════════
-  // 📊 تبويب الرئيسية
-  // ═══════════════════════════════════════════════════════════
   Widget _buildDashboardTab() {
     return FutureBuilder<Map<String, dynamic>>(
       future: _dataFuture,
@@ -215,9 +214,6 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
     );
   }
 
-  // ═══════════════════════════════════════════════════════════
-  // ⚡ إجراءات سريعة
-  // ═══════════════════════════════════════════════════════════
   Widget _buildQuickActions() {
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
@@ -276,9 +272,6 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
     );
   }
 
-  // ═══════════════════════════════════════════════════════════
-  // 🏛️ تبويب قاعاتي
-  // ═══════════════════════════════════════════════════════════
   Widget _buildMyHallsTab() {
     return FutureBuilder<Map<String, dynamic>>(
       future: _dataFuture,
@@ -319,9 +312,6 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
     );
   }
 
-  // ═══════════════════════════════════════════════════════════
-  // 📅 تبويب الحجوزات
-  // ═══════════════════════════════════════════════════════════
   Widget _buildBookingsTab() {
     return FutureBuilder<Map<String, dynamic>>(
       future: _dataFuture,
@@ -377,9 +367,6 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
     );
   }
 
-  // ═══════════════════════════════════════════════════════════
-  // 🎨 دوال مساعدة للواجهة
-  // ═══════════════════════════════════════════════════════════
   Widget _buildAppBar(String title) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
@@ -537,7 +524,7 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
         ],
       ),
       child: Row(
-        textDirection: TextDirection.rtl,
+        // ✅ تم إزالة textDirection: TextDirection.rtl لأن التطبيق RTL افتراضياً
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: List.generate(items.length, (i) {
           final active = i == _currentTab;
@@ -870,7 +857,6 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
     final eventColor = eventInfo['color'] as Color;
     final dateStr = eventDate != null ? DateFormat('yyyy/MM/dd').format(eventDate) : 'غير محدد';
     
-    // عرض العداد التنازلي فقط إذا كان بانتظار الحضور
     final showCountdown = isActuallyWaiting && !isManual;
     final remainingTime = showCountdown ? _getRemainingTime(data) : '';
 
@@ -1464,7 +1450,7 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
 }
 
 // ═══════════════════════════════════════════════
-// شاشة حسابي الخاصة بالمزود (تم إزالة المحفظة)
+// شاشة حسابي الخاصة بالمزود
 // ═══════════════════════════════════════════════
 class ProviderProfileScreen extends StatefulWidget {
   const ProviderProfileScreen({super.key});
