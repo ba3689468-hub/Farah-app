@@ -55,7 +55,6 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
   bool _loading = false;
   late Map<String, dynamic> _hall;
 
-  // ✅ دالة للتحقق مما إذا كان المستخدم زائراً
   bool get _isGuest => FirebaseAuth.instance.currentUser == null;
 
   static const List<String> _timeSlots = [
@@ -99,6 +98,16 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
     return p is int ? p : int.tryParse(p.toString()) ?? 0;
   }
 
+  // ✅ قراءة الصور المتعددة
+  List<String> _getImages(Map<String, dynamic> hall) {
+    if (hall['images'] is List && (hall['images'] as List).isNotEmpty) {
+      return List<String>.from(hall['images']);
+    }
+    final single = hall['image'] ?? hall['coverImage'];
+    if (single != null && single.toString().isNotEmpty) return [single.toString()];
+    return [];
+  }
+
   Future<void> _loadBookedDates() async {
     if (_hallId.isEmpty) {
       if (mounted) setState(() => _loadingBookings = false);
@@ -138,7 +147,6 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
     return _bookedDates.contains(key);
   }
 
-  // ✅ نافذة التنبيه بالدخول للزوار
   void _showLoginPrompt() {
     showDialog(
       context: context,
@@ -191,6 +199,17 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
               onPressed: () => Navigator.pop(context),
             ),
             actions: [
+              // ✅ زر الفيديو (إذا وجد)
+              if (_hall['videoUrl'] != null && _hall['videoUrl'].toString().isNotEmpty)
+                IconButton(
+                  icon: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.9), shape: BoxShape.circle),
+                    child: const Icon(Icons.play_circle_outline, color: primary, size: 20),
+                  ),
+                  onPressed: () => _openVideo(_hall['videoUrl']),
+                ),
+              // زر المشاركة
               IconButton(
                 icon: Container(
                   padding: const EdgeInsets.all(8),
@@ -205,9 +224,9 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
           if (images.length > 1) SliverToBoxAdapter(child: _buildThumbnails(images)),
           SliverToBoxAdapter(child: _buildInfoSection(name, city, rating, capacity, description)),
           SliverToBoxAdapter(child: _buildBookingCard()),
-          SliverToBoxAdapter(child: _buildPaymentSummaryCard()), // ✅ موجودة الآن
-          SliverToBoxAdapter(child: _buildReviewsSection()), // ✅ موجودة الآن
-          SliverToBoxAdapter(child: _buildSimilarHallsSection(city)), // ✅ موجودة الآن
+          SliverToBoxAdapter(child: _buildPaymentSummaryCard()),
+          SliverToBoxAdapter(child: _buildReviewsSection()),
+          SliverToBoxAdapter(child: _buildSimilarHallsSection(city)),
           const SliverToBoxAdapter(child: SizedBox(height: 100)),
         ],
       ),
@@ -215,14 +234,9 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
     );
   }
 
-  List<String> _getImages(Map<String, dynamic> hall) {
-    final gallery = hall['gallery'];
-    if (gallery is List && gallery.isNotEmpty) return List<String>.from(gallery);
-    final single = hall['image'] ?? hall['coverImage'];
-    if (single != null && single.toString().isNotEmpty) return [single.toString()];
-    return [];
-  }
-
+  // ═══════════════════════════════════════════════════════════
+  // 🖼️ معرض الصور
+  // ═══════════════════════════════════════════════════════════
   Widget _buildImageGallery(List<String> images) {
     if (images.isEmpty) {
       return Container(
@@ -345,7 +359,12 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
     );
   }
 
+  // ═══════════════════════════════════════════════════════════
+  // 📋 المعلومات الأساسية والخدمات
+  // ═══════════════════════════════════════════════════════════
   Widget _buildInfoSection(String name, String city, double rating, int capacity, String description) {
+    final additionalServices = _hall['additionalServices'] as List? ?? [];
+
     return Container(
       margin: const EdgeInsets.all(16),
       padding: const EdgeInsets.all(20),
@@ -406,12 +425,44 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
           ),
           const SizedBox(height: 10),
           Text(description, style: const TextStyle(fontFamily: 'Tajawal', color: textDark, fontSize: 14, height: 1.7)),
+          
+          // ✅ عرض الخدمات الإضافية بأسعار
+          if (additionalServices.isNotEmpty) ...[
+            const SizedBox(height: 24),
+            const Row(
+              children: [
+                Icon(Icons.room_service_outlined, color: primary, size: 20),
+                SizedBox(width: 6),
+                Text('خدمات إضافية (بأسعار)', style: TextStyle(fontFamily: 'Tajawal', color: textDark, fontSize: 18, fontWeight: FontWeight.bold)),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: additionalServices.map<Widget>((s) {
+                return Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                  decoration: BoxDecoration(color: primary.withValues(alpha: 0.08), borderRadius: BorderRadius.circular(20), border: Border.all(color: primary.withValues(alpha: 0.2))),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.check_circle, color: primary, size: 14),
+                      const SizedBox(width: 5),
+                      Text('${s['name']} (${s['price']} د.ل)', style: const TextStyle(fontFamily: 'Tajawal', color: textDark, fontSize: 12, fontWeight: FontWeight.w600)),
+                    ],
+                  ),
+                );
+              }).toList(),
+            ),
+          ],
+
           const SizedBox(height: 24),
           const Row(
             children: [
               Icon(Icons.room_service_outlined, color: primary, size: 20),
               SizedBox(width: 6),
-              Text('المرافق والخدمات', style: TextStyle(fontFamily: 'Tajawal', color: textDark, fontSize: 18, fontWeight: FontWeight.bold)),
+              Text('المرافق الثابتة', style: TextStyle(fontFamily: 'Tajawal', color: textDark, fontSize: 18, fontWeight: FontWeight.bold)),
             ],
           ),
           const SizedBox(height: 12),
@@ -461,6 +512,9 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
     );
   }
 
+  // ═══════════════════════════════════════════════════════════
+  // 📅 بطاقة الحجز (التقويم والفترات)
+  // ═══════════════════════════════════════════════════════════
   Widget _buildBookingCard() {
     return Container(
       margin: const EdgeInsets.fromLTRB(16, 0, 16, 8),
@@ -571,101 +625,6 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
           _buildVisualCalendar(),
         ],
       ),
-    );
-  }
-
-  Widget _buildPaymentSummaryCard() {
-    return Container(
-      margin: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20), boxShadow: [BoxShadow(color: primary.withValues(alpha: 0.06), blurRadius: 15, offset: const Offset(0, 5))]),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Row(
-            children: [
-              Icon(Icons.receipt_long, color: primary, size: 22),
-              SizedBox(width: 8),
-              Text('ملخص الدفع', style: TextStyle(fontFamily: 'Tajawal', color: textDark, fontSize: 17, fontWeight: FontWeight.bold)),
-            ],
-          ),
-          const SizedBox(height: 14),
-          _paymentRow(
-            icon: Icons.home_outlined,
-            label: 'سعر القاعة (يُدفع في القاعة)',
-            value: '$_basePrice د.ل',
-            color: textDark,
-          ),
-          const Divider(height: 20),
-          _paymentRow(
-            icon: Icons.app_registration,
-            label: 'رسم حجز التطبيق (يُدفع الآن)',
-            value: '${APP_COMMISSION.toInt()} د.ل',
-            color: primary,
-            bold: true,
-          ),
-          const SizedBox(height: 12),
-          Container(
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(colors: [primary, primaryDark], begin: Alignment.centerLeft, end: Alignment.centerRight),
-              borderRadius: BorderRadius.circular(14),
-            ),
-            child: Row(
-              children: [
-                const Icon(Icons.payment, color: Colors.white, size: 22),
-                const SizedBox(width: 10),
-                const Expanded(child: Text('المطلوب دفعه الآن', style: TextStyle(fontFamily: 'Tajawal', color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold))),
-                Text('${APP_COMMISSION.toInt()} د.ل', style: const TextStyle(fontFamily: 'Tajawal', color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
-              ],
-            ),
-          ),
-          const SizedBox(height: 14),
-          Container(
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(color: Colors.amber.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(14), border: Border.all(color: Colors.amber.withValues(alpha: 0.4), width: 1.5)),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Row(
-                  children: [
-                    Icon(Icons.policy_outlined, color: Colors.orange, size: 20),
-                    SizedBox(width: 8),
-                    Text('سياسة الإلغاء', style: TextStyle(fontFamily: 'Tajawal', color: Colors.orange, fontSize: 14, fontWeight: FontWeight.bold)),
-                  ],
-                ),
-                const SizedBox(height: 10),
-                _policyItem(icon: Icons.check_circle_outline, color: Colors.green, text: 'استرداد كامل (60 د.ل) خلال 48 ساعة من الحجز'),
-                const SizedBox(height: 6),
-                _policyItem(icon: Icons.cancel_outlined, color: Colors.redAccent, text: 'لا يوجد استرداد بعد مرور 48 ساعة'),
-                const SizedBox(height: 6),
-                _policyItem(icon: Icons.info_outline, color: Colors.blueGrey, text: 'إذا لم تتوجه للقاعة خلال 48 ساعة، يُلغى الحجز تلقائياً'),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _paymentRow({required IconData icon, required String label, required String value, required Color color, bool bold = false}) {
-    return Row(
-      children: [
-        Container(padding: const EdgeInsets.all(8), decoration: BoxDecoration(color: color.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(10)), child: Icon(icon, color: color, size: 18)),
-        const SizedBox(width: 12),
-        Expanded(child: Text(label, style: TextStyle(fontFamily: 'Tajawal', color: textDark, fontSize: 13, fontWeight: bold ? FontWeight.bold : FontWeight.w500))),
-        Text(value, style: TextStyle(fontFamily: 'Tajawal', color: color, fontSize: bold ? 18 : 15, fontWeight: FontWeight.bold)),
-      ],
-    );
-  }
-
-  Widget _policyItem({required IconData icon, required Color color, required String text}) {
-    return Row(
-      children: [
-        Icon(icon, color: color, size: 16),
-        const SizedBox(width: 8),
-        Expanded(child: Text(text, style: const TextStyle(fontFamily: 'Tajawal', color: textDark, fontSize: 12, height: 1.4))),
-      ],
     );
   }
 
@@ -796,6 +755,107 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
     );
   }
 
+  // ═══════════════════════════════════════════════════════════
+  // 💰 ملخص الدفع والشريط السفلي
+  // ═══════════════════════════════════════════════════════════
+  Widget _buildPaymentSummaryCard() {
+    return Container(
+      margin: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20), boxShadow: [BoxShadow(color: primary.withValues(alpha: 0.06), blurRadius: 15, offset: const Offset(0, 5))]),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Row(
+            children: [
+              Icon(Icons.receipt_long, color: primary, size: 22),
+              SizedBox(width: 8),
+              Text('ملخص الدفع', style: TextStyle(fontFamily: 'Tajawal', color: textDark, fontSize: 17, fontWeight: FontWeight.bold)),
+            ],
+          ),
+          const SizedBox(height: 14),
+          _paymentRow(
+            icon: Icons.home_outlined,
+            label: 'سعر القاعة (يُدفع في القاعة)',
+            value: '$_basePrice د.ل',
+            color: textDark,
+          ),
+          const Divider(height: 20),
+          _paymentRow(
+            icon: Icons.app_registration,
+            label: 'رسم حجز التطبيق (يُدفع الآن)',
+            value: '${APP_COMMISSION.toInt()} د.ل',
+            color: primary,
+            bold: true,
+          ),
+          const SizedBox(height: 12),
+          Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(colors: [primary, primaryDark], begin: Alignment.centerLeft, end: Alignment.centerRight),
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.payment, color: Colors.white, size: 22),
+                const SizedBox(width: 10),
+                const Expanded(child: Text('المطلوب دفعه الآن', style: TextStyle(fontFamily: 'Tajawal', color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold))),
+                Text('${APP_COMMISSION.toInt()} د.ل', style: const TextStyle(fontFamily: 'Tajawal', color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
+              ],
+            ),
+          ),
+          const SizedBox(height: 14),
+          Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(color: Colors.amber.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(14), border: Border.all(color: Colors.amber.withValues(alpha: 0.4), width: 1.5)),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Row(
+                  children: [
+                    Icon(Icons.policy_outlined, color: Colors.orange, size: 20),
+                    SizedBox(width: 8),
+                    Text('سياسة الإلغاء', style: TextStyle(fontFamily: 'Tajawal', color: Colors.orange, fontSize: 14, fontWeight: FontWeight.bold)),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                _policyItem(icon: Icons.check_circle_outline, color: Colors.green, text: 'استرداد كامل (60 د.ل) خلال 48 ساعة من الحجز'),
+                const SizedBox(height: 6),
+                _policyItem(icon: Icons.cancel_outlined, color: Colors.redAccent, text: 'لا يوجد استرداد بعد مرور 48 ساعة'),
+                const SizedBox(height: 6),
+                _policyItem(icon: Icons.info_outline, color: Colors.blueGrey, text: 'إذا لم تتوجه للقاعة خلال 48 ساعة، يُلغى الحجز تلقائياً'),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _paymentRow({required IconData icon, required String label, required String value, required Color color, bool bold = false}) {
+    return Row(
+      children: [
+        Container(padding: const EdgeInsets.all(8), decoration: BoxDecoration(color: color.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(10)), child: Icon(icon, color: color, size: 18)),
+        const SizedBox(width: 12),
+        Expanded(child: Text(label, style: TextStyle(fontFamily: 'Tajawal', color: textDark, fontSize: 13, fontWeight: bold ? FontWeight.bold : FontWeight.w500))),
+        Text(value, style: TextStyle(fontFamily: 'Tajawal', color: color, fontSize: bold ? 18 : 15, fontWeight: FontWeight.bold)),
+      ],
+    );
+  }
+
+  Widget _policyItem({required IconData icon, required Color color, required String text}) {
+    return Row(
+      children: [
+        Icon(icon, color: color, size: 16),
+        const SizedBox(width: 8),
+        Expanded(child: Text(text, style: const TextStyle(fontFamily: 'Tajawal', color: textDark, fontSize: 12, height: 1.4))),
+      ],
+    );
+  }
+
+  // ═══════════════════════════════════════════════════════════
+  // ⭐ التقييمات
+  // ═══════════════════════════════════════════════════════════
   Widget _buildReviewsSection() {
     final rating = (_hall['rating'] ?? 0).toDouble();
     final reviewsCount = _hall['reviewsCount'] ?? 0;
@@ -945,6 +1005,9 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
     );
   }
 
+  // ═══════════════════════════════════════════════════════════
+  // 🏛️ قاعات مشابهة
+  // ═══════════════════════════════════════════════════════════
   Widget _buildSimilarHallsSection(String city) {
     return Padding(
       padding: const EdgeInsets.only(top: 16),
@@ -1042,6 +1105,9 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
     );
   }
 
+  // ═══════════════════════════════════════════════════════════
+  // ⬇️ الشريط السفلي وزر الحجز
+  // ═══════════════════════════════════════════════════════════
   Widget _buildBottomBar() {
     return Container(
       padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
@@ -1103,6 +1169,9 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
     );
   }
 
+  // ═══════════════════════════════════════════════════════════
+  // ⚙️ دوال مساعدة (اختيار التاريخ والفترة)
+  // ═══════════════════════════════════════════════════════════
   Future<void> _pickDate() async {
     final now = DateTime.now();
     final picked = await showDatePicker(
@@ -1160,6 +1229,9 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
     );
   }
 
+  // ═══════════════════════════════════════════════════════════
+  // ✅ تأكيد الحجز
+  // ═══════════════════════════════════════════════════════════
   Future<void> _confirmBooking() async {
     if (_selectedEventType == null) { _showError('الرجاء اختيار نوع المناسبة'); return; }
     if (_selectedDate == null) { _showError('الرجاء اختيار تاريخ الحجز'); return; }
@@ -1279,6 +1351,9 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg, style: const TextStyle(fontFamily: 'Tajawal')), backgroundColor: Colors.redAccent));
   }
 
+  // ═══════════════════════════════════════════════════════════
+  // 📞 دوال الاتصال والاتجاهات والمشاركة
+  // ═══════════════════════════════════════════════════════════
   Future<void> _callProvider() async {
     final phone = _hall['providerPhone'] ?? _hall['phone'] ?? _hall['contactPhone'] ?? '';
     if (phone.toString().trim().isEmpty) { _showError('لا يوجد رقم هاتف متاح للمزود'); return; }
@@ -1308,6 +1383,20 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
   }
 
   Future<void> _openDirections(String city, String name) async {
+    // ✅ التحقق من وجود mapUrl أولاً
+    final mapUrl = _hall['mapUrl'];
+    if (mapUrl != null && mapUrl.toString().isNotEmpty) {
+      final uri = Uri.parse(mapUrl.toString());
+      try {
+        if (await canLaunchUrl(uri)) {
+          await launchUrl(uri, mode: LaunchMode.externalApplication);
+          return;
+        }
+      } catch (e) {
+        // تجاهل الخطأ والبحث بالاسم
+      }
+    }
+
     final lat = _hall['latitude'];
     final lng = _hall['longitude'];
     Uri uri;
@@ -1324,6 +1413,20 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
         await launchUrl(uri, mode: LaunchMode.externalApplication);
       } else {
         _showError('تعذر فتح الخرائط');
+      }
+    } catch (e) {
+      _showError('خطأ: $e');
+    }
+  }
+
+  // ✅ دالة فتح الفيديو
+  Future<void> _openVideo(String videoUrl) async {
+    final uri = Uri.parse(videoUrl);
+    try {
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+      } else {
+        _showError('تعذر فتح الفيديو');
       }
     } catch (e) {
       _showError('خطأ: $e');
