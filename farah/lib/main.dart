@@ -4,23 +4,22 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
-// ❌ تم إزالة import الخاص بـ google_fonts
 import 'features/onboarding/onboarding_screen.dart';
 
 // 🟩 إعدادات Firebase
 const FirebaseOptions webFirebaseOptions = FirebaseOptions(
-  apiKey: "AIzaSyCSqBeVcXBQouswQlzqIDFb4fLXbHEzg",
+  apiKey: String.fromEnvironment('FIREBASE_API_KEY'),
   authDomain: "farah-app-caa99.firebaseapp.com",
-  projectId: "farah-app-caa99",
+  projectId: String.fromEnvironment('FIREBASE_PROJECT_ID'),
   storageBucket: "farah-app-caa99.firebasestorage.app",
-  messagingSenderId: "665183433574",
-  appId: "1:665183433574:web:76bdc78d836fd6cecea7",
-  measurementId: "G-G7987HVMLD",
+  messagingSenderId: String.fromEnvironment('FIREBASE_MESSAGING_SENDER_ID'),
+  appId: String.fromEnvironment('FIREBASE_APP_ID'),
+  measurementId: String.fromEnvironment('FIREBASE_MEASUREMENT_ID'),
 );
 
 // 🟩 إعدادات Supabase
-const String supabaseUrl = 'https://tzizhccygtgqbkghbwif.supabase.co';
-const String supabaseAnonKey = 'sb_publishable_HxGzyPlKTAUK5U7Rznlf0Q_EY0du155';
+const String supabaseUrl = String.fromEnvironment('SUPABASE_URL');
+const String supabaseAnonKey = String.fromEnvironment('SUPABASE_ANON_KEY');
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -45,7 +44,7 @@ class FarahApp extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    const Color primaryColor = Color(0xFFD81B60); 
+    const Color primaryColor = Color(0xFFD81B60);
 
     return MaterialApp(
       title: 'فرح',
@@ -58,15 +57,11 @@ class FarahApp extends ConsumerWidget {
         GlobalCupertinoLocalizations.delegate,
       ],
 
-      // 🎨 الثيم الموحد بالخط المحلي
       theme: ThemeData(
         brightness: Brightness.light,
         primaryColor: primaryColor,
         scaffoldBackgroundColor: const Color(0xFFF9F9FB),
-        
-        // ✅ استخدام الخط المحلي (بدون إنترنت)
-        fontFamily: 'Tajawal', 
-        
+        fontFamily: 'Tajawal',
         colorScheme: ColorScheme.fromSeed(
           seedColor: primaryColor,
           brightness: Brightness.light,
@@ -87,13 +82,22 @@ class FarahApp extends ConsumerWidget {
         cardTheme: CardThemeData(
           color: Colors.white,
           elevation: 0,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
         ),
         inputDecorationTheme: InputDecorationTheme(
           filled: true,
           fillColor: Colors.white,
-          contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-          hintStyle: const TextStyle(fontFamily: 'Tajawal', color: Colors.grey, fontSize: 14),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 20,
+            vertical: 16,
+          ),
+          hintStyle: const TextStyle(
+            fontFamily: 'Tajawal',
+            color: Colors.grey,
+            fontSize: 14,
+          ),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(16),
             borderSide: BorderSide(color: Colors.grey.withValues(alpha: 0.2)),
