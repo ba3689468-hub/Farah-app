@@ -55,7 +55,6 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
   bool _loading = false;
   late Map<String, dynamic> _hall;
 
-  // ✅ دالة للتحقق مما إذا كان المستخدم زائراً
   bool get _isGuest => FirebaseAuth.instance.currentUser == null;
 
   static const List<String> _timeSlots = [
@@ -138,7 +137,6 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
     return _bookedDates.contains(key);
   }
 
-  // ✅ نافذة التنبيه بالدخول
   void _showLoginPrompt() {
     showDialog(
       context: context,
@@ -461,7 +459,6 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
     );
   }
 
-  // ✅✅✅ تعديل بطاقة الحجز لحماية الزائر ✅✅✅
   Widget _buildBookingCard() {
     return Container(
       margin: const EdgeInsets.fromLTRB(16, 0, 16, 8),
@@ -488,7 +485,7 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
               final color = type['color'] as Color;
               return GestureDetector(
                 onTap: () {
-                  if (_isGuest) { _showLoginPrompt(); return; } // ✅ حماية
+                  if (_isGuest) { _showLoginPrompt(); return; }
                   setState(() => _selectedEventType = type['name']);
                 },
                 child: AnimatedContainer(
@@ -519,7 +516,7 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
                 label: 'التاريخ',
                 value: _selectedDate != null ? DateFormat('d MMM yyyy', 'ar').format(_selectedDate!) : null,
                 onTap: () {
-                  if (_isGuest) { _showLoginPrompt(); return; } // ✅ حماية
+                  if (_isGuest) { _showLoginPrompt(); return; }
                   _pickDate();
                 },
               )),
@@ -529,7 +526,7 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
                 label: 'الفترة',
                 value: _selectedTimeSlot,
                 onTap: () {
-                  if (_isGuest) { _showLoginPrompt(); return; } // ✅ حماية
+                  if (_isGuest) { _showLoginPrompt(); return; }
                   _pickTimeSlot();
                 },
               )),
@@ -548,7 +545,7 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
                 _counterBtn(
                   icon: Icons.remove,
                   onTap: _guestsCount > 10 ? () {
-                    if (_isGuest) { _showLoginPrompt(); return; } // ✅ حماية
+                    if (_isGuest) { _showLoginPrompt(); return; }
                     setState(() => _guestsCount -= 10);
                   } : null,
                 ),
@@ -559,7 +556,7 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
                 _counterBtn(
                   icon: Icons.add,
                   onTap: _guestsCount < 1000 ? () {
-                    if (_isGuest) { _showLoginPrompt(); return; } // ✅ حماية
+                    if (_isGuest) { _showLoginPrompt(); return; }
                     setState(() => _guestsCount += 10);
                   } : null,
                 ),
@@ -575,72 +572,133 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
     );
   }
 
-  // ... (باقي الكود كما هو، مع إضافة الحماية في زر احجز الآن) ...
-  
-  Widget _buildBottomBar() {
+  Widget _buildPaymentSummaryCard() {
     return Container(
-      padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
-      decoration: BoxDecoration(color: Colors.white, boxShadow: [BoxShadow(color: primary.withValues(alpha: 0.08), blurRadius: 20, offset: const Offset(0, -6))]),
-      child: SafeArea(
+      margin: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20), boxShadow: [BoxShadow(color: primary.withValues(alpha: 0.06), blurRadius: 15, offset: const Offset(0, 5))]),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Row(
+            children: [
+              Icon(Icons.receipt_long, color: primary, size: 22),
+              SizedBox(width: 8),
+              Text('ملخص الدفع', style: TextStyle(fontFamily: 'Tajawal', color: textDark, fontSize: 17, fontWeight: FontWeight.bold)),
+            ],
+          ),
+          const SizedBox(height: 14),
+          _paymentRow(
+            icon: Icons.home_outlined,
+            label: 'سعر القاعة (يُدفع في القاعة)',
+            value: '$_basePrice د.ل',
+            color: textDark,
+          ),
+          const Divider(height: 20),
+          _paymentRow(
+            icon: Icons.app_registration,
+            label: 'رسم حجز التطبيق (يُدفع الآن)',
+            value: '${APP_COMMISSION.toInt()} د.ل',
+            color: primary,
+            bold: true,
+          ),
+          const SizedBox(height: 12),
+          Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(colors: [primary, primaryDark], begin: Alignment.centerLeft, end: Alignment.centerRight),
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.payment, color: Colors.white, size: 22),
+                const SizedBox(width: 10),
+                const Expanded(child: Text('المطلوب دفعه الآن', style: TextStyle(fontFamily: 'Tajawal', color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold))),
+                Text('${APP_COMMISSION.toInt()} د.ل', style: const TextStyle(fontFamily: 'Tajawal', color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
+              ],
+            ),
+          ),
+          const SizedBox(height: 14),
+          Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(color: Colors.amber.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(14), border: Border.all(color: Colors.amber.withValues(alpha: 0.4), width: 1.5)),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Row(
+                  children: [
+                    Icon(Icons.policy_outlined, color: Colors.orange, size: 20),
+                    SizedBox(width: 8),
+                    Text('سياسة الإلغاء', style: TextStyle(fontFamily: 'Tajawal', color: Colors.orange, fontSize: 14, fontWeight: FontWeight.bold)),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                _policyItem(icon: Icons.check_circle_outline, color: Colors.green, text: 'استرداد كامل (60 د.ل) خلال 48 ساعة من الحجز'),
+                const SizedBox(height: 6),
+                _policyItem(icon: Icons.cancel_outlined, color: Colors.redAccent, text: 'لا يوجد استرداد بعد مرور 48 ساعة'),
+                const SizedBox(height: 6),
+                _policyItem(icon: Icons.info_outline, color: Colors.blueGrey, text: 'إذا لم تتوجه للقاعة خلال 48 ساعة، يُلغى الحجز تلقائياً'),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _paymentRow({required IconData icon, required String label, required String value, required Color color, bool bold = false}) {
+    return Row(
+      children: [
+        Container(padding: const EdgeInsets.all(8), decoration: BoxDecoration(color: color.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(10)), child: Icon(icon, color: color, size: 18)),
+        const SizedBox(width: 12),
+        Expanded(child: Text(label, style: TextStyle(fontFamily: 'Tajawal', color: textDark, fontSize: 13, fontWeight: bold ? FontWeight.bold : FontWeight.w500))),
+        Text(value, style: TextStyle(fontFamily: 'Tajawal', color: color, fontSize: bold ? 18 : 15, fontWeight: FontWeight.bold)),
+      ],
+    );
+  }
+
+  Widget _policyItem({required IconData icon, required Color color, required String text}) {
+    return Row(
+      children: [
+        Icon(icon, color: color, size: 16),
+        const SizedBox(width: 8),
+        Expanded(child: Text(text, style: const TextStyle(fontFamily: 'Tajawal', color: textDark, fontSize: 12, height: 1.4))),
+      ],
+    );
+  }
+
+  Widget _buildPickerField({required IconData icon, required String label, required String? value, required VoidCallback onTap}) {
+    final hasValue = value != null && value.isNotEmpty;
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+        decoration: BoxDecoration(color: hasValue ? primary.withValues(alpha: 0.08) : AppColors.background, borderRadius: BorderRadius.circular(12), border: Border.all(color: hasValue ? primary.withValues(alpha: 0.4) : Colors.transparent, width: 1.2)),
         child: Row(
           children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Text('المطلوب دفعه الآن', style: TextStyle(fontFamily: 'Tajawal', color: textLight, fontSize: 11)),
-                  RichText(
-                    text: TextSpan(children: [
-                      TextSpan(text: '${APP_COMMISSION.toInt()} ', style: const TextStyle(fontFamily: 'Tajawal', color: primary, fontSize: 22, fontWeight: FontWeight.bold)),
-                      const TextSpan(text: 'د.ل', style: TextStyle(fontFamily: 'Tajawal', color: textDark, fontSize: 13)),
-                    ]),
-                  ),
-                  Text('+ $_basePrice د.ل في القاعة', style: const TextStyle(fontFamily: 'Tajawal', color: textLight, fontSize: 10)),
-                ],
-              ),
-            ),
-            GestureDetector(
-              onTap: _callProvider,
-              child: Container(
-                padding: const EdgeInsets.all(14),
-                decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20), border: Border.all(color: primary.withValues(alpha: 0.3), width: 1.5)),
-                child: const Icon(Icons.phone_outlined, color: primary, size: 22),
-              ),
-            ),
-            const SizedBox(width: 10),
-            GestureDetector(
-              onTap: _loading ? null : () {
-                if (_isGuest) { _showLoginPrompt(); return; } // ✅ حماية
-                _confirmBooking();
-              },
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(colors: [primary, primaryDark]),
-                  borderRadius: BorderRadius.circular(20),
-                  boxShadow: [BoxShadow(color: primary.withValues(alpha: 0.35), blurRadius: 15, offset: const Offset(0, 6))],
-                ),
-                child: _loading
-                    ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5))
-                    : const Row(
-                        children: [
-                          Icon(Icons.calendar_month, color: Colors.white, size: 18),
-                          SizedBox(width: 6),
-                          Text('احجز الآن', style: TextStyle(fontFamily: 'Tajawal', color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold)),
-                        ],
-                      ),
-              ),
-            ),
+            Icon(icon, color: primary, size: 18),
+            const SizedBox(width: 6),
+            Expanded(child: Text(hasValue ? value : label, style: TextStyle(fontFamily: 'Tajawal', color: hasValue ? textDark : textLight, fontSize: 12, fontWeight: hasValue ? FontWeight.bold : FontWeight.normal), maxLines: 1, overflow: TextOverflow.ellipsis)),
+            const Icon(Icons.keyboard_arrow_down, color: textLight, size: 16),
           ],
         ),
       ),
     );
   }
 
-  // دالة التقويم المرئي
+  Widget _counterBtn({required IconData icon, VoidCallback? onTap}) {
+    final enabled = onTap != null;
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 34, height: 34,
+        decoration: BoxDecoration(color: enabled ? primary.withValues(alpha: 0.1) : Colors.grey.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(10)),
+        child: Icon(icon, color: enabled ? primary : Colors.black26, size: 18),
+      ),
+    );
+  }
+
   Widget _buildVisualCalendar() {
-    // ... (الكود كما هو، فقط أضف التحقق للزائر عند الضغط على يوم)
     final firstDay = DateTime(_calendarMonth.year, _calendarMonth.month, 1);
     final daysInMonth = DateTime(_calendarMonth.year, _calendarMonth.month + 1, 0).day;
     final firstWeekday = firstDay.weekday;
@@ -678,7 +736,7 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
       cells.add(
         GestureDetector(
           onTap: isPast ? null : () {
-            if (_isGuest) { _showLoginPrompt(); return; } // ✅ حماية عند اختيار يوم من التقويم
+            if (_isGuest) { _showLoginPrompt(); return; }
             setState(() => _selectedDate = date);
           },
           child: Container(
@@ -688,9 +746,7 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
               borderRadius: BorderRadius.circular(8),
               border: isSelected ? Border.all(color: Colors.green.shade700, width: 2) : Border.all(color: Colors.black.withValues(alpha: 0.06), width: 1),
             ),
-            child: Center(
-              child: Text('$day', style: TextStyle(fontFamily: 'Tajawal', color: fg, fontSize: 12, fontWeight: isSelected ? FontWeight.bold : FontWeight.w500)),
-            ),
+            child: Center(child: Text('$day', style: TextStyle(fontFamily: 'Tajawal', color: fg, fontSize: 12, fontWeight: isSelected ? FontWeight.bold : FontWeight.w500))),
           ),
         ),
       );
@@ -738,42 +794,309 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
     );
   }
 
-  // ... (باقي الدوال المساعدة مثل _buildPickerField, _pickDate, _pickTimeSlot, _confirmBooking, إلخ تبقى كما هي) ...
-  
-  // سنستخدم نفس كود الدوال المساعدة الذي أرسلته لك في الرسالة السابقة
-  // (تم اختصارها هنا لتوفير المساحة، يرجى دمجها مع الكود أعلاه)
-  
-  // سأكتب الدوال الأساسية فقط للتأكد من عدم حدوث أخطاء:
+  Widget _buildReviewsSection() {
+    final rating = (_hall['rating'] ?? 0).toDouble();
+    final reviewsCount = _hall['reviewsCount'] ?? 0;
 
-  Widget _buildPickerField({required IconData icon, required String label, required String? value, required VoidCallback onTap}) {
-    final hasValue = value != null && value.isNotEmpty;
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-        decoration: BoxDecoration(color: hasValue ? primary.withValues(alpha: 0.08) : AppColors.background, borderRadius: BorderRadius.circular(12), border: Border.all(color: hasValue ? primary.withValues(alpha: 0.4) : Colors.transparent, width: 1.2)),
-        child: Row(
-          children: [
-            Icon(icon, color: primary, size: 18),
-            const SizedBox(width: 6),
-            Expanded(
-              child: Text(hasValue ? value : label, style: TextStyle(fontFamily: 'Tajawal', color: hasValue ? textDark : textLight, fontSize: 12, fontWeight: hasValue ? FontWeight.bold : FontWeight.normal), maxLines: 1, overflow: TextOverflow.ellipsis),
+    return Container(
+      margin: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20), boxShadow: [BoxShadow(color: primary.withValues(alpha: 0.06), blurRadius: 15, offset: const Offset(0, 5))]),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.reviews_outlined, color: primary, size: 20),
+              const SizedBox(width: 6),
+              const Text('التقييمات', style: TextStyle(fontFamily: 'Tajawal', color: textDark, fontSize: 17, fontWeight: FontWeight.bold)),
+              const Spacer(),
+              GestureDetector(
+                onTap: () {
+                  if (_isGuest) { _showLoginPrompt(); return; }
+                  _openAddReview();
+                },
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  decoration: BoxDecoration(color: primary.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(10)),
+                  child: const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.add, color: primary, size: 16),
+                      SizedBox(width: 4),
+                      Text('أضف تقييم', style: TextStyle(fontFamily: 'Tajawal', color: primary, fontSize: 12, fontWeight: FontWeight.bold)),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(color: primary.withValues(alpha: 0.06), borderRadius: BorderRadius.circular(14)),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                  decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12)),
+                  child: Text(rating.toStringAsFixed(1), style: const TextStyle(fontFamily: 'Tajawal', color: primary, fontSize: 32, fontWeight: FontWeight.bold)),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(children: List.generate(5, (i) => Icon(i < rating ? Icons.star : Icons.star_border, color: Colors.amber, size: 20))),
+                      const SizedBox(height: 6),
+                      Text('$reviewsCount مراجعة', style: const TextStyle(fontFamily: 'Tajawal', color: textLight, fontSize: 12)),
+                    ],
+                  ),
+                ),
+              ],
             ),
-            const Icon(Icons.keyboard_arrow_down, color: textLight, size: 16),
+          ),
+          const SizedBox(height: 14),
+          StreamBuilder<QuerySnapshot>(
+            stream: FirebaseFirestore.instance.collection('reviews').where('hallId', isEqualTo: _hallId).limit(3).snapshots(),
+            builder: (context, snap) {
+              if (!snap.hasData) return const SizedBox();
+              final reviews = snap.data!.docs;
+              if (reviews.isEmpty) {
+                return Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(color: AppColors.background, borderRadius: BorderRadius.circular(12)),
+                  child: const Row(
+                    children: [
+                      Icon(Icons.info_outline, color: textLight, size: 18),
+                      SizedBox(width: 8),
+                      Expanded(child: Text('لا توجد مراجعات بعد. كن أول من يشارك تجربته!', style: TextStyle(fontFamily: 'Tajawal', color: textLight, fontSize: 12))),
+                    ],
+                  ),
+                );
+              }
+
+              final sortedReviews = List<QueryDocumentSnapshot>.from(reviews);
+              sortedReviews.sort((a, b) {
+                final aT = (a.data() as Map)['createdAt'] as Timestamp?;
+                final bT = (b.data() as Map)['createdAt'] as Timestamp?;
+                if (aT == null && bT == null) return 0;
+                if (aT == null) return 1;
+                if (bT == null) return -1;
+                return bT.compareTo(aT);
+              });
+
+              return Column(children: sortedReviews.map((doc) => _buildReviewItem(doc.data() as Map<String, dynamic>)).toList());
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _openAddReview() async {
+    if (_hallId.isEmpty) return;
+    final result = await Navigator.push(context, MaterialPageRoute(builder: (_) => AddReviewScreen(hallId: _hallId, hallName: _hall['name'] ?? '')));
+    if (result == true && mounted) {
+      try {
+        final doc = await FirebaseFirestore.instance.collection('halls').doc(_hallId).get();
+        if (doc.exists && mounted) {
+          setState(() {
+            _hall = Map<String, dynamic>.from(doc.data()!);
+            _hall['_id'] = doc.id;
+          });
+        }
+      } catch (_) {}
+    }
+  }
+
+  Widget _buildReviewItem(Map<String, dynamic> review) {
+    final userName = review['userName'] ?? 'مستخدم';
+    final rating = (review['rating'] ?? 0).toDouble();
+    final comment = review['comment'] ?? '';
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(color: AppColors.background, borderRadius: BorderRadius.circular(12), border: Border.all(color: Colors.black.withValues(alpha: 0.05), width: 1)),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 32, height: 32,
+                decoration: const BoxDecoration(gradient: LinearGradient(colors: [primary, primaryDark]), shape: BoxShape.circle),
+                child: Center(child: Text(userName.isNotEmpty ? userName[0] : 'م', style: const TextStyle(fontFamily: 'Tajawal', color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold))),
+              ),
+              const SizedBox(width: 10),
+              Expanded(child: Text(userName, style: const TextStyle(fontFamily: 'Tajawal', color: textDark, fontSize: 13, fontWeight: FontWeight.bold))),
+              Row(children: List.generate(5, (i) => Icon(i < rating ? Icons.star : Icons.star_border, color: Colors.amber, size: 12))),
+            ],
+          ),
+          if (comment.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            Text(comment, style: const TextStyle(fontFamily: 'Tajawal', color: textDark, fontSize: 12, height: 1.5)),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSimilarHallsSection(String city) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Row(
+              children: [
+                Container(width: 4, height: 20, decoration: BoxDecoration(color: primary, borderRadius: BorderRadius.circular(2))),
+                const SizedBox(width: 8),
+                const Text('قاعات مشابهة', style: TextStyle(fontFamily: 'Tajawal', color: textDark, fontSize: 18, fontWeight: FontWeight.bold)),
+              ],
+            ),
+          ),
+          const SizedBox(height: 14),
+          SizedBox(
+            height: 200,
+            child: StreamBuilder<QuerySnapshot>(
+              stream: FirebaseFirestore.instance.collection('halls').where('city', isEqualTo: city).limit(6).snapshots(),
+              builder: (context, snap) {
+                if (!snap.hasData) return const SizedBox();
+                final halls = snap.data!.docs.where((doc) => doc.id != _hallId).toList();
+                if (halls.isEmpty) return const SizedBox();
+
+                return ListView.separated(
+                  scrollDirection: Axis.horizontal,
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  itemCount: halls.length,
+                  separatorBuilder: (_, __) => const SizedBox(width: 12),
+                  itemBuilder: (context, i) {
+                    final data = halls[i].data() as Map<String, dynamic>;
+                    data['_id'] = halls[i].id;
+                    return _buildSimilarCard(data);
+                  },
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSimilarCard(Map<String, dynamic> hall) {
+    final name = hall['name'] ?? 'قاعة';
+    final city = hall['city'] ?? '';
+    final price = hall['price'] ?? 0;
+    final rating = (hall['rating'] ?? 0).toDouble();
+    final image = hall['image'] ?? hall['coverImage'];
+
+    return GestureDetector(
+      onTap: () => Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => HallDetailsScreen(hallData: hall))),
+      child: Container(
+        width: 160,
+        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), boxShadow: [BoxShadow(color: primary.withValues(alpha: 0.06), blurRadius: 12, offset: const Offset(0, 4))]),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            ClipRRect(
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+              child: SizedBox(
+                height: 100, width: 160,
+                child: (image != null && image.toString().isNotEmpty)
+                    ? Image.network(image.toString(), fit: BoxFit.cover, errorBuilder: (_, __, ___) => Container(color: primary.withValues(alpha: 0.2), child: const Icon(Icons.celebration, color: Colors.white, size: 40)))
+                    : Container(color: primary.withValues(alpha: 0.2), child: const Icon(Icons.celebration, color: Colors.white, size: 40)),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(10),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(name, style: const TextStyle(fontFamily: 'Tajawal', color: textDark, fontSize: 12, fontWeight: FontWeight.bold), maxLines: 1, overflow: TextOverflow.ellipsis),
+                  const SizedBox(height: 4),
+                  Text(city, style: const TextStyle(fontFamily: 'Tajawal', color: textLight, fontSize: 10), maxLines: 1, overflow: TextOverflow.ellipsis),
+                  const SizedBox(height: 6),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text('$price د.ل', style: const TextStyle(fontFamily: 'Tajawal', color: primary, fontSize: 11, fontWeight: FontWeight.bold)),
+                      Row(children: [
+                        const Icon(Icons.star, color: Colors.amber, size: 10),
+                        Text(rating.toStringAsFixed(1), style: const TextStyle(fontFamily: 'Tajawal', color: textDark, fontSize: 10, fontWeight: FontWeight.bold)),
+                      ]),
+                    ],
+                  ),
+                ],
+              ),
+            ),
           ],
         ),
       ),
     );
   }
 
-  Widget _counterBtn({required IconData icon, VoidCallback? onTap}) {
-    final enabled = onTap != null;
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: 34, height: 34,
-        decoration: BoxDecoration(color: enabled ? primary.withValues(alpha: 0.1) : Colors.grey.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(10)),
-        child: Icon(icon, color: enabled ? primary : Colors.black26, size: 18),
+  Widget _buildBottomBar() {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
+      decoration: BoxDecoration(color: Colors.white, boxShadow: [BoxShadow(color: primary.withValues(alpha: 0.08), blurRadius: 20, offset: const Offset(0, -6))]),
+      child: SafeArea(
+        child: Row(
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text('المطلوب دفعه الآن', style: TextStyle(fontFamily: 'Tajawal', color: textLight, fontSize: 11)),
+                  RichText(
+                    text: TextSpan(children: [
+                      TextSpan(text: '${APP_COMMISSION.toInt()} ', style: const TextStyle(fontFamily: 'Tajawal', color: primary, fontSize: 22, fontWeight: FontWeight.bold)),
+                      const TextSpan(text: 'د.ل', style: TextStyle(fontFamily: 'Tajawal', color: textDark, fontSize: 13)),
+                    ]),
+                  ),
+                  Text('+ $_basePrice د.ل في القاعة', style: const TextStyle(fontFamily: 'Tajawal', color: textLight, fontSize: 10)),
+                ],
+              ),
+            ),
+            GestureDetector(
+              onTap: _callProvider,
+              child: Container(
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20), border: Border.all(color: primary.withValues(alpha: 0.3), width: 1.5)),
+                child: const Icon(Icons.phone_outlined, color: primary, size: 22),
+              ),
+            ),
+            const SizedBox(width: 10),
+            GestureDetector(
+              onTap: _loading ? null : () {
+                if (_isGuest) { _showLoginPrompt(); return; }
+                _confirmBooking();
+              },
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(colors: [primary, primaryDark]),
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [BoxShadow(color: primary.withValues(alpha: 0.35), blurRadius: 15, offset: const Offset(0, 6))],
+                ),
+                child: _loading
+                    ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5))
+                    : const Row(
+                        children: [
+                          Icon(Icons.calendar_month, color: Colors.white, size: 18),
+                          SizedBox(width: 6),
+                          Text('احجز الآن', style: TextStyle(fontFamily: 'Tajawal', color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold)),
+                        ],
+                      ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -836,7 +1159,6 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
   }
 
   Future<void> _confirmBooking() async {
-    // ... (الكود كما هو، لأننا أضفنا الحماية في الـ onTap الخاص بالزر) ...
     if (_selectedEventType == null) { _showError('الرجاء اختيار نوع المناسبة'); return; }
     if (_selectedDate == null) { _showError('الرجاء اختيار تاريخ الحجز'); return; }
     if (_selectedTimeSlot == null) { _showError('الرجاء اختيار الفترة الزمنية'); return; }
@@ -955,9 +1277,73 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg, style: const TextStyle(fontFamily: 'Tajawal')), backgroundColor: Colors.redAccent));
   }
 
-  Future<void> _callProvider() async { /* ... الكود القديم ... */ }
-  Future<void> _openDirections(String city, String name) async { /* ... الكود القديم ... */ }
-  Future<void> _shareHall() async { /* ... الكود القديم ... */ }
-  
-  // تأكد من وجود باقي دوال التقييمات (_buildReviewsSection, إلخ) من الكود السابق
+  Future<void> _callProvider() async {
+    final phone = _hall['providerPhone'] ?? _hall['phone'] ?? _hall['contactPhone'] ?? '';
+    if (phone.toString().trim().isEmpty) { _showError('لا يوجد رقم هاتف متاح للمزود'); return; }
+
+    String cleanPhone = phone.toString().replaceAll(RegExp(r'[^\d+]'), '');
+    if (cleanPhone.startsWith('00')) cleanPhone = cleanPhone.substring(2);
+    if (!cleanPhone.startsWith('+')) {
+      if (cleanPhone.startsWith('0')) {
+        cleanPhone = '+218${cleanPhone.substring(1)}';
+      } else if (cleanPhone.startsWith('218')) {
+        cleanPhone = '+$cleanPhone';
+      } else {
+        cleanPhone = '+218$cleanPhone';
+      }
+    }
+
+    final uri = Uri(scheme: 'tel', path: cleanPhone);
+    try {
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri);
+      } else {
+        _showError('تعذر فتح الاتصال: $cleanPhone');
+      }
+    } catch (e) {
+      _showError('خطأ: $e');
+    }
+  }
+
+  Future<void> _openDirections(String city, String name) async {
+    final lat = _hall['latitude'];
+    final lng = _hall['longitude'];
+    Uri uri;
+
+    if (lat != null && lng != null) {
+      uri = Uri.parse('https://www.google.com/maps/search/?api=1&query=$lat,$lng');
+    } else {
+      final query = Uri.encodeComponent('$name $city ليبيا');
+      uri = Uri.parse('https://www.google.com/maps/search/?api=1&query=$query');
+    }
+
+    try {
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+      } else {
+        _showError('تعذر فتح الخرائط');
+      }
+    } catch (e) {
+      _showError('خطأ: $e');
+    }
+  }
+
+  Future<void> _shareHall() async {
+    final name = _hall['name'] ?? 'قاعة';
+    final city = _hall['city'] ?? '';
+    final rating = (_hall['rating'] ?? 0).toStringAsFixed(1);
+
+    final text = '🎉 اكتشف $name على تطبيق فرح!\n\n'
+        '📍 المدينة: $city\n'
+        '💰 السعر: $_basePrice د.ل\n'
+        '⭐ التقييم: $rating\n\n'
+        '📱 حمّل تطبيق فرح من هنا:\n'
+        'https://github.com/ba3689468-hub/Farah-app/releases';
+
+    try {
+      await Share.share(text, subject: 'قاعة $name على تطبيق فرح');
+    } catch (e) {
+      _showError('تعذر المشاركة: $e');
+    }
+  }
 }
