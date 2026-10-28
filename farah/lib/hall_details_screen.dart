@@ -55,6 +55,7 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
   bool _loading = false;
   late Map<String, dynamic> _hall;
 
+  // ✅ دالة للتحقق مما إذا كان المستخدم زائراً
   bool get _isGuest => FirebaseAuth.instance.currentUser == null;
 
   static const List<String> _timeSlots = [
@@ -137,6 +138,7 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
     return _bookedDates.contains(key);
   }
 
+  // ✅ نافذة التنبيه بالدخول للزوار
   void _showLoginPrompt() {
     showDialog(
       context: context,
@@ -203,9 +205,9 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
           if (images.length > 1) SliverToBoxAdapter(child: _buildThumbnails(images)),
           SliverToBoxAdapter(child: _buildInfoSection(name, city, rating, capacity, description)),
           SliverToBoxAdapter(child: _buildBookingCard()),
-          SliverToBoxAdapter(child: _buildPaymentSummaryCard()),
-          SliverToBoxAdapter(child: _buildReviewsSection()),
-          SliverToBoxAdapter(child: _buildSimilarHallsSection(city)),
+          SliverToBoxAdapter(child: _buildPaymentSummaryCard()), // ✅ موجودة الآن
+          SliverToBoxAdapter(child: _buildReviewsSection()), // ✅ موجودة الآن
+          SliverToBoxAdapter(child: _buildSimilarHallsSection(city)), // ✅ موجودة الآن
           const SliverToBoxAdapter(child: SizedBox(height: 100)),
         ],
       ),
