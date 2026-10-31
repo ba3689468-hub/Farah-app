@@ -1,5 +1,5 @@
 import 'dart:async'; 
-import 'dart:ui'; 
+import 'dart:ui' as ui; // ✅ تمت إضافة هذا السطر لحل مشكلة TextDirection
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -201,11 +201,9 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
         ? (data['refundEligibleUntil'] as Timestamp).toDate() 
         : null;
 
-    // ✅ الحل المنطقي: فحص ما إذا كان الحجز قيد الانتظار ولكن انتهى وقت الاسترداد
     final isPending = status == 'pending' || status == 'pending_attendance';
     final isRefundExpired = refundUntil != null && DateTime.now().isAfter(refundUntil);
     
-    // إذا كان قيد الانتظار وانتهى الوقت، نعتبره "منتهي" لحل التناقض
     String displayStatus = status;
     if (isPending && isRefundExpired) {
       displayStatus = 'expired'; 
@@ -266,15 +264,17 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
                       ],
                     ),
                   ),
+                  
+                  // ✅ الحل هنا: استخدام ui.TextDirection.ltr
                   const Directionality(
-                    textDirection: TextDirection.ltr,
+                    textDirection: ui.TextDirection.ltr, 
                     child: Icon(Icons.arrow_forward_ios, color: Colors.grey, size: 16),
                   ),
+                  
                 ],
               ),
             ),
             
-            // ✅ إخفاء شريط العد التنازلي إذا انتهى الوقت (لأننا غيرنا الحالة لـ منتهي)
             if (isPending && refundUntil != null && !isRefundExpired)
               RefundCountdownWidget(expiryDate: refundUntil),
 
@@ -320,7 +320,6 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
                       ),
                     ),
                     const SizedBox(width: 10),
-                    // ✅ إخفاء زر الإلغاء إذا كان "منتهي" أو "ملغي" أو "مكتمل"
                     if (isPending && !isRefundExpired)
                       Expanded(
                         flex: 1,
@@ -527,14 +526,13 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg, style: const TextStyle(fontFamily: 'Tajawal')), backgroundColor: Colors.redAccent));
   }
 
-  // ✅ إضافة الحالة الجديدة "منتهي"
   Map<String, dynamic> _getStatusInfo(String status) {
     switch (status) {
       case 'confirmed': return {'label': 'مؤكد', 'color': Colors.green, 'icon': Icons.check_circle};
       case 'completed': return {'label': 'مكتمل', 'color': Colors.blue, 'icon': Icons.done_all};
       case 'cancelled': return {'label': 'ملغى', 'color': Colors.redAccent, 'icon': Icons.cancel};
       case 'pending_attendance': return {'label': 'بانتظار الحضور', 'color': Colors.orange, 'icon': Icons.event_available};
-      case 'expired': return {'label': 'منتهي', 'color': Colors.grey, 'icon': Icons.hourglass_disabled}; // الحالة الجديدة
+      case 'expired': return {'label': 'منتهي', 'color': Colors.grey, 'icon': Icons.hourglass_disabled};
       default: return {'label': 'قيد الانتظار', 'color': Colors.orange, 'icon': Icons.access_time};
     }
   }
@@ -553,7 +551,6 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
   }
 }
 
-// تم إبقاء هذا الودجت كما هو، لكننا لن نستدعيه إذا كان الوقت منتهياً
 class RefundCountdownWidget extends StatefulWidget {
   final DateTime expiryDate;
   const RefundCountdownWidget({super.key, required this.expiryDate});
@@ -601,7 +598,6 @@ class _RefundCountdownWidgetState extends State<RefundCountdownWidget> {
   Widget build(BuildContext context) {
     final isExpired = _remaining == Duration.zero;
     
-    // إذا انتهى الوقت، لا نعرض أي شيء (لأن الحالة تحولت لـ "منتهي")
     if (isExpired) {
        return const SizedBox.shrink();
     }
