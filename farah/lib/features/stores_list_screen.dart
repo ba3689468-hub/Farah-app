@@ -1,19 +1,23 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart'; // أضفنا هذا
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:farah/core/constants/app_colors.dart';
 import 'store_details_screen.dart';
-import 'package:cached_network_image/cached_network_image.dart'; // أضفنا هذا للاستيراد
+import 'package:cached_network_image/cached_network_image.dart';
+// استيراد ملفات السلة (تأكد من المسار الصحيح)
+import 'package:farah/cart_provider.dart'; 
+import 'package:farah/cart_screen.dart'; 
 
-class StoresListScreen extends StatefulWidget {
+class StoresListScreen extends ConsumerStatefulWidget { // تم التعديل هنا
   final String initialCategory; 
 
   const StoresListScreen({super.key, this.initialCategory = 'الكل'});
 
   @override
-  State<StoresListScreen> createState() => _StoresListScreenState();
+  ConsumerState<StoresListScreen> createState() => _StoresListScreenState(); // تم التعديل هنا
 }
 
-class _StoresListScreenState extends State<StoresListScreen> {
+class _StoresListScreenState extends ConsumerState<StoresListScreen> { // تم التعديل هنا
   static const Color primary = AppColors.primary;
   static const Color textDark = AppColors.textPrimary;
   static const Color textLight = AppColors.textSecondary;
@@ -54,6 +58,43 @@ class _StoresListScreenState extends State<StoresListScreen> {
         centerTitle: true,
         title: const Text('المتاجر', style: TextStyle(fontFamily: 'Tajawal', color: textDark, fontWeight: FontWeight.w800, fontSize: 20)),
         iconTheme: const IconThemeData(color: textDark),
+        // --- بداية كود السلة المضاف ---
+        actions: [
+          Consumer( // نستخدم Consumer لكي تتحدث الأيقونة فقط دون إعادة بناء الشاشة
+            builder: (context, ref, child) {
+              final cartItems = ref.watch(cartProvider);
+              return Stack(
+                alignment: Alignment.center,
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.shopping_cart_outlined, color: textDark),
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => const CartScreen()),
+                      );
+                    },
+                  ),
+                  if (cartItems.isNotEmpty)
+                    Positioned(
+                      right: 6,
+                      top: 6,
+                      child: CircleAvatar(
+                        radius: 9,
+                        backgroundColor: Colors.red,
+                        child: Text(
+                          '${cartItems.length}',
+                          style: const TextStyle(fontSize: 10, color: Colors.white, fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                    ),
+                ],
+              );
+            },
+          ),
+          const SizedBox(width: 8), // مسافة بسيطة من اليمين
+        ],
+        // --- نهاية كود السلة المضاف ---
       ),
       body: Column(
         children: [
@@ -137,7 +178,6 @@ class _StoresListScreenState extends State<StoresListScreen> {
   }
 
   Widget _buildStoreCard(Map<String, dynamic> store, String storeId) {
-    // ... تصميم البطاقة (تأكد من إضافة fontFamily: 'Tajawal' لكل النصوص)
     return GestureDetector(
       onTap: () {
         Navigator.push(
