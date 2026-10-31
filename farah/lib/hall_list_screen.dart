@@ -5,6 +5,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_animate/flutter_animate.dart'; 
+import 'package:flutter_riverpod/flutter_riverpod.dart'; // ✅ أضفنا هذا
 
 import 'features/auth/presentation/screens/login_screen_farah.dart';
 import 'features/favorites_screen.dart';
@@ -17,6 +18,8 @@ import 'hall_details_screen.dart';
 import 'my_bookings_screen.dart';
 import 'features/stores_list_screen.dart';
 import 'core/widgets/shimmer_loading.dart';
+import 'cart_provider.dart'; // ✅ أضفنا هذا
+import 'cart_screen.dart';   // ✅ أضفنا هذا
 
 class HallListScreen extends StatefulWidget {
   const HallListScreen({super.key});
@@ -138,6 +141,57 @@ class _HallListScreenState extends State<HallListScreen> {
           ],
         ),
       ),
+      
+      // 👇✅ الزر العائم الجديد للسلة ✅👇
+      floatingActionButton: Consumer(
+        builder: (context, ref, child) {
+          final cartItems = ref.watch(cartProvider);
+          return FloatingActionButton(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const CartScreen()),
+              );
+            },
+            backgroundColor: primary,
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                const Icon(Icons.shopping_cart, color: Colors.white),
+                if (cartItems.isNotEmpty)
+                  Positioned(
+                    right: 0,
+                    top: 0,
+                    child: Container(
+                      padding: const EdgeInsets.all(2),
+                      decoration: BoxDecoration(
+                        color: Colors.red,
+                        shape: BoxShape.circle,
+                        border: Border.all(color: Colors.white, width: 1.5),
+                      ),
+                      constraints: const BoxConstraints(
+                        minWidth: 16,
+                        minHeight: 16,
+                      ),
+                      child: Text(
+                        '${cartItems.length}',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          );
+        },
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
+      // 👆✅ نهاية الزر العائم ✅👆
+
       bottomNavigationBar: _buildBottomNav(),
     );
   }
@@ -155,7 +209,7 @@ class _HallListScreenState extends State<HallListScreen> {
           _buildFilteredHallsSection()
         else
           SliverToBoxAdapter(child: _buildHallsSection()),
-        const SliverToBoxAdapter(child: SizedBox(height: 30)),
+        const SliverToBoxAdapter(child: SizedBox(height: 100)), // زيادة المسافة السفلية لكي لا يغطي الزر العائم المحتوى
       ],
     );
   }
@@ -696,7 +750,6 @@ class _HallListScreenState extends State<HallListScreen> {
                               children: [
                                 Text(b['btn']!, style: const TextStyle(fontFamily: 'Tajawal', color: primary, fontSize: 12, fontWeight: FontWeight.bold)),
                                 const SizedBox(width: 6),
-                                // ✅ تعديل سهم البانر ليشير للاتجاه الصحيح
                                 const Directionality(
                                   textDirection: TextDirection.ltr,
                                   child: Icon(Icons.arrow_forward_ios, color: primary, size: 12),
@@ -888,7 +941,6 @@ class _HallListScreenState extends State<HallListScreen> {
     return StreamBuilder<DocumentSnapshot>(
       stream: FirebaseFirestore.instance.collection('users').doc(FirebaseAuth.instance.currentUser?.uid).snapshots(),
       builder: (context, snap) {
-        // ✅ إذا كان زائراً (لا يوجد مستخدم)، نتعامل معه بحذر
         if (FirebaseAuth.instance.currentUser == null) {
           return GestureDetector(
             onTap: () {
@@ -1342,7 +1394,7 @@ class _SimpleProfileScreenState extends State<SimpleProfileScreen> {
                 ),
               ),
               
-              const SizedBox(height: 20),
+              const SizedBox(height: 100), // زيادة المسافة لكي لا يغطي الزر العائم زر تسجيل الخروج
               
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -1422,7 +1474,6 @@ class _SimpleProfileScreenState extends State<SimpleProfileScreen> {
                 ],
               ),
             ),
-            // ✅ تم إصلاح السهم هنا ليشير لليمين
             const Directionality(
               textDirection: TextDirection.ltr,
               child: Icon(Icons.arrow_forward_ios, color: textLight, size: 12),
