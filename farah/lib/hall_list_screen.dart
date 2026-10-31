@@ -696,7 +696,11 @@ class _HallListScreenState extends State<HallListScreen> {
                               children: [
                                 Text(b['btn']!, style: const TextStyle(fontFamily: 'Tajawal', color: primary, fontSize: 12, fontWeight: FontWeight.bold)),
                                 const SizedBox(width: 6),
-                                const Icon(Icons.arrow_back_ios, color: primary, size: 12),
+                                // ✅ تعديل سهم البانر ليشير للاتجاه الصحيح
+                                const Directionality(
+                                  textDirection: TextDirection.ltr,
+                                  child: Icon(Icons.arrow_forward_ios, color: primary, size: 12),
+                                ),
                               ],
                             ),
                           ),
@@ -1312,7 +1316,6 @@ class _SimpleProfileScreenState extends State<SimpleProfileScreen> {
                     ],
                     _menuItem(Icons.calendar_month, 'حجوزاتي', 'سجل حجوزاتك السابقة والقادمة', () {
                       // ملاحظة: عند النقر هنا، سينتقل لتبويب "حجوزاتي" وهو محمي أصلاً
-                      // إذا كان الزائر، فلن يعمل. يمكننا إضافة تحقق هنا، لكن الأفضل الاعتماد على تبويب حجوزاتي نفسه.
                     }),
                     const SizedBox(height: 8),
                     _menuItem(Icons.account_balance_wallet, 'محفظتي', 'رصيدك وطرق الدفع', () {
@@ -1419,7 +1422,11 @@ class _SimpleProfileScreenState extends State<SimpleProfileScreen> {
                 ],
               ),
             ),
-            const Icon(Icons.arrow_back_ios, color: textLight, size: 12),
+            // ✅ تم إصلاح السهم هنا ليشير لليمين
+            const Directionality(
+              textDirection: TextDirection.ltr,
+              child: Icon(Icons.arrow_forward_ios, color: textLight, size: 12),
+            ),
           ],
         ),
       ),
