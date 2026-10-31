@@ -173,7 +173,11 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   child: Container(
                     padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(color: Colors.white, shape: BoxShape.circle, boxShadow: [BoxShadow(color: AppColors.primaryDark.withValues(alpha: 0.1), blurRadius: 10, offset: const Offset(0, 3))]),
-                    child: const Icon(Icons.arrow_forward, color: AppColors.primary, size: 22),
+                    // ✅ التعديل هنا: إجبار السهم على الاتجاه الصحيح (لليمين)
+                    child: const Directionality(
+                      textDirection: TextDirection.ltr, 
+                      child: Icon(Icons.arrow_forward_ios, color: AppColors.primary, size: 22),
+                    ),
                   ),
                 ),
               ),
