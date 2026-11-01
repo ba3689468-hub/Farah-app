@@ -5,11 +5,10 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_animate/flutter_animate.dart'; 
-import 'package:flutter_riverpod/flutter_riverpod.dart'; 
 
 import 'features/auth/presentation/screens/login_screen_farah.dart';
 import 'features/favorites_screen.dart';
-import 'features/explore_screen.dart'; 
+import 'features/explore_screen.dart'; // ✅ تم إرجاع الاستكشاف
 import 'features/edit_profile_screen.dart';
 import 'features/wallet_screen.dart';
 import 'features/notifications_screen.dart';
@@ -18,8 +17,6 @@ import 'hall_details_screen.dart';
 import 'my_bookings_screen.dart';
 import 'features/stores_list_screen.dart';
 import 'core/widgets/shimmer_loading.dart';
-import 'cart_provider.dart'; 
-import 'cart_screen.dart';   
 
 class HallListScreen extends StatefulWidget {
   const HallListScreen({super.key});
@@ -130,55 +127,17 @@ class _HallListScreenState extends State<HallListScreen> {
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
-        // ✅ تعديل جذري: تأمين IndexedStack لاحتواء أي شاشة بداخله
         child: IndexedStack(
           index: _currentIndex,
           children: [
-            SizedBox.expand(child: _buildHome()),
-            SizedBox.expand(child: const FavoritesScreen()),
-            SizedBox.expand(child: const CartScreen()), 
-            SizedBox.expand(child: const MyBookingsScreen()),
-            SizedBox.expand(child: const SimpleProfileScreen()), 
+            _buildHome(),
+            const ExploreScreen(), // ✅ الاستكشاف عاد هنا
+            const FavoritesScreen(),
+            const MyBookingsScreen(),
+            const SimpleProfileScreen(), 
           ],
         ),
       ),
-      
-      floatingActionButton: _currentIndex == 0 
-          ? Consumer(
-              builder: (context, ref, child) {
-                final cartItems = ref.watch(cartProvider);
-                return FloatingActionButton(
-                  onPressed: () => setState(() => _currentIndex = 2),
-                  backgroundColor: primary,
-                  child: Stack(
-                    alignment: Alignment.center,
-                    children: [
-                      const Icon(Icons.shopping_cart, color: Colors.white),
-                      if (cartItems.isNotEmpty)
-                        Positioned(
-                          right: 0, top: 0,
-                          child: Container(
-                            padding: const EdgeInsets.all(2),
-                            decoration: BoxDecoration(
-                              color: Colors.red, shape: BoxShape.circle,
-                              border: Border.all(color: Colors.white, width: 1.5),
-                            ),
-                            constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
-                            child: Text(
-                              '${cartItems.length}',
-                              style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
-                              textAlign: TextAlign.center,
-                            ),
-                          ),
-                        ),
-                    ],
-                  ),
-                );
-              },
-            )
-          : null,
-      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
-
       bottomNavigationBar: _buildBottomNav(),
     );
   }
@@ -196,7 +155,7 @@ class _HallListScreenState extends State<HallListScreen> {
           _buildFilteredHallsSection()
         else
           SliverToBoxAdapter(child: _buildHallsSection()), 
-        const SliverToBoxAdapter(child: SizedBox(height: 100)), 
+        const SliverToBoxAdapter(child: SizedBox(height: 30)), 
       ],
     );
   }
@@ -206,13 +165,7 @@ class _HallListScreenState extends State<HallListScreen> {
       padding: const EdgeInsets.fromLTRB(20, 12, 20, 8),
       child: Row(
         children: [
-          _iconButton(Icons.explore_outlined, () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const ExploreScreen()),
-            );
-          }),
-          const SizedBox(width: 8),
+          // ✅ تمت إزالة أيقونة الاستكشاف من هنا لأنها عادت للشريط السفلي
           _iconButton(Icons.account_balance_wallet_outlined, () {
             Navigator.push(context, MaterialPageRoute(builder: (_) => const WalletScreen()));
           }),
@@ -1164,11 +1117,12 @@ class _HallListScreenState extends State<HallListScreen> {
     );
   }
 
+  // ✅ الشريط السفلي (5 أزرار) مع Expanded للحماية من الشاشة الحمراء
   Widget _buildBottomNav() {
     final items = [
       {'icon': Icons.home_outlined, 'active': Icons.home, 'label': 'الرئيسية'},
+      {'icon': Icons.explore_outlined, 'active': Icons.explore, 'label': 'استكشف'},
       {'icon': Icons.favorite_border, 'active': Icons.favorite, 'label': 'المفضلة'},
-      {'icon': Icons.shopping_cart_outlined, 'active': Icons.shopping_cart, 'label': 'السلة'},
       {'icon': Icons.event_note_outlined, 'active': Icons.event_note, 'label': 'حجوزاتي'},
       {'icon': Icons.person_outline, 'active': Icons.person, 'label': 'حسابي'},
     ];
@@ -1182,34 +1136,7 @@ class _HallListScreenState extends State<HallListScreen> {
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: List.generate(items.length, (i) {
           final active = i == _currentIndex;
-          final isCart = items[i]['label'] == 'السلة';
           
-          Widget iconWidget = Icon(active ? items[i]['active'] as IconData : items[i]['icon'] as IconData, color: active ? Colors.white : textLight, size: 20);
-
-          if (isCart) {
-            iconWidget = Consumer(
-              builder: (context, ref, child) {
-                final cartItems = ref.watch(cartProvider);
-                return Stack(
-                  clipBehavior: Clip.none,
-                  children: [
-                    iconWidget,
-                    if (cartItems.isNotEmpty)
-                      Positioned(
-                        right: -6, top: -4,
-                        child: Container(
-                          padding: const EdgeInsets.all(2),
-                          decoration: BoxDecoration(color: Colors.red, shape: BoxShape.circle, border: Border.all(color: Colors.white, width: 1)),
-                          constraints: const BoxConstraints(minWidth: 14, minHeight: 14),
-                          child: Text('${cartItems.length}', style: const TextStyle(color: Colors.white, fontSize: 8, fontWeight: FontWeight.bold), textAlign: TextAlign.center),
-                        ),
-                      ),
-                  ],
-                );
-              },
-            );
-          }
-
           return Expanded(
             child: GestureDetector(
               onTap: () => setState(() => _currentIndex = i),
@@ -1226,7 +1153,7 @@ class _HallListScreenState extends State<HallListScreen> {
                     mainAxisSize: MainAxisSize.min,
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      iconWidget,
+                      Icon(active ? items[i]['active'] as IconData : items[i]['icon'] as IconData, color: active ? Colors.white : textLight, size: 20),
                       if (active) ...[
                         const SizedBox(width: 4),
                         Flexible(
@@ -1501,7 +1428,10 @@ class _SimpleProfileScreenState extends State<SimpleProfileScreen> {
                 ],
               ),
             ),
-            const Icon(Icons.arrow_forward_ios, color: textLight, size: 12),
+            const Directionality(
+              textDirection: TextDirection.ltr,
+              child: Icon(Icons.arrow_forward_ios, color: textLight, size: 12),
+            ),
           ],
         ),
       ),
