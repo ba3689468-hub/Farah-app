@@ -9,7 +9,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'features/auth/presentation/screens/login_screen_farah.dart';
 import 'features/favorites_screen.dart';
-import 'features/explore_screen.dart';
+import 'features/explore_screen.dart'; // ✅ تم إرجاع الاستيراد
 import 'features/edit_profile_screen.dart';
 import 'features/wallet_screen.dart';
 import 'features/notifications_screen.dart';
@@ -134,54 +134,49 @@ class _HallListScreenState extends State<HallListScreen> {
           index: _currentIndex,
           children: [
             _buildHome(),
-            const ExploreScreen(),
             const FavoritesScreen(),
+            const CartScreen(), // ✅ السلة في التبويب
             const MyBookingsScreen(),
             const SimpleProfileScreen(), 
           ],
         ),
       ),
       
-      // ✅ الزر العائم للسلة
-      floatingActionButton: Consumer(
-        builder: (context, ref, child) {
-          final cartItems = ref.watch(cartProvider);
-          return FloatingActionButton(
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const CartScreen()),
-              );
-            },
-            backgroundColor: primary,
-            child: Stack(
-              alignment: Alignment.center,
-              children: [
-                const Icon(Icons.shopping_cart, color: Colors.white),
-                if (cartItems.isNotEmpty)
-                  Positioned(
-                    right: 0,
-                    top: 0,
-                    child: Container(
-                      padding: const EdgeInsets.all(2),
-                      decoration: BoxDecoration(
-                        color: Colors.red,
-                        shape: BoxShape.circle,
-                        border: Border.all(color: Colors.white, width: 1.5),
-                      ),
-                      constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
-                      child: Text(
-                        '${cartItems.length}',
-                        style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
+      // الزر العائم للسلة (يظهر فقط في الرئيسية)
+      floatingActionButton: _currentIndex == 0 
+          ? Consumer(
+              builder: (context, ref, child) {
+                final cartItems = ref.watch(cartProvider);
+                return FloatingActionButton(
+                  onPressed: () => setState(() => _currentIndex = 2),
+                  backgroundColor: primary,
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      const Icon(Icons.shopping_cart, color: Colors.white),
+                      if (cartItems.isNotEmpty)
+                        Positioned(
+                          right: 0, top: 0,
+                          child: Container(
+                            padding: const EdgeInsets.all(2),
+                            decoration: BoxDecoration(
+                              color: Colors.red, shape: BoxShape.circle,
+                              border: Border.all(color: Colors.white, width: 1.5),
+                            ),
+                            constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
+                            child: Text(
+                              '${cartItems.length}',
+                              style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+                        ),
+                    ],
                   ),
-              ],
-            ),
-          );
-        },
-      ),
+                );
+              },
+            )
+          : null,
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
 
       bottomNavigationBar: _buildBottomNav(),
@@ -200,7 +195,7 @@ class _HallListScreenState extends State<HallListScreen> {
         if (_isAdvancedFiltering)
           _buildFilteredHallsSection()
         else
-          SliverToBoxAdapter(child: _buildHallsSection()),
+          SliverToBoxAdapter(child: _buildHallsSection()), // ✅ عرض القاعات فقط
         const SliverToBoxAdapter(child: SizedBox(height: 100)), 
       ],
     );
@@ -211,6 +206,14 @@ class _HallListScreenState extends State<HallListScreen> {
       padding: const EdgeInsets.fromLTRB(20, 12, 20, 8),
       child: Row(
         children: [
+          // ✅ أيقونة الاستكشاف الجديدة
+          _iconButton(Icons.explore_outlined, () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const ExploreScreen()),
+            );
+          }),
+          const SizedBox(width: 8),
           _iconButton(Icons.account_balance_wallet_outlined, () {
             Navigator.push(context, MaterialPageRoute(builder: (_) => const WalletScreen()));
           }),
@@ -742,7 +745,6 @@ class _HallListScreenState extends State<HallListScreen> {
                               children: [
                                 Text(b['btn']!, style: const TextStyle(fontFamily: 'Tajawal', color: primary, fontSize: 12, fontWeight: FontWeight.bold)),
                                 const SizedBox(width: 6),
-                                // ✅ تم إزالة Directionality ليأخذ اتجاهه الطبيعي (يسار)
                                 const Icon(Icons.arrow_forward_ios, color: primary, size: 12),
                               ],
                             ),
@@ -1166,8 +1168,8 @@ class _HallListScreenState extends State<HallListScreen> {
   Widget _buildBottomNav() {
     final items = [
       {'icon': Icons.home_outlined, 'active': Icons.home, 'label': 'الرئيسية'},
-      {'icon': Icons.explore_outlined, 'active': Icons.explore, 'label': 'استكشف'},
       {'icon': Icons.favorite_border, 'active': Icons.favorite, 'label': 'المفضلة'},
+      {'icon': Icons.shopping_cart_outlined, 'active': Icons.shopping_cart, 'label': 'السلة'},
       {'icon': Icons.event_note_outlined, 'active': Icons.event_note, 'label': 'حجوزاتي'},
       {'icon': Icons.person_outline, 'active': Icons.person, 'label': 'حسابي'},
     ];
@@ -1181,6 +1183,35 @@ class _HallListScreenState extends State<HallListScreen> {
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: List.generate(items.length, (i) {
           final active = i == _currentIndex;
+          final isCart = items[i]['label'] == 'السلة';
+          
+          Widget iconWidget = Icon(active ? items[i]['active'] as IconData : items[i]['icon'] as IconData, color: active ? Colors.white : textLight, size: 20);
+
+          // ✅ إضافة شارة العدد للسلة
+          if (isCart) {
+            iconWidget = Consumer(
+              builder: (context, ref, child) {
+                final cartItems = ref.watch(cartProvider);
+                return Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    iconWidget,
+                    if (cartItems.isNotEmpty)
+                      Positioned(
+                        right: -6, top: -4,
+                        child: Container(
+                          padding: const EdgeInsets.all(2),
+                          decoration: BoxDecoration(color: Colors.red, shape: BoxShape.circle, border: Border.all(color: Colors.white, width: 1)),
+                          constraints: const BoxConstraints(minWidth: 14, minHeight: 14),
+                          child: Text('${cartItems.length}', style: const TextStyle(color: Colors.white, fontSize: 8, fontWeight: FontWeight.bold), textAlign: TextAlign.center),
+                        ),
+                      ),
+                  ],
+                );
+              },
+            );
+          }
+
           return GestureDetector(
             onTap: () => setState(() => _currentIndex = i),
             child: AnimatedContainer(
@@ -1193,7 +1224,7 @@ class _HallListScreenState extends State<HallListScreen> {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(active ? items[i]['active'] as IconData : items[i]['icon'] as IconData, color: active ? Colors.white : textLight, size: 20),
+                  iconWidget,
                   if (active) ...[
                     const SizedBox(width: 5),
                     Text(items[i]['label'] as String, style: const TextStyle(fontFamily: 'Tajawal', color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
@@ -1459,7 +1490,6 @@ class _SimpleProfileScreenState extends State<SimpleProfileScreen> {
                 ],
               ),
             ),
-            // ✅ إزالة Directionality هنا ليأخذ السهم اتجاهه الطبيعي (لليسار)
             const Icon(Icons.arrow_forward_ios, color: textLight, size: 12),
           ],
         ),
