@@ -5,7 +5,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_animate/flutter_animate.dart'; 
-import 'package:flutter_riverpod/flutter_riverpod.dart'; // ✅ أضفنا هذا
+import 'package:flutter_riverpod/flutter_riverpod.dart'; 
 
 import 'features/auth/presentation/screens/login_screen_farah.dart';
 import 'features/favorites_screen.dart';
@@ -18,8 +18,8 @@ import 'hall_details_screen.dart';
 import 'my_bookings_screen.dart';
 import 'features/stores_list_screen.dart';
 import 'core/widgets/shimmer_loading.dart';
-import 'cart_provider.dart'; // ✅ أضفنا هذا
-import 'cart_screen.dart';   // ✅ أضفنا هذا
+import 'cart_provider.dart'; 
+import 'cart_screen.dart';   
 
 class HallListScreen extends StatefulWidget {
   const HallListScreen({super.key});
@@ -142,7 +142,7 @@ class _HallListScreenState extends State<HallListScreen> {
         ),
       ),
       
-      // 👇✅ الزر العائم الجديد للسلة ✅👇
+      // ✅ الزر العائم للسلة
       floatingActionButton: Consumer(
         builder: (context, ref, child) {
           final cartItems = ref.watch(cartProvider);
@@ -169,17 +169,10 @@ class _HallListScreenState extends State<HallListScreen> {
                         shape: BoxShape.circle,
                         border: Border.all(color: Colors.white, width: 1.5),
                       ),
-                      constraints: const BoxConstraints(
-                        minWidth: 16,
-                        minHeight: 16,
-                      ),
+                      constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
                       child: Text(
                         '${cartItems.length}',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 10,
-                          fontWeight: FontWeight.bold,
-                        ),
+                        style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
                         textAlign: TextAlign.center,
                       ),
                     ),
@@ -190,7 +183,6 @@ class _HallListScreenState extends State<HallListScreen> {
         },
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
-      // 👆✅ نهاية الزر العائم ✅👆
 
       bottomNavigationBar: _buildBottomNav(),
     );
@@ -209,7 +201,7 @@ class _HallListScreenState extends State<HallListScreen> {
           _buildFilteredHallsSection()
         else
           SliverToBoxAdapter(child: _buildHallsSection()),
-        const SliverToBoxAdapter(child: SizedBox(height: 100)), // زيادة المسافة السفلية لكي لا يغطي الزر العائم المحتوى
+        const SliverToBoxAdapter(child: SizedBox(height: 100)), 
       ],
     );
   }
@@ -750,10 +742,8 @@ class _HallListScreenState extends State<HallListScreen> {
                               children: [
                                 Text(b['btn']!, style: const TextStyle(fontFamily: 'Tajawal', color: primary, fontSize: 12, fontWeight: FontWeight.bold)),
                                 const SizedBox(width: 6),
-                                const Directionality(
-                                  textDirection: TextDirection.ltr,
-                                  child: Icon(Icons.arrow_forward_ios, color: primary, size: 12),
-                                ),
+                                // ✅ تم إزالة Directionality ليأخذ اتجاهه الطبيعي (يسار)
+                                const Icon(Icons.arrow_forward_ios, color: primary, size: 12),
                               ],
                             ),
                           ),
@@ -1219,7 +1209,7 @@ class _HallListScreenState extends State<HallListScreen> {
 }
 
 // ═══════════════════════════════════════════════
-// شاشة الملف الشخصي المبسطة (تم تعديلها لتدعم الزوار)
+// شاشة الملف الشخصي المبسطة
 // ═══════════════════════════════════════════════
 class SimpleProfileScreen extends StatefulWidget {
   const SimpleProfileScreen({super.key});
@@ -1239,7 +1229,6 @@ class _SimpleProfileScreenState extends State<SimpleProfileScreen> {
   void initState() {
     super.initState();
     final uid = FirebaseAuth.instance.currentUser?.uid;
-    // إذا لم يكن هناك مستخدم، لا نحاول جلب بيانات
     _userFuture = uid == null 
         ? Future.error('no user') 
         : FirebaseFirestore.instance.collection('users').doc(uid).get();
@@ -1271,7 +1260,6 @@ class _SimpleProfileScreenState extends State<SimpleProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // ✅ التحقق مما إذا كان المستخدم زائراً (غير مسجل دخول)
     if (FirebaseAuth.instance.currentUser == null) {
       return Center(
         child: Column(
@@ -1312,7 +1300,6 @@ class _SimpleProfileScreenState extends State<SimpleProfileScreen> {
       );
     }
 
-    // هنا يبدأ الكود القديم إذا كان المستخدم مسجلاً
     return FutureBuilder<DocumentSnapshot>(
       future: _userFuture,
       builder: (context, snap) {
@@ -1366,9 +1353,7 @@ class _SimpleProfileScreenState extends State<SimpleProfileScreen> {
                       }),
                       const SizedBox(height: 8),
                     ],
-                    _menuItem(Icons.calendar_month, 'حجوزاتي', 'سجل حجوزاتك السابقة والقادمة', () {
-                      // ملاحظة: عند النقر هنا، سينتقل لتبويب "حجوزاتي" وهو محمي أصلاً
-                    }),
+                    _menuItem(Icons.calendar_month, 'حجوزاتي', 'سجل حجوزاتك السابقة والقادمة', () {}),
                     const SizedBox(height: 8),
                     _menuItem(Icons.account_balance_wallet, 'محفظتي', 'رصيدك وطرق الدفع', () {
                       Navigator.push(context, MaterialPageRoute(builder: (_) => const WalletScreen()));
@@ -1394,7 +1379,7 @@ class _SimpleProfileScreenState extends State<SimpleProfileScreen> {
                 ),
               ),
               
-              const SizedBox(height: 100), // زيادة المسافة لكي لا يغطي الزر العائم زر تسجيل الخروج
+              const SizedBox(height: 100), 
               
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -1474,10 +1459,8 @@ class _SimpleProfileScreenState extends State<SimpleProfileScreen> {
                 ],
               ),
             ),
-            const Directionality(
-              textDirection: TextDirection.ltr,
-              child: Icon(Icons.arrow_forward_ios, color: textLight, size: 12),
-            ),
+            // ✅ إزالة Directionality هنا ليأخذ السهم اتجاهه الطبيعي (لليسار)
+            const Icon(Icons.arrow_forward_ios, color: textLight, size: 12),
           ],
         ),
       ),
