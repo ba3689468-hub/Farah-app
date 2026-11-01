@@ -70,7 +70,6 @@ class _FarahGlassLoginScreenState extends ConsumerState<FarahGlassLoginScreen> {
     if (credentials != null) {
       _phoneCtrl.text = credentials['phone']!;
       _passCtrl.text = credentials['password']!;
-      // ✅ نمرر true لكي لا تظهر نافذة "تفعيل البصمة" مرة أخرى
       await _login(isBiometricLogin: true); 
     }
   }
@@ -88,13 +87,17 @@ class _FarahGlassLoginScreenState extends ConsumerState<FarahGlassLoginScreen> {
       final fakeEmail = '$phone@farah.app';
       final password = _passCtrl.text.trim();
 
+      debugPrint("⏳ [Login] Starting sign in...");
       final repo = ref.read(authRepositoryProvider);
       await repo.signIn(fakeEmail, password);
+      debugPrint("✅ [Login] Sign in successful.");
 
       final fbUser = FirebaseAuth.instance.currentUser;
       if (fbUser != null) {
+        debugPrint("⏳ [Login] Fetching user doc...");
         final docRef = FirebaseFirestore.instance.collection('users').doc(fbUser.uid);
         final doc = await docRef.get();
+        debugPrint("✅ [Login] User doc fetched.");
 
         if (!doc.exists) {
           await docRef.set({
@@ -111,8 +114,8 @@ class _FarahGlassLoginScreenState extends ConsumerState<FarahGlassLoginScreen> {
           });
         }
 
-        // ✅ لا تظهر نافذة التفعيل إذا كان المستخدم يسجل الدخول بالبصمة أصلاً
         if (_canUseBiometrics && !_hasSavedCredentials && !isBiometricLogin && mounted) {
+          debugPrint("⏳ [Login] Showing biometric dialog...");
           final enableBio = await showDialog<bool>(
             context: context,
             barrierDismissible: false,
@@ -135,20 +138,24 @@ class _FarahGlassLoginScreenState extends ConsumerState<FarahGlassLoginScreen> {
               ],
             ),
           );
+          debugPrint("✅ [Login] Dialog closed with: $enableBio");
 
           if (enableBio == true) {
-            // ✅ نضع عملية الحفظ في try-catch لكي لا يعلق التطبيق إذا فشلت البصمة
             try {
-              await _bioService.enableBiometrics(phone, password);
+              debugPrint("⏳ [Login] Enabling biometrics...");
+              // ✅ إضافة مهلة زمنية 5 ثواني كحد أقصى. إذا تجمدت البصمة، سيكمل التطبيق الدخول
+              await _bioService.enableBiometrics(phone, password).timeout(const Duration(seconds: 5));
               if (mounted) setState(() => _hasSavedCredentials = true);
+              debugPrint("✅ [Login] Biometrics enabled.");
             } catch (e) {
-              debugPrint('Error enabling biometrics: $e');
-              // نكمل عملية الدخول حتى لو فشل حفظ البصمة
+              debugPrint("❌ [Login] Error/Timeout enabling biometrics: $e");
+              // نكمل عملية الدخول حتى لو فشل أو تأخر حفظ البصمة
             }
           }
         }
 
         if (mounted) {
+          debugPrint("⏳ [Login] Preparing Navigation...");
           String role = 'user';
           String? providerType;
 
@@ -182,7 +189,7 @@ class _FarahGlassLoginScreenState extends ConsumerState<FarahGlassLoginScreen> {
               Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (_) => const ProviderChoiceScreen()), (route) => false);
             }
           } else {
-            // ✅ التنقل الآمن للصفحة الرئيسية
+            debugPrint("🚀 [Login] Navigating to HallListScreen...");
             Navigator.pushAndRemoveUntil(
               context, 
               MaterialPageRoute(builder: (_) => const HallListScreen()), 
@@ -192,8 +199,10 @@ class _FarahGlassLoginScreenState extends ConsumerState<FarahGlassLoginScreen> {
         }
       }
     } catch (e) {
+      debugPrint("❌ [Login] Error: $e");
       setState(() => _error = _translateError(e.toString()));
     } finally {
+      debugPrint("🏁 [Login] Finally block reached.");
       if (mounted) setState(() => _loading = false);
     }
   }
