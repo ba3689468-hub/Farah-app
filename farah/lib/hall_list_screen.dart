@@ -9,7 +9,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'features/auth/presentation/screens/login_screen_farah.dart';
 import 'features/favorites_screen.dart';
-import 'features/explore_screen.dart'; // ✅ تم إرجاع الاستيراد
+import 'features/explore_screen.dart'; 
 import 'features/edit_profile_screen.dart';
 import 'features/wallet_screen.dart';
 import 'features/notifications_screen.dart';
@@ -135,14 +135,13 @@ class _HallListScreenState extends State<HallListScreen> {
           children: [
             _buildHome(),
             const FavoritesScreen(),
-            const CartScreen(), // ✅ السلة في التبويب
+            const CartScreen(), 
             const MyBookingsScreen(),
             const SimpleProfileScreen(), 
           ],
         ),
       ),
       
-      // الزر العائم للسلة (يظهر فقط في الرئيسية)
       floatingActionButton: _currentIndex == 0 
           ? Consumer(
               builder: (context, ref, child) {
@@ -195,7 +194,7 @@ class _HallListScreenState extends State<HallListScreen> {
         if (_isAdvancedFiltering)
           _buildFilteredHallsSection()
         else
-          SliverToBoxAdapter(child: _buildHallsSection()), // ✅ عرض القاعات فقط
+          SliverToBoxAdapter(child: _buildHallsSection()), 
         const SliverToBoxAdapter(child: SizedBox(height: 100)), 
       ],
     );
@@ -206,7 +205,6 @@ class _HallListScreenState extends State<HallListScreen> {
       padding: const EdgeInsets.fromLTRB(20, 12, 20, 8),
       child: Row(
         children: [
-          // ✅ أيقونة الاستكشاف الجديدة
           _iconButton(Icons.explore_outlined, () {
             Navigator.push(
               context,
@@ -1165,6 +1163,7 @@ class _HallListScreenState extends State<HallListScreen> {
     );
   }
 
+  // ✅ التعديل الجذري هنا: إضافة Expanded و Flexible لمنع خطأ الـ Overflow
   Widget _buildBottomNav() {
     final items = [
       {'icon': Icons.home_outlined, 'active': Icons.home, 'label': 'الرئيسية'},
@@ -1187,7 +1186,6 @@ class _HallListScreenState extends State<HallListScreen> {
           
           Widget iconWidget = Icon(active ? items[i]['active'] as IconData : items[i]['icon'] as IconData, color: active ? Colors.white : textLight, size: 20);
 
-          // ✅ إضافة شارة العدد للسلة
           if (isCart) {
             iconWidget = Consumer(
               builder: (context, ref, child) {
@@ -1212,24 +1210,39 @@ class _HallListScreenState extends State<HallListScreen> {
             );
           }
 
-          return GestureDetector(
-            onTap: () => setState(() => _currentIndex = i),
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 250),
-              padding: EdgeInsets.symmetric(horizontal: active ? 12 : 8, vertical: 8),
-              decoration: BoxDecoration(
-                gradient: active ? const LinearGradient(colors: [primary, primaryDark]) : null,
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  iconWidget,
-                  if (active) ...[
-                    const SizedBox(width: 5),
-                    Text(items[i]['label'] as String, style: const TextStyle(fontFamily: 'Tajawal', color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
-                  ],
-                ],
+          // ✅ التعديل: تغليف الزر بـ Expanded لمنع التمدد اللانهائي
+          return Expanded(
+            child: GestureDetector(
+              onTap: () => setState(() => _currentIndex = i),
+              behavior: HitTestBehavior.opaque,
+              child: Center(
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 250),
+                  padding: EdgeInsets.symmetric(horizontal: active ? 10 : 4, vertical: 8),
+                  decoration: BoxDecoration(
+                    gradient: active ? const LinearGradient(colors: [primary, primaryDark]) : null,
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      iconWidget,
+                      if (active) ...[
+                        const SizedBox(width: 4),
+                        // ✅ التعديل: تغليف النص بـ Flexible لمنع التمدد
+                        Flexible(
+                          child: Text(
+                            items[i]['label'] as String, 
+                            style: const TextStyle(fontFamily: 'Tajawal', color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
               ),
             ),
           );
