@@ -122,24 +122,21 @@ class _HallListScreenState extends State<HallListScreen> {
     super.dispose();
   }
 
-  // ✅ الحل الجذري: بناء الصفحة النشطة فقط بدلاً من بناء كل شيء في IndexedStack
-  Widget _buildActiveScreen() {
-    switch (_currentIndex) {
-      case 0: return _buildHome();
-      case 1: return const ExploreScreen();
-      case 2: return const FavoritesScreen();
-      case 3: return const MyBookingsScreen();
-      case 4: return const SimpleProfileScreen();
-      default: return _buildHome();
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
-        child: _buildActiveScreen(), // ✅ استخدام الدالة الجديدة
+        child: IndexedStack(
+          index: _currentIndex,
+          children: [
+            _buildHome(),
+            const ExploreScreen(), 
+            const FavoritesScreen(),
+            const MyBookingsScreen(),
+            const SimpleProfileScreen(), 
+          ],
+        ),
       ),
       bottomNavigationBar: _buildBottomNav(),
     );
@@ -1145,7 +1142,7 @@ class _HallListScreenState extends State<HallListScreen> {
               child: Center(
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 250),
-                  padding: EdgeInsets.symmetric(horizontal: active ? 10 : 4, vertical: 8),
+                  padding: EdgeInsets.symmetric(horizontal: active ? 12 : 8, vertical: 8),
                   decoration: BoxDecoration(
                     gradient: active ? const LinearGradient(colors: [primary, primaryDark]) : null,
                     borderRadius: BorderRadius.circular(20),
@@ -1156,7 +1153,7 @@ class _HallListScreenState extends State<HallListScreen> {
                     children: [
                       Icon(active ? items[i]['active'] as IconData : items[i]['icon'] as IconData, color: active ? Colors.white : textLight, size: 20),
                       if (active) ...[
-                        const SizedBox(width: 4),
+                        const SizedBox(width: 5),
                         Flexible(
                           child: Text(
                             items[i]['label'] as String, 
