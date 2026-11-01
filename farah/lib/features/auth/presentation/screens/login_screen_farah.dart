@@ -11,7 +11,6 @@ import 'register_screen.dart';
 import 'package:farah/features/provider_dashboard_screen.dart';
 import 'package:farah/features/provider_choice_screen.dart'; 
 import 'package:farah/features/store_dashboard_screen.dart'; 
-// ✅ تم تصحيح مسار الاستيراد هنا ليتطابق مع المجلد الصحيح
 import 'package:farah/core/services/biometric_auth_service.dart'; 
 
 class FarahGlassLoginScreen extends ConsumerStatefulWidget {
@@ -71,11 +70,12 @@ class _FarahGlassLoginScreenState extends ConsumerState<FarahGlassLoginScreen> {
     if (credentials != null) {
       _phoneCtrl.text = credentials['phone']!;
       _passCtrl.text = credentials['password']!;
-      await _login(); 
+      // ✅ نمرر true لكي لا تظهر نافذة "تفعيل البصمة" مرة أخرى
+      await _login(isBiometricLogin: true); 
     }
   }
 
-  Future<void> _login() async {
+  Future<void> _login({bool isBiometricLogin = false}) async {
     if (!_formKey.currentState!.validate()) return;
     FocusScope.of(context).unfocus();
     setState(() {
@@ -111,7 +111,8 @@ class _FarahGlassLoginScreenState extends ConsumerState<FarahGlassLoginScreen> {
           });
         }
 
-        if (_canUseBiometrics && !_hasSavedCredentials && mounted) {
+        // ✅ لا تظهر نافذة التفعيل إذا كان المستخدم يسجل الدخول بالبصمة أصلاً
+        if (_canUseBiometrics && !_hasSavedCredentials && !isBiometricLogin && mounted) {
           final enableBio = await showDialog<bool>(
             context: context,
             barrierDismissible: false,
@@ -136,7 +137,14 @@ class _FarahGlassLoginScreenState extends ConsumerState<FarahGlassLoginScreen> {
           );
 
           if (enableBio == true) {
-            await _bioService.enableBiometrics(phone, password);
+            // ✅ نضع عملية الحفظ في try-catch لكي لا يعلق التطبيق إذا فشلت البصمة
+            try {
+              await _bioService.enableBiometrics(phone, password);
+              if (mounted) setState(() => _hasSavedCredentials = true);
+            } catch (e) {
+              debugPrint('Error enabling biometrics: $e');
+              // نكمل عملية الدخول حتى لو فشل حفظ البصمة
+            }
           }
         }
 
@@ -174,7 +182,12 @@ class _FarahGlassLoginScreenState extends ConsumerState<FarahGlassLoginScreen> {
               Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (_) => const ProviderChoiceScreen()), (route) => false);
             }
           } else {
-            Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (_) => HallListScreen()), (route) => false);
+            // ✅ التنقل الآمن للصفحة الرئيسية
+            Navigator.pushAndRemoveUntil(
+              context, 
+              MaterialPageRoute(builder: (_) => const HallListScreen()), 
+              (route) => false
+            );
           }
         }
       }
@@ -382,7 +395,6 @@ class _FarahGlassLoginScreenState extends ConsumerState<FarahGlassLoginScreen> {
                   ],
                 ),
 
-                // ✅ زر الدخول كزائر (تم إزالة const من الأيقونة لحل الخطأ)
                 const SizedBox(height: 20),
                 TextButton.icon(
                   onPressed: () {
@@ -391,7 +403,7 @@ class _FarahGlassLoginScreenState extends ConsumerState<FarahGlassLoginScreen> {
                       MaterialPageRoute(builder: (_) => const HallListScreen()),
                     );
                   },
-                  icon: Icon(Icons.person_outline, color: textLight),
+                  icon: const Icon(Icons.person_outline, color: textLight),
                   label: const Text(
                     'الدخول كزائر (تصفح فقط)',
                     style: TextStyle(
