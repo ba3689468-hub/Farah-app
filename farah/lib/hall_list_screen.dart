@@ -8,7 +8,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 
 import 'features/auth/presentation/screens/login_screen_farah.dart';
 import 'features/favorites_screen.dart';
-import 'features/explore_screen.dart'; // ✅ تم إرجاع الاستكشاف
+import 'features/explore_screen.dart'; 
 import 'features/edit_profile_screen.dart';
 import 'features/wallet_screen.dart';
 import 'features/notifications_screen.dart';
@@ -122,21 +122,24 @@ class _HallListScreenState extends State<HallListScreen> {
     super.dispose();
   }
 
+  // ✅ الحل الجذري: بناء الصفحة النشطة فقط بدلاً من بناء كل شيء في IndexedStack
+  Widget _buildActiveScreen() {
+    switch (_currentIndex) {
+      case 0: return _buildHome();
+      case 1: return const ExploreScreen();
+      case 2: return const FavoritesScreen();
+      case 3: return const MyBookingsScreen();
+      case 4: return const SimpleProfileScreen();
+      default: return _buildHome();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
-        child: IndexedStack(
-          index: _currentIndex,
-          children: [
-            _buildHome(),
-            const ExploreScreen(), // ✅ الاستكشاف عاد هنا
-            const FavoritesScreen(),
-            const MyBookingsScreen(),
-            const SimpleProfileScreen(), 
-          ],
-        ),
+        child: _buildActiveScreen(), // ✅ استخدام الدالة الجديدة
       ),
       bottomNavigationBar: _buildBottomNav(),
     );
@@ -165,7 +168,6 @@ class _HallListScreenState extends State<HallListScreen> {
       padding: const EdgeInsets.fromLTRB(20, 12, 20, 8),
       child: Row(
         children: [
-          // ✅ تمت إزالة أيقونة الاستكشاف من هنا لأنها عادت للشريط السفلي
           _iconButton(Icons.account_balance_wallet_outlined, () {
             Navigator.push(context, MaterialPageRoute(builder: (_) => const WalletScreen()));
           }),
@@ -1117,7 +1119,6 @@ class _HallListScreenState extends State<HallListScreen> {
     );
   }
 
-  // ✅ الشريط السفلي (5 أزرار) مع Expanded للحماية من الشاشة الحمراء
   Widget _buildBottomNav() {
     final items = [
       {'icon': Icons.home_outlined, 'active': Icons.home, 'label': 'الرئيسية'},
