@@ -130,14 +130,15 @@ class _HallListScreenState extends State<HallListScreen> {
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
+        // ✅ تعديل جذري: تأمين IndexedStack لاحتواء أي شاشة بداخله
         child: IndexedStack(
           index: _currentIndex,
           children: [
-            _buildHome(),
-            const FavoritesScreen(),
-            const CartScreen(), 
-            const MyBookingsScreen(),
-            const SimpleProfileScreen(), 
+            SizedBox.expand(child: _buildHome()),
+            SizedBox.expand(child: const FavoritesScreen()),
+            SizedBox.expand(child: const CartScreen()), 
+            SizedBox.expand(child: const MyBookingsScreen()),
+            SizedBox.expand(child: const SimpleProfileScreen()), 
           ],
         ),
       ),
@@ -1163,7 +1164,6 @@ class _HallListScreenState extends State<HallListScreen> {
     );
   }
 
-  // ✅ التعديل الجذري هنا: إضافة Expanded و Flexible لمنع خطأ الـ Overflow
   Widget _buildBottomNav() {
     final items = [
       {'icon': Icons.home_outlined, 'active': Icons.home, 'label': 'الرئيسية'},
@@ -1210,7 +1210,6 @@ class _HallListScreenState extends State<HallListScreen> {
             );
           }
 
-          // ✅ التعديل: تغليف الزر بـ Expanded لمنع التمدد اللانهائي
           return Expanded(
             child: GestureDetector(
               onTap: () => setState(() => _currentIndex = i),
@@ -1230,7 +1229,6 @@ class _HallListScreenState extends State<HallListScreen> {
                       iconWidget,
                       if (active) ...[
                         const SizedBox(width: 4),
-                        // ✅ التعديل: تغليف النص بـ Flexible لمنع التمدد
                         Flexible(
                           child: Text(
                             items[i]['label'] as String, 
@@ -1317,7 +1315,7 @@ class _SimpleProfileScreenState extends State<SimpleProfileScreen> {
             ),
             const SizedBox(height: 10),
             const Text(
-              'سجل دخولك أو أنشئ حساباً للوصول إلى\nحجوزاتك، محفظتك، ومفضلتك.',
+              'سجل دخولك أو أنشئ حساباً للوصول إلى\nحجوزاتك، محفظتك، ومفضلك.',
               textAlign: TextAlign.center,
               style: TextStyle(fontFamily: 'Tajawal', color: textLight, fontSize: 14, height: 1.5),
             ),
