@@ -86,7 +86,7 @@ class _StoresListScreenState extends ConsumerState<StoresListScreen> {
         builder: (context, snapshot) {
           final docs = snapshot.data?.docs ?? [];
           final all = docs
-              .map((d) => {
+              .map((d) => <String, dynamic>{
                     ...(d.data() as Map<String, dynamic>),
                     '_id': d.id,
                   })
@@ -363,7 +363,8 @@ class _StoresListScreenState extends ConsumerState<StoresListScreen> {
       );
     }
 
-    var stores = all.where((s) => _matchesCategory(s, _selectedCategory)).toList();
+    var stores =
+        all.where((s) => _matchesCategory(s, _selectedCategory)).toList();
 
     if (_query.isNotEmpty) {
       stores = stores.where((s) {
@@ -381,7 +382,8 @@ class _StoresListScreenState extends ConsumerState<StoresListScreen> {
         icon: _query.isNotEmpty
             ? Icons.search_off_rounded
             : Icons.storefront_outlined,
-        title: _query.isNotEmpty ? 'لا توجد نتائج' : 'لا توجد متاجر في هذا القسم',
+        title:
+            _query.isNotEmpty ? 'لا توجد نتائج' : 'لا توجد متاجر في هذا القسم',
         subtitle: _query.isNotEmpty
             ? 'جرّب كلمة بحث مختلفة'
             : 'جرّب قسماً آخر أو عد لاحقاً',
@@ -504,7 +506,8 @@ class _StoresListScreenState extends ConsumerState<StoresListScreen> {
   }
 
   // ───────────── بطاقة المتجر ─────────────
-  Widget _buildStoreCard(Map<String, dynamic> store, String storeId, int index) {
+  Widget _buildStoreCard(
+      Map<String, dynamic> store, String storeId, int index) {
     final name = (store['name'] ?? 'متجر').toString();
     final type = (store['type'] ?? '').toString();
     final location = (store['location'] ?? store['city'] ?? '').toString();
@@ -512,7 +515,6 @@ class _StoresListScreenState extends ConsumerState<StoresListScreen> {
     final image = store['image'] ?? store['logo'] ?? store['coverImage'];
     final hasImage = image != null && image.toString().isNotEmpty;
 
-    // بيانات المتجر الأصلية كما كانت تُمرَّر (بدون الحقل المساعد)
     final storeData = Map<String, dynamic>.from(store)..remove('_id');
 
     return GestureDetector(
@@ -544,7 +546,6 @@ class _StoresListScreenState extends ConsumerState<StoresListScreen> {
           borderRadius: BorderRadius.circular(24),
           child: Row(
             children: [
-              // الصورة / الغلاف
               SizedBox(
                 width: 130,
                 height: double.infinity,
@@ -594,7 +595,6 @@ class _StoresListScreenState extends ConsumerState<StoresListScreen> {
                   ],
                 ),
               ),
-              // التفاصيل
               Expanded(
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(14, 14, 16, 14),
@@ -624,3 +624,115 @@ class _StoresListScreenState extends ConsumerState<StoresListScreen> {
                         ),
                       const SizedBox(height: 8),
                       Text(
+                        name,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontFamily: 'Tajawal',
+                          color: textDark,
+                          fontSize: 18,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      if (location.isNotEmpty)
+                        Row(
+                          children: [
+                            const Icon(Icons.location_on_outlined,
+                                color: textLight, size: 15),
+                            const SizedBox(width: 4),
+                            Expanded(
+                              child: Text(
+                                location,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  fontFamily: 'Tajawal',
+                                  color: textLight,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      const Spacer(),
+                      Align(
+                        alignment: AlignmentDirectional.centerEnd,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 14, vertical: 6),
+                          decoration: BoxDecoration(
+                            gradient: const LinearGradient(
+                                colors: [primary, primaryDark]),
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                          child: const Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                'زيارة المتجر',
+                                style: TextStyle(
+                                  fontFamily: 'Tajawal',
+                                  color: Colors.white,
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              SizedBox(width: 4),
+                              Icon(Icons.arrow_back_ios_new_rounded,
+                                  color: Colors.white, size: 11),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    )
+        .animate()
+        .fadeIn(
+          duration: 450.ms,
+          delay: (60 * (index > 6 ? 6 : index)).ms,
+        )
+        .slideY(begin: 0.08, end: 0, curve: Curves.easeOut);
+  }
+
+  Widget _coverFallback(String type) {
+    IconData icon = Icons.storefront_rounded;
+    _categoryIcons.forEach((key, value) {
+      if (key != 'الكل' &&
+          type.isNotEmpty &&
+          (type.contains(key) || key.contains(type))) {
+        icon = value;
+      }
+    });
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            primary.withValues(alpha: 0.15),
+            primaryDark.withValues(alpha: 0.25),
+          ],
+          begin: Alignment.topRight,
+          end: Alignment.bottomLeft,
+        ),
+      ),
+      child: Center(
+        child: Container(
+          width: 64,
+          height: 64,
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.85),
+            shape: BoxShape.circle,
+          ),
+          child: Icon(icon, color: primary, size: 32),
+        ),
+      ),
+    );
+  }
+}
