@@ -55,7 +55,7 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
 
   Future<Map<String, dynamic>> _fetchProviderData() async {
     final uid = FirebaseAuth.instance.currentUser?.uid;
-    if (uid == null) throw 'no user';
+    if (uid == null) throw 'يجب تسجيل الدخول';
 
     // 1. جلب القاعات
     List<QueryDocumentSnapshot<Map<String, dynamic>>> halls = [];
@@ -85,24 +85,23 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
       }
     }
 
-    // ✅ 3. تسجيل الحجوزات المنتهية تلقائياً
+    // 3. تحديث الحجوزات المنتهية تلقائياً
     for (var booking in allBookings) {
       final data = booking.data();
       final status = data['status'] ?? '';
       final eventDate = data['eventDate'] is Timestamp ? (data['eventDate'] as Timestamp).toDate() : null;
 
-      // إذا كان الحجز مؤكداً ومر تاريخ المناسبة، نعتبره مكتملاً
       if (status == 'confirmed' && eventDate != null && eventDate.isBefore(DateTime.now())) {
         try {
           await booking.reference.update({'status': 'completed'});
-          data['status'] = 'completed'; // تحديث الحالة في الذاكرة للعرض الفوري
+          data['status'] = 'completed'; 
         } catch (e) {
-          // تجاهل الخطأ إذا فشل التحديث
+          debugPrint('Error auto-completing booking: $e');
         }
       }
     }
 
-    // 4. جلب أسماء الزبائن
+    // 4. جلب أسماء الزبائن (بدون try-catch تلفيقي، لأن القواعد أصبحت تسمح)
     final userIds = <String>{};
     for (final b in allBookings) {
       final u = (b.data()['userId'] ?? '') as String;
@@ -110,12 +109,13 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
         userIds.add(u);
       }
     }
+    
     final Map<String, String> userMap = {};
     for (final u in userIds) {
       final doc = await FirebaseFirestore.instance.collection('users').doc(u).get();
       if (doc.exists) {
         final data = doc.data() as Map<String, dynamic>?;
-        userMap[u] = data?['fullName'] ?? 'مستخدم';
+        userMap[u] = data?['fullName'] ?? 'زبون';
       }
     }
 
@@ -162,7 +162,7 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
         if (snap.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator(color: primary));
         }
-        if (snap.hasError) return _buildError();
+        if (snap.hasError) return _buildError(snap.error.toString());
 
         final data = snap.data!;
         final bookings = data['bookings'] as List<QueryDocumentSnapshot<Map<String, dynamic>>>;
@@ -279,7 +279,7 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
         if (snap.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator(color: primary));
         }
-        if (snap.hasError) return _buildError();
+        if (snap.hasError) return _buildError(snap.error.toString());
 
         final data = snap.data!;
         final halls = data['halls'] as List<QueryDocumentSnapshot<Map<String, dynamic>>>;
@@ -319,7 +319,7 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
         if (snap.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator(color: primary));
         }
-        if (snap.hasError) return _buildError();
+        if (snap.hasError) return _buildError(snap.error.toString());
 
         final data = snap.data!;
         final bookings = data['bookings'] as List<QueryDocumentSnapshot<Map<String, dynamic>>>;
@@ -524,7 +524,6 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
         ],
       ),
       child: Row(
-        // ✅ تم إزالة textDirection: TextDirection.rtl لأن التطبيق RTL افتراضياً
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: List.generate(items.length, (i) {
           final active = i == _currentTab;
@@ -1418,21 +1417,26 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
     );
   }
 
-  Widget _buildError() {
+  Widget _buildError(String errorMsg) {
     return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const Icon(Icons.error_outline, size: 60, color: Colors.redAccent),
-          const SizedBox(height: 16),
-          const Text('تعذر تحميل بيانات المزود', style: TextStyle(fontFamily: 'Tajawal', color: textDark, fontSize: 14)),
-          const SizedBox(height: 16),
-          ElevatedButton(
-            onPressed: _loadData,
-            style: ElevatedButton.styleFrom(backgroundColor: primary, foregroundColor: Colors.white),
-            child: const Text('حاول مرة أخرى', style: TextStyle(fontFamily: 'Tajawal')),
-          ),
-        ],
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.error_outline, size: 60, color: Colors.redAccent),
+            const SizedBox(height: 16),
+            const Text('تعذر تحميل بيانات المزود', style: TextStyle(fontFamily: 'Tajawal', color: textDark, fontSize: 16, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 8),
+            Text(errorMsg, textAlign: TextAlign.center, style: const TextStyle(fontFamily: 'Tajawal', color: textLight, fontSize: 12)),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: _loadData,
+              style: ElevatedButton.styleFrom(backgroundColor: primary, foregroundColor: Colors.white),
+              child: const Text('حاول مرة أخرى', style: TextStyle(fontFamily: 'Tajawal')),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -1548,8 +1552,6 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen> {
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: Column(
                   children: [
-                    // ❌ تم إزالة زر المحفظة بالكامل من هنا
-                    
                     _menuItem(Icons.notifications_outlined, 'الإشعارات', 'تخصيص التنبيهات', () {
                       Navigator.push(context, MaterialPageRoute(builder: (_) => const NotificationsScreen()));
                     }),
@@ -1656,7 +1658,10 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen> {
                 ],
               ),
             ),
-            const Icon(Icons.arrow_back_ios, color: textLight, size: 12),
+            const Directionality(
+              textDirection: TextDirection.ltr,
+              child: Icon(Icons.arrow_forward_ios, color: textLight, size: 12),
+            ),
           ],
         ),
       ),
