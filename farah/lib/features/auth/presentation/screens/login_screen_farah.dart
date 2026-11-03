@@ -31,7 +31,6 @@ class _FarahGlassLoginScreenState extends ConsumerState<FarahGlassLoginScreen> {
   bool _loading = false;
   String? _error;
 
-  // تم إبقاء الخدمة ولكننا لن نستخدمها الآن
   final BiometricAuthService _bioService = BiometricAuthService();
   bool _canUseBiometrics = false;
   bool _hasSavedCredentials = false;
@@ -45,11 +44,9 @@ class _FarahGlassLoginScreenState extends ConsumerState<FarahGlassLoginScreen> {
   @override
   void initState() {
     super.initState();
-    // ✅ تم تعطيل فحص البصمة مؤقتاً لتسريع الفتح ومنع أي تعليق
-    // _checkBiometrics(); 
+    _checkBiometrics(); // ✅ إعادة تفعيل فحص البصمة عند فتح الشاشة
   }
 
-  /* 
   Future<void> _checkBiometrics() async {
     final available = await _bioService.isBiometricAvailable();
     final hasSaved = await _bioService.hasSavedCredentials();
@@ -60,7 +57,6 @@ class _FarahGlassLoginScreenState extends ConsumerState<FarahGlassLoginScreen> {
       });
     }
   }
-  */
 
   @override
   void dispose() {
@@ -70,7 +66,12 @@ class _FarahGlassLoginScreenState extends ConsumerState<FarahGlassLoginScreen> {
   }
 
   Future<void> _loginWithBiometrics() async {
-    // معطل مؤقتاً
+    final credentials = await _bioService.loginWithBiometrics();
+    if (credentials != null) {
+      _phoneCtrl.text = credentials['phone']!;
+      _passCtrl.text = credentials['password']!;
+      await _login(isBiometricLogin: true); 
+    }
   }
 
   Future<void> _login({bool isBiometricLogin = false}) async {
@@ -109,16 +110,6 @@ class _FarahGlassLoginScreenState extends ConsumerState<FarahGlassLoginScreen> {
           });
         }
 
-        // ✅ تم تعطيل نافذة البصمة تماماً هنا
-        /*
-        bool shouldEnableBio = false;
-
-        if (_canUseBiometrics && !_hasSavedCredentials && !isBiometricLogin && mounted) {
-          final enableBio = await showDialog<bool>(...);
-          if (enableBio == true) shouldEnableBio = true; 
-        }
-        */
-
         if (mounted) {
           String role = 'user';
           String? providerType;
@@ -153,16 +144,8 @@ class _FarahGlassLoginScreenState extends ConsumerState<FarahGlassLoginScreen> {
               Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (_) => const ProviderChoiceScreen()), (route) => false);
             }
           } else {
-            // ✅ التنقل للصفحة الرئيسية
             Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (_) => const HallListScreen()), (route) => false);
           }
-
-          // ✅ تم تعطيل حفظ البصمة في الخلفية
-          /*
-          if (shouldEnableBio) {
-            _bioService.enableBiometrics(phone, password);
-          }
-          */
         }
       }
     } catch (e) {
@@ -337,8 +320,7 @@ class _FarahGlassLoginScreenState extends ConsumerState<FarahGlassLoginScreen> {
                   ),
                 ),
 
-                // ✅ تم إخفاء زر البصمة تماماً من الواجهة
-                /*
+                // ✅ إعادة زر البصمة للظهور
                 if (_canUseBiometrics && _hasSavedCredentials) ...[
                   const SizedBox(height: 16),
                   GestureDetector(
@@ -354,7 +336,6 @@ class _FarahGlassLoginScreenState extends ConsumerState<FarahGlassLoginScreen> {
                     ),
                   ),
                 ],
-                */
 
                 const SizedBox(height: 18),
 
@@ -375,10 +356,9 @@ class _FarahGlassLoginScreenState extends ConsumerState<FarahGlassLoginScreen> {
                 const SizedBox(height: 20),
                 TextButton.icon(
                   onPressed: () {
-                    // ✅ استخدام pushAndRemoveUntil للدخول كزائر لضمان عدم التعليق
-                    Navigator.of(context).pushAndRemoveUntil(
+                    Navigator.pushReplacement(
+                      context,
                       MaterialPageRoute(builder: (_) => const HallListScreen()),
-                      (route) => false,
                     );
                   },
                   icon: const Icon(Icons.person_outline, color: textLight),
