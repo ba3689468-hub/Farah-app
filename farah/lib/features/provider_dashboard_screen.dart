@@ -1,5 +1,5 @@
 import 'dart:async';
-import 'dart:ui' as ui; // ✅ تمت إضافة هذا السطر لحل مشكلة TextDirection
+import 'dart:ui' as ui; // ✅ لحل مشكلة TextDirection
 import 'package:farah/core/constants/app_colors.dart';
 import 'package:farah/core/utils/notification_helper.dart';
 import 'package:flutter/material.dart';
@@ -880,4 +880,792 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
                     width: isCompact ? 60 : 70,
                     height: isCompact ? 60 : 70,
                     child: (image != null && image.toString().isNotEmpty)
-                        ? Image.network(image.toString(), fit
+                        ? Image.network(image.toString(), fit: BoxFit.cover,
+                            errorBuilder: (_, __, ___) => Container(
+                              color: primary.withValues(alpha: 0.15),
+                              child: Icon(isManual ? Icons.bookmark : Icons.celebration, color: primary, size: 30),
+                            ))
+                        : Container(color: primary.withValues(alpha: 0.15),
+                            child: Icon(isManual ? Icons.bookmark : Icons.celebration, color: primary, size: 30)),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Text(hallName, style: const TextStyle(fontFamily: 'Tajawal', color: textDark, fontSize: 15, fontWeight: FontWeight.bold), maxLines: 1, overflow: TextOverflow.ellipsis),
+                      const SizedBox(height: 4),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          if (isManual) ...[
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                              decoration: BoxDecoration(color: Colors.blue.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(6)),
+                              child: const Text('يدوي', style: TextStyle(fontFamily: 'Tajawal', color: Colors.blue, fontSize: 9, fontWeight: FontWeight.bold)),
+                            ),
+                            const SizedBox(width: 6),
+                          ],
+                          Flexible(child: Text(customerName, style: const TextStyle(fontFamily: 'Tajawal', color: textLight, fontSize: 12), maxLines: 1, overflow: TextOverflow.ellipsis)),
+                          const SizedBox(width: 4),
+                          const Icon(Icons.person_outline, color: textLight, size: 13),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                        decoration: BoxDecoration(color: statusColor.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(10)),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(statusLabel, style: TextStyle(fontFamily: 'Tajawal', color: statusColor, fontSize: 11, fontWeight: FontWeight.bold)),
+                            const SizedBox(width: 4),
+                            Icon(statusIcon, color: statusColor, size: 12),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          
+          if (showCountdown)
+            Container(
+              margin: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(color: Colors.orange.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(12)),
+              child: Row(
+                children: [
+                  const Icon(Icons.timer_outlined, color: Colors.orange, size: 18),
+                  const SizedBox(width: 8),
+                  const Text('يجب أن يحضر العميل خلال:', style: TextStyle(fontFamily: 'Tajawal', color: textDark, fontSize: 11)),
+                  const Spacer(),
+                  Text(remainingTime, style: const TextStyle(fontFamily: 'Tajawal', color: Colors.orange, fontSize: 12, fontWeight: FontWeight.bold)),
+                ],
+              ),
+            ),
+
+          if (!isCompact) ...[
+            Container(height: 1, color: Colors.black.withValues(alpha: 0.05)),
+            Padding(
+              padding: const EdgeInsets.all(14),
+              child: Column(
+                children: [
+                  Row(
+                    children: [
+                      Expanded(child: _infoItem(Icons.calendar_today_outlined, 'التاريخ', dateStr)),
+                      Expanded(child: _infoItem(Icons.people_outline, 'الضيوف', '$guests ضيف')),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(6),
+                              decoration: BoxDecoration(color: eventColor.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(8)),
+                              child: Icon(eventIcon, color: eventColor, size: 14),
+                            ),
+                            const SizedBox(width: 6),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text('المناسبة', style: TextStyle(fontFamily: 'Tajawal', color: textLight, fontSize: 9)),
+                                  Text(eventType, style: const TextStyle(fontFamily: 'Tajawal', color: textDark, fontSize: 12, fontWeight: FontWeight.bold), maxLines: 1, overflow: TextOverflow.ellipsis),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Expanded(child: _infoItem(Icons.access_time, 'الفترة', timeSlot.isNotEmpty ? timeSlot : '-')),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  if (!isManual)
+                    Row(
+                      children: [
+                        Expanded(child: _infoItem(Icons.attach_money, 'الإجمالي', '$total د.ل')),
+                        Expanded(child: _infoItem(Icons.payments_outlined, 'صافي ربحك', '$net د.ل')),
+                      ],
+                    ),
+                  if (!isManual) ...[
+                    if (status == 'pending' && !isActuallyWaiting) _buildNewBookingActions(docId),
+                    if (isActuallyWaiting) _buildCheckInActions(docId),
+                    if (status == 'confirmed') _buildCompleteAction(docId, eventDate),
+                  ] else ...[
+                    Padding(
+                      padding: const EdgeInsets.only(top: 16),
+                      child: GestureDetector(
+                        onTap: () => _deleteManualBooking(docId),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(vertical: 10),
+                          decoration: BoxDecoration(
+                            color: Colors.red.withValues(alpha: 0.08),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: Colors.redAccent.withValues(alpha: 0.3)),
+                          ),
+                          child: const Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.delete_outline, color: Colors.redAccent, size: 16),
+                              SizedBox(width: 6),
+                              Text('حذف الحجز اليدوي', style: TextStyle(fontFamily: 'Tajawal', color: Colors.redAccent, fontSize: 12, fontWeight: FontWeight.bold)),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ] else if (isActuallyWaiting || (status == 'pending' && !isManual)) ...[
+             Padding(
+               padding: const EdgeInsets.fromLTRB(14, 0, 14, 14),
+               child: GestureDetector(
+                 onTap: () => setState(() => _currentTab = 2),
+                 child: Container(
+                   width: double.infinity,
+                   padding: const EdgeInsets.symmetric(vertical: 8),
+                   decoration: BoxDecoration(color: primary.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(10)),
+                   child: const Center(child: Text('إدارة الحجز', style: TextStyle(fontFamily: 'Tajawal', color: primary, fontSize: 12, fontWeight: FontWeight.bold))),
+                 ),
+               ),
+             )
+          ]
+        ],
+      ),
+    );
+  }
+
+  Widget _buildNewBookingActions(String docId) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 16),
+      child: Row(
+        children: [
+          Expanded(
+            child: GestureDetector(
+              onTap: () => _updateBookingStatus(docId, 'cancelled'),
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                decoration: BoxDecoration(
+                  color: Colors.red.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.redAccent.withValues(alpha: 0.3)),
+                ),
+                child: const Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.close, color: Colors.redAccent, size: 16),
+                    SizedBox(width: 6),
+                    Text('رفض', style: TextStyle(fontFamily: 'Tajawal', color: Colors.redAccent, fontSize: 13, fontWeight: FontWeight.bold)),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: GestureDetector(
+              onTap: () => _updateBookingStatus(docId, 'confirmed'),
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                decoration: BoxDecoration(
+                  color: Colors.green.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.green.withValues(alpha: 0.4)),
+                ),
+                child: const Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.check, color: Colors.green, size: 16),
+                    SizedBox(width: 6),
+                    Text('قبول', style: TextStyle(fontFamily: 'Tajawal', color: Colors.green, fontSize: 13, fontWeight: FontWeight.bold)),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCheckInActions(String docId) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 16),
+      child: Row(
+        children: [
+          Expanded(
+            child: GestureDetector(
+              onTap: () => _updateBookingStatus(docId, 'cancelled'),
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                decoration: BoxDecoration(
+                  color: Colors.red.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.redAccent.withValues(alpha: 0.3)),
+                ),
+                child: const Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.close, color: Colors.redAccent, size: 16),
+                    SizedBox(width: 6),
+                    Text('رفض', style: TextStyle(fontFamily: 'Tajawal', color: Colors.redAccent, fontSize: 12, fontWeight: FontWeight.bold)),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            flex: 2,
+            child: GestureDetector(
+              onTap: () => _confirmAttendance(docId),
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(colors: [Colors.green, Color(0xFF2E7D32)]),
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [BoxShadow(color: Colors.green.withValues(alpha: 0.3), blurRadius: 10, offset: const Offset(0, 4))],
+                ),
+                child: const Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.login, color: Colors.white, size: 18),
+                    SizedBox(width: 6),
+                    Text('تأكيد الحضور', style: TextStyle(fontFamily: 'Tajawal', color: Colors.white, fontSize: 13, fontWeight: FontWeight.bold)),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCompleteAction(String docId, DateTime? eventDate) {
+    final bool isEventPassed = eventDate != null && eventDate.isBefore(DateTime.now());
+
+    return Padding(
+      padding: const EdgeInsets.only(top: 16),
+      child: GestureDetector(
+        onTap: isEventPassed ? () => _updateBookingStatus(docId, 'completed') : null,
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          decoration: BoxDecoration(
+            color: isEventPassed ? Colors.blue.withValues(alpha: 0.1) : Colors.grey.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: isEventPassed ? Colors.blue.withValues(alpha: 0.4) : Colors.grey.withValues(alpha: 0.3)),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.done_all, color: isEventPassed ? Colors.blue : Colors.grey, size: 16),
+              const SizedBox(width: 6),
+              Text(isEventPassed ? 'إتمام الحجز' : 'انتظر انتهاء المناسبة',
+                  style: TextStyle(fontFamily: 'Tajawal', color: isEventPassed ? Colors.blue : Colors.grey, fontSize: 13, fontWeight: FontWeight.bold)),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _confirmAttendance(String docId) async {
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        backgroundColor: Colors.white,
+        title: const Row(
+          children: [
+            Icon(Icons.login, color: Colors.green, size: 26),
+            SizedBox(width: 10),
+            Text('تأكيد الحضور', style: TextStyle(fontFamily: 'Tajawal', color: textDark, fontSize: 18)),
+          ],
+        ),
+        content: const Text(
+          'هل وصل العميل إلى القاعة وقام بدفع العربون؟\n\n'
+          'بالضغط على "تأكيد"، ستصبح الحالة "مؤكد" ويتم إغلاق الحجز رسمياً.',
+          style: TextStyle(fontFamily: 'Tajawal', color: textDark, fontSize: 14, height: 1.6),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('لم يصل بعد', style: TextStyle(fontFamily: 'Tajawal', color: Colors.grey))),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.green, foregroundColor: Colors.white, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('نعم، وصل', style: TextStyle(fontFamily: 'Tajawal')),
+          ),
+        ],
+      ),
+    );
+    if (ok != true) return;
+
+    try {
+      await FirebaseFirestore.instance.collection('bookings').doc(docId).update({
+        'status': 'confirmed',
+        'confirmedAt': FieldValue.serverTimestamp(),
+      });
+
+      try {
+        final bookingDoc = await FirebaseFirestore.instance.collection('bookings').doc(docId).get();
+        final bookingData = bookingDoc.data() ?? {};
+        final customerId = bookingData['userId'] ?? '';
+        final hallName = bookingData['hallName'] ?? 'قاعة';
+
+        if (customerId.toString().isNotEmpty && !customerId.toString().startsWith('manual_') && !customerId.toString().startsWith('external_')) {
+          await NotificationHelper.notifyCustomerConfirmed(customerId: customerId.toString(), hallName: hallName.toString(), bookingId: docId);
+        }
+      } catch (_) {}
+
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('✅ تم تأكيد الحضور بنجاح', style: TextStyle(fontFamily: 'Tajawal')), backgroundColor: Colors.green));
+      _loadData();
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('خطأ: $e', style: TextStyle(fontFamily: 'Tajawal')), backgroundColor: Colors.redAccent));
+    }
+  }
+
+  Widget _infoItem(IconData icon, String label, String value) {
+    return Row(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(6),
+          decoration: BoxDecoration(color: primary.withValues(alpha: 0.08), borderRadius: BorderRadius.circular(8)),
+          child: Icon(icon, color: primary, size: 14),
+        ),
+        const SizedBox(width: 6),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(label, style: const TextStyle(fontFamily: 'Tajawal', color: textLight, fontSize: 9)),
+              Text(value, style: const TextStyle(fontFamily: 'Tajawal', color: textDark, fontSize: 12, fontWeight: FontWeight.bold), maxLines: 1, overflow: TextOverflow.ellipsis),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Future<void> _updateBookingStatus(String docId, String newStatus) async {
+    final isConfirm = newStatus == 'confirmed';
+    final isComplete = newStatus == 'completed';
+    final isCancel = newStatus == 'cancelled';
+
+    String title = '';
+    String message = '';
+    if (isConfirm) { title = 'تأكيد الحجز'; message = 'هل تريد تأكيد هذا الحجز؟'; }
+    else if (isComplete) { title = 'إتمام الحجز'; message = 'هل انتهت المناسبة وتم إتمام الحجز بنجاح؟'; }
+    else if (isCancel) { title = 'رفض الحجز'; message = 'هل تريد رفض هذا الحجز؟'; }
+
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        backgroundColor: Colors.white,
+        title: Text(title, textAlign: TextAlign.right, style: const TextStyle(fontFamily: 'Tajawal', color: textDark)),
+        content: Text(message, textAlign: TextAlign.right, style: const TextStyle(fontFamily: 'Tajawal')),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('لا', style: TextStyle(fontFamily: 'Tajawal'))),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: isComplete ? Colors.blue : (isConfirm ? Colors.green : Colors.redAccent), foregroundColor: Colors.white),
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('نعم', style: TextStyle(fontFamily: 'Tajawal')),
+          ),
+        ],
+      ),
+    );
+    if (ok != true) return;
+
+    try {
+      await FirebaseFirestore.instance.collection('bookings').doc(docId).update({'status': newStatus});
+
+      try {
+        final bookingDoc = await FirebaseFirestore.instance.collection('bookings').doc(docId).get();
+        final bookingData = bookingDoc.data() ?? {};
+        final customerId = bookingData['userId'] ?? '';
+        final hallName = bookingData['hallName'] ?? 'قاعة';
+
+        if (customerId.toString().isNotEmpty && !customerId.toString().startsWith('manual_') && !customerId.toString().startsWith('external_')) {
+          if (isConfirm) {
+            await NotificationHelper.notifyCustomerConfirmed(customerId: customerId.toString(), hallName: hallName.toString(), bookingId: docId);
+          } else if (isCancel) {
+            await NotificationHelper.notifyCustomerCancelled(customerId: customerId.toString(), hallName: hallName.toString(), bookingId: docId, isByProvider: true);
+          }
+        }
+      } catch (_) {}
+
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(isConfirm ? '✅ تم تأكيد الحجز' : (isComplete ? '✅ تم إتمام الحجز' : '✅ تم رفض الحجز'), style: const TextStyle(fontFamily: 'Tajawal')), backgroundColor: Colors.green),
+      );
+      _loadData();
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('خطأ: $e', style: const TextStyle(fontFamily: 'Tajawal')), backgroundColor: Colors.redAccent));
+    }
+  }
+
+  Future<void> _deleteManualBooking(String docId) async {
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        backgroundColor: Colors.white,
+        title: const Text('حذف الحجز اليدوي', textAlign: TextAlign.right, style: TextStyle(fontFamily: 'Tajawal', color: textDark)),
+        content: const Text('هل أنت متأكد من حذف هذا الحجز اليدوي؟\n\nسيتم فتح التاريخ مرة أخرى للحجز عبر التطبيق.', textAlign: TextAlign.right, style: TextStyle(fontFamily: 'Tajawal')),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('إلغاء', style: TextStyle(fontFamily: 'Tajawal'))),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent, foregroundColor: Colors.white),
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('نعم، حذف', style: TextStyle(fontFamily: 'Tajawal')),
+          ),
+        ],
+      ),
+    );
+    if (ok != true) return;
+
+    try {
+      await FirebaseFirestore.instance.collection('bookings').doc(docId).delete();
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('✅ تم حذف الحجز اليدوي', style: TextStyle(fontFamily: 'Tajawal')), backgroundColor: Colors.green));
+      _loadData();
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('خطأ: $e', style: TextStyle(fontFamily: 'Tajawal')), backgroundColor: Colors.redAccent));
+    }
+  }
+
+  Future<void> _deleteHall(String hallId, String hallName) async {
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        backgroundColor: Colors.white,
+        title: const Text('حذف القاعة', textAlign: TextAlign.right, style: TextStyle(fontFamily: 'Tajawal', color: textDark)),
+        content: Text('هل أنت متأكد من حذف "$hallName"؟\nلا يمكن التراجع عن هذا الإجراء.', textAlign: TextAlign.right, style: TextStyle(fontFamily: 'Tajawal')),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('إلغاء', style: TextStyle(fontFamily: 'Tajawal'))),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent, foregroundColor: Colors.white),
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('نعم، حذف', style: TextStyle(fontFamily: 'Tajawal')),
+          ),
+        ],
+      ),
+    );
+    if (ok != true) return;
+
+    try {
+      await FirebaseFirestore.instance.collection('halls').doc(hallId).delete();
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('✅ تم حذف القاعة', style: TextStyle(fontFamily: 'Tajawal')), backgroundColor: Colors.green));
+      _loadData();
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('خطأ: $e', style: TextStyle(fontFamily: 'Tajawal')), backgroundColor: Colors.redAccent));
+    }
+  }
+
+  Widget _buildNoHalls() {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(30),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(color: primary.withValues(alpha: 0.08), shape: BoxShape.circle),
+              child: const Icon(Icons.storefront_outlined, size: 70, color: primary),
+            ),
+            const SizedBox(height: 20),
+            const Text('لا توجد قاعات مسجلة', style: TextStyle(fontFamily: 'Tajawal', color: textDark, fontSize: 18, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 8),
+            const Text('أضف قاعتك الأولى من الزر أعلاه', style: TextStyle(fontFamily: 'Tajawal', color: textLight, fontSize: 13)),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildEmptyBookings() {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(30),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.event_busy_outlined, size: 70, color: primary.withValues(alpha: 0.3)),
+            const SizedBox(height: 14),
+            const Text('لا توجد حجوزات', style: TextStyle(fontFamily: 'Tajawal', color: textDark, fontSize: 15, fontWeight: FontWeight.bold)),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildError(String errorMsg) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.error_outline, size: 60, color: Colors.redAccent),
+            const SizedBox(height: 16),
+            const Text('تعذر تحميل بيانات المزود', style: TextStyle(fontFamily: 'Tajawal', color: textDark, fontSize: 16, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 8),
+            Text(errorMsg, textAlign: TextAlign.center, style: const TextStyle(fontFamily: 'Tajawal', color: textLight, fontSize: 12)),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: _loadData,
+              style: ElevatedButton.styleFrom(backgroundColor: primary, foregroundColor: Colors.white),
+              child: const Text('حاول مرة أخرى', style: TextStyle(fontFamily: 'Tajawal')),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Map<String, dynamic> _statusInfo(String status) {
+    switch (status) {
+      case 'confirmed': return {'label': 'مؤكد', 'color': Colors.green, 'icon': Icons.check_circle};
+      case 'completed': return {'label': 'مكتمل', 'color': Colors.blue, 'icon': Icons.done_all};
+      case 'cancelled': return {'label': 'ملغى', 'color': Colors.redAccent, 'icon': Icons.cancel};
+      case 'expired': return {'label': 'منتهي', 'color': Colors.grey, 'icon': Icons.timer_off};
+      case 'pending_attendance': return {'label': 'بانتظار الحضور', 'color': Colors.deepOrange, 'icon': Icons.event_available};
+      default: return {'label': 'قيد الانتظار', 'color': Colors.orange, 'icon': Icons.access_time};
+    }
+  }
+}
+
+// ═══════════════════════════════════════════════
+// شاشة حسابي الخاصة بالمزود
+// ═══════════════════════════════════════════════
+class ProviderProfileScreen extends StatefulWidget {
+  const ProviderProfileScreen({super.key});
+  @override
+  State<ProviderProfileScreen> createState() => _ProviderProfileScreenState();
+}
+
+class _ProviderProfileScreenState extends State<ProviderProfileScreen> {
+  static const Color primary = AppColors.primary;
+  static const Color primaryDark = AppColors.primaryDark;
+  static const Color textDark = AppColors.textPrimary;
+  static const Color textLight = AppColors.textSecondary;
+
+  late Future<DocumentSnapshot> _userFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    _userFuture = uid == null ? Future.error('no user') : FirebaseFirestore.instance.collection('users').doc(uid).get();
+  }
+
+  Future<void> _logout() async {
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        backgroundColor: Colors.white,
+        title: const Text('تسجيل الخروج', textAlign: TextAlign.right, style: TextStyle(fontFamily: 'Tajawal', color: textDark)),
+        content: const Text('هل أنت متأكد؟', textAlign: TextAlign.right, style: TextStyle(fontFamily: 'Tajawal')),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('إلغاء', style: TextStyle(fontFamily: 'Tajawal'))),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: primary, foregroundColor: Colors.white),
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('خروج', style: TextStyle(fontFamily: 'Tajawal')),
+          ),
+        ],
+      ),
+    );
+    if (ok != true) return;
+    await FirebaseAuth.instance.signOut();
+    if (!mounted) return;
+    Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (_) => const FarahGlassLoginScreen()), (route) => false);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<DocumentSnapshot>(
+      future: _userFuture,
+      builder: (context, snap) {
+        if (snap.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator(color: primary));
+        }
+        if (!snap.hasData || !snap.data!.exists) {
+          return const Center(child: Text('تعذر تحميل البيانات', style: TextStyle(fontFamily: 'Tajawal')));
+        }
+        final user = snap.data!.data() as Map<String, dynamic>;
+        final name = user['fullName'] ?? 'مزود';
+        final phone = user['phone'] ?? '';
+
+        return SingleChildScrollView(
+          child: Column(
+            children: [
+              const SizedBox(height: 16),
+              Container(
+                width: 90, height: 90,
+                decoration: const BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: LinearGradient(colors: [primary, primaryDark]),
+                ),
+                child: const Icon(Icons.storefront, size: 45, color: Colors.white),
+              ),
+              const SizedBox(height: 12),
+              Text(name, style: const TextStyle(fontFamily: 'Tajawal', color: textDark, fontSize: 20, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+                decoration: BoxDecoration(gradient: const LinearGradient(colors: [primary, primaryDark]), borderRadius: BorderRadius.circular(20)),
+                child: const Text('مزود خدمة', style: TextStyle(fontFamily: 'Tajawal', color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold)),
+              ),
+              const SizedBox(height: 20),
+              
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),
+                  child: _infoRow(Icons.phone_outlined, 'رقم الهاتف', phone.isEmpty ? 'غير محدد' : phone),
+                ),
+              ),
+              const SizedBox(height: 16),
+              
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Column(
+                  children: [
+                    _menuItem(Icons.notifications_outlined, 'الإشعارات', 'تخصيص التنبيهات', () {
+                      Navigator.push(context, MaterialPageRoute(builder: (_) => const NotificationsScreen()));
+                    }),
+                    const SizedBox(height: 8),
+                    
+                    _menuItem(Icons.edit_outlined, 'تعديل الملف الشخصي', 'الاسم وكلمة المرور', () async {
+                      final result = await Navigator.push(context, MaterialPageRoute(builder: (_) => const EditProfileScreen()));
+                      if (result == true && mounted) {
+                        setState(() {
+                          _userFuture = FirebaseFirestore.instance.collection('users').doc(FirebaseAuth.instance.currentUser?.uid).get();
+                        });
+                      }
+                    }),
+                    const SizedBox(height: 8),
+                    
+                    _menuItem(Icons.settings_outlined, 'الإعدادات', 'اللغة والمظهر والخصوصية', () {}),
+                    const SizedBox(height: 8),
+                    
+                    _menuItem(Icons.help_outline, 'المساعدة والدعم', 'تواصل معنا', () {}),
+                    const SizedBox(height: 8),
+                    
+                    _menuItem(Icons.info_outline, 'عن التطبيق', 'فرح — الإصدار 1.0.0', () {}),
+                  ],
+                ),
+              ),
+              
+              const SizedBox(height: 20),
+              
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: GestureDetector(
+                  onTap: _logout,
+                  child: Container(
+                    width: double.infinity, height: 48, 
+                    decoration: BoxDecoration(
+                      color: Colors.red.withValues(alpha: 0.08),
+                      borderRadius: BorderRadius.circular(24),
+                      border: Border.all(color: Colors.redAccent.withValues(alpha: 0.4), width: 1.2),
+                    ),
+                    child: const Center(
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.logout, color: Colors.redAccent, size: 18),
+                          SizedBox(width: 8),
+                          Text('تسجيل الخروج', style: TextStyle(fontFamily: 'Tajawal', color: Colors.redAccent, fontSize: 13, fontWeight: FontWeight.bold)),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 30),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _infoRow(IconData icon, String label, String value) {
+    return Row(
+      children: [
+        Container(width: 38, height: 38,
+            decoration: BoxDecoration(gradient: const LinearGradient(colors: [primary, primaryDark]), borderRadius: BorderRadius.circular(10)),
+            child: Icon(icon, color: Colors.white, size: 18)),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(label, style: const TextStyle(fontFamily: 'Tajawal', color: textLight, fontSize: 10)),
+              const SizedBox(height: 2),
+              Text(value, style: const TextStyle(fontFamily: 'Tajawal', color: textDark, fontSize: 13, fontWeight: FontWeight.w600), overflow: TextOverflow.ellipsis),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _menuItem(IconData icon, String title, String subtitle, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),
+        child: Row(
+          children: [
+            Container(width: 38, height: 38,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(colors: [primary.withValues(alpha: 0.9), primaryDark], begin: Alignment.topLeft, end: Alignment.bottomRight),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(icon, color: Colors.white, size: 18)),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(title, style: const TextStyle(fontFamily: 'Tajawal', color: textDark, fontSize: 14, fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 2),
+                  Text(subtitle, style: const TextStyle(fontFamily: 'Tajawal', color: textLight, fontSize: 10), maxLines: 1, overflow: TextOverflow.ellipsis),
+                ],
+              ),
+            ),
+            const Directionality(
+              textDirection: ui.TextDirection.ltr, // ✅ تم إصلاح هذا السطر
+              child: Icon(Icons.arrow_forward_ios, color: textLight, size: 12),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
