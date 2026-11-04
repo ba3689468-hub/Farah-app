@@ -1,100 +1,126 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../constants/app_colors.dart';
 
-// زوايا دائرية كبيرة، ظلال ناعمة، ألوان باستيل: Claymorphism
+/// الثيم الوحيد للتطبيق. الألوان من AppColors، والخط Tajawal فقط.
 class AppTheme {
   AppTheme._();
 
-  static ThemeData get lightTheme {
-    final textTheme = GoogleFonts.tajawalTextTheme().apply(
-      bodyColor: AppColors.textPrimary,
-      displayColor: AppColors.textPrimary,
-    );
+  static const String font = 'Tajawal';
 
+  static ThemeData get lightTheme {
     return ThemeData(
       useMaterial3: true,
       brightness: Brightness.light,
+      fontFamily: font,
       primaryColor: AppColors.primary,
-      
-      // ==========================================
-      // 1. تغيير لون الخلفية لجميع الشاشات
-      // ==========================================
-      // يمكنك تغيير اللون (0xFFF9F9F9) إلى أي لون تريده (مثلاً Colors.white)
-      scaffoldBackgroundColor: const Color(0xFFF9F9F9), 
-
-      colorScheme: const ColorScheme.light(
+      scaffoldBackgroundColor: AppColors.background,
+      colorScheme: ColorScheme.fromSeed(
+        seedColor: AppColors.primary,
+        brightness: Brightness.light,
+      ).copyWith(
         primary: AppColors.primary,
         secondary: AppColors.primaryDark,
         surface: AppColors.card,
         error: AppColors.error,
       ),
-      textTheme: textTheme,
-      
-      // ==========================================
-      // 2. إزالة التوهج من الشريط العلوي (AppBar)
-      // ==========================================
-      appBarTheme: AppBarTheme(
-        backgroundColor: const Color(0xFFF9F9F9), // نفس لون الخلفية
+
+      // الشريط العلوي: أبيض نظيف بنص داكن
+      appBarTheme: const AppBarTheme(
+        backgroundColor: Colors.white,
         foregroundColor: AppColors.textPrimary,
-        elevation: 0, // <--- إزالة الظل
+        elevation: 0,
+        scrolledUnderElevation: 0,
         centerTitle: true,
-        titleTextStyle: GoogleFonts.cairo(
+        titleTextStyle: TextStyle(
+          fontFamily: font,
           fontSize: 20,
-          fontWeight: FontWeight.bold,
+          fontWeight: FontWeight.w800,
           color: AppColors.textPrimary,
         ),
       ),
-      
-      // ==========================================
-      // 3. إزالة التوهج من الأزرار (Buttons)
-      // ==========================================
+
+      // الأزرار
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           backgroundColor: AppColors.primary,
           foregroundColor: Colors.white,
-          elevation: 0, // <--- إزالة الظل
-          minimumSize: const Size(double.infinity, 56),
+          elevation: 0,
+          padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 14),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(26),
+            borderRadius: BorderRadius.circular(24),
           ),
-          textStyle: GoogleFonts.cairo(
-            fontSize: 18,
+          textStyle: const TextStyle(
+            fontFamily: font,
+            fontSize: 15,
             fontWeight: FontWeight.bold,
           ),
         ),
       ),
-      
-      // ==========================================
-      // 4. إزالة التوهج من البطاقات (Cards)
-      // ==========================================
-      cardTheme: CardThemeData(
-        elevation: 0, // <--- إزالة الظل
-        color: AppColors.card,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-          // إضافة حدود خفيفة جداً بدلاً من الظل لتعطي شكلاً مرتباً
-          side: BorderSide(color: Colors.black.withOpacity(0.05), width: 1),
+      textButtonTheme: TextButtonThemeData(
+        style: TextButton.styleFrom(
+          foregroundColor: AppColors.primary,
+          textStyle: const TextStyle(
+            fontFamily: font,
+            fontWeight: FontWeight.bold,
+          ),
         ),
       ),
-      
-      // ==========================================
-      // 5. إزالة التوهج من حقول الإدخال (Text Fields)
-      // ==========================================
+
+      // البطاقات
+      cardTheme: CardThemeData(
+        elevation: 0,
+        color: Colors.white,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(24),
+          side: BorderSide(
+              color: AppColors.primary.withValues(alpha: 0.08), width: 1),
+        ),
+      ),
+
+      // حقول الإدخال
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: Colors.white,
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+        hintStyle: const TextStyle(
+          fontFamily: font,
+          color: AppColors.textSecondary,
+          fontSize: 14,
+        ),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(20),
-          borderSide: BorderSide.none,
+          borderRadius: BorderRadius.circular(18),
+          borderSide:
+              BorderSide(color: AppColors.primary.withValues(alpha: 0.15)),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(20),
-          borderSide: BorderSide.none,
+          borderRadius: BorderRadius.circular(18),
+          borderSide:
+              BorderSide(color: AppColors.primary.withValues(alpha: 0.15)),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(20),
-          borderSide: BorderSide(color: AppColors.primary.withOpacity(0.5), width: 1),
+          borderRadius: BorderRadius.circular(18),
+          borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
+        ),
+      ),
+
+      // النوافذ والقوائم السفلية
+      dialogTheme: DialogThemeData(
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(24),
+        ),
+      ),
+      bottomSheetTheme: const BottomSheetThemeData(
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+      ),
+      snackBarTheme: SnackBarThemeData(
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
         ),
       ),
     );
