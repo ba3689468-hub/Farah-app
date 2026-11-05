@@ -44,7 +44,7 @@ class _FarahGlassLoginScreenState extends ConsumerState<FarahGlassLoginScreen> {
   @override
   void initState() {
     super.initState();
-    _checkBiometrics(); // ✅ إعادة تفعيل فحص البصمة عند فتح الشاشة
+    _checkBiometrics();
   }
 
   Future<void> _checkBiometrics() async {
@@ -68,6 +68,7 @@ class _FarahGlassLoginScreenState extends ConsumerState<FarahGlassLoginScreen> {
   Future<void> _loginWithBiometrics() async {
     final credentials = await _bioService.loginWithBiometrics();
     if (credentials != null) {
+      // استخدام الرقم المحفوظ
       _phoneCtrl.text = credentials['phone']!;
       _passCtrl.text = credentials['password']!;
       await _login(isBiometricLogin: true); 
@@ -84,8 +85,11 @@ class _FarahGlassLoginScreenState extends ConsumerState<FarahGlassLoginScreen> {
 
     try {
       final phone = _phoneCtrl.text.trim();
-      final fakeEmail = '$phone@farah.app';
       final password = _passCtrl.text.trim();
+
+      // ✅ الحل الجذري: تنظيف الرقم من رمز الدولة والأصفار لضمان تطابق البريد
+      final cleanPhone = phone.replaceAll('+218', '').replaceAll(RegExp(r'^0+'), '');
+      final fakeEmail = '$cleanPhone@farah.app';
 
       final repo = ref.read(authRepositoryProvider);
       await repo.signIn(fakeEmail, password);
@@ -320,7 +324,6 @@ class _FarahGlassLoginScreenState extends ConsumerState<FarahGlassLoginScreen> {
                   ),
                 ),
 
-                // ✅ إعادة زر البصمة للظهور
                 if (_canUseBiometrics && _hasSavedCredentials) ...[
                   const SizedBox(height: 16),
                   GestureDetector(
