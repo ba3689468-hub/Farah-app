@@ -4,11 +4,11 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter_animate/flutter_animate.dart'; 
 
 import 'features/auth/presentation/screens/login_screen_farah.dart';
 import 'features/favorites_screen.dart';
-import 'features/explore_screen.dart';
+import 'features/explore_screen.dart'; 
 import 'features/edit_profile_screen.dart';
 import 'features/wallet_screen.dart';
 import 'features/notifications_screen.dart';
@@ -17,7 +17,6 @@ import 'hall_details_screen.dart';
 import 'my_bookings_screen.dart';
 import 'features/stores_list_screen.dart';
 import 'core/widgets/shimmer_loading.dart';
-import 'core/services/biometric_auth_service.dart';
 
 class HallListScreen extends StatefulWidget {
   const HallListScreen({super.key});
@@ -132,10 +131,10 @@ class _HallListScreenState extends State<HallListScreen> {
           index: _currentIndex,
           children: [
             _buildHome(),
-            const ExploreScreen(),
+            const ExploreScreen(), 
             const FavoritesScreen(),
             const MyBookingsScreen(),
-            const SimpleProfileScreen(),
+            const SimpleProfileScreen(), 
           ],
         ),
       ),
@@ -148,6 +147,10 @@ class _HallListScreenState extends State<HallListScreen> {
       slivers: [
         SliverToBoxAdapter(child: _buildHeader()),
         SliverToBoxAdapter(child: _buildAdvancedSearchBar()),
+        
+        // ✅ تم إضافة البانر الجديد هنا
+        SliverToBoxAdapter(child: _buildNewBanner()),
+        
         if (_isAdvancedFiltering) SliverToBoxAdapter(child: _buildActiveFiltersBanner()),
         if (!_isAdvancedFiltering) SliverToBoxAdapter(child: _buildHeroBannersCarousel()),
         if (!_isAdvancedFiltering) SliverToBoxAdapter(child: _buildCategoryIcons()),
@@ -155,9 +158,61 @@ class _HallListScreenState extends State<HallListScreen> {
         if (_isAdvancedFiltering)
           _buildFilteredHallsSection()
         else
-          SliverToBoxAdapter(child: _buildHallsSection()),
-        const SliverToBoxAdapter(child: SizedBox(height: 30)),
+          SliverToBoxAdapter(child: _buildHallsSection()), 
+        const SliverToBoxAdapter(child: SizedBox(height: 30)), 
       ],
+    );
+  }
+
+  // ✅ دالة عرض البانر الجديد
+  Widget _buildNewBanner() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 8, 20, 8),
+      child: GestureDetector(
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const ExploreScreen()),
+          );
+        },
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(24),
+          child: Container(
+            height: 180, 
+            width: double.infinity,
+            decoration: BoxDecoration(
+              boxShadow: [
+                BoxShadow(
+                  color: primary.withValues(alpha: 0.2),
+                  blurRadius: 15,
+                  offset: const Offset(0, 8),
+                ),
+              ],
+            ),
+            child: Image.asset(
+              'assets/icons/Digen_image_1793993130303.jpg', // ✅ اسم الصورة الصحيح
+              fit: BoxFit.cover, 
+              errorBuilder: (context, error, stackTrace) {
+                return Container(
+                  decoration: const BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topRight, 
+                      end: Alignment.bottomLeft, 
+                      colors: [primary, primaryDark]
+                    ),
+                  ),
+                  child: const Center(
+                    child: Text(
+                      'ليلة العمر تبدأ من هنا',
+                      style: TextStyle(fontFamily: 'Tajawal', color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+        ),
+      ),
     );
   }
 
@@ -605,7 +660,7 @@ class _HallListScreenState extends State<HallListScreen> {
         if (snap.connectionState == ConnectionState.waiting) {
           return const SliverToBoxAdapter(
             child: SizedBox(
-              height: 400,
+              height: 400, 
               child: ShimmerLoading(),
             ),
           );
@@ -745,7 +800,7 @@ class _HallListScreenState extends State<HallListScreen> {
           itemBuilder: (context, i) {
             final cat = _categoriesList[i];
             final color = cat['color'] as Color;
-
+            
             return GestureDetector(
               onTap: () {
                 String filterType = 'الكل';
@@ -819,7 +874,7 @@ class _HallListScreenState extends State<HallListScreen> {
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const SizedBox(
-            height: 400,
+            height: 400, 
             child: ShimmerLoading(),
           );
         }
@@ -1203,7 +1258,7 @@ class _HallListScreenState extends State<HallListScreen> {
 }
 
 // ═══════════════════════════════════════════════
-// شاشة الملف الشخصي (مع الدخول بالبصمة)
+// شاشة الملف الشخصي المبسطة
 // ═══════════════════════════════════════════════
 class SimpleProfileScreen extends StatefulWidget {
   const SimpleProfileScreen({super.key});
@@ -1219,77 +1274,13 @@ class _SimpleProfileScreenState extends State<SimpleProfileScreen> {
 
   late Future<DocumentSnapshot> _userFuture;
 
-  final BiometricAuthService _bio = BiometricAuthService();
-  bool _bioSupported = false;
-  bool _bioEnabled = false;
-  bool _bioBusy = false;
-
   @override
   void initState() {
     super.initState();
     final uid = FirebaseAuth.instance.currentUser?.uid;
-    _userFuture = uid == null
-        ? Future.error('no user')
+    _userFuture = uid == null 
+        ? Future.error('no user') 
         : FirebaseFirestore.instance.collection('users').doc(uid).get();
-    _loadBiometricState();
-  }
-
-  Future<void> _loadBiometricState() async {
-    final supported = await _bio.isBiometricAvailable();
-    final enabled = await _bio.hasSavedCredentials();
-    if (!mounted) return;
-    setState(() {
-      _bioSupported = supported;
-      _bioEnabled = enabled;
-    });
-  }
-
-  void _snack(String msg, {Color? color}) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(msg, style: const TextStyle(fontFamily: 'Tajawal')),
-        backgroundColor: color,
-      ),
-    );
-  }
-
-  Future<void> _toggleBiometric(bool value, String phone) async {
-    if (_bioBusy) return;
-
-    if (!value) {
-      setState(() => _bioBusy = true);
-      await _bio.disableBiometrics();
-      if (!mounted) return;
-      setState(() {
-        _bioEnabled = false;
-        _bioBusy = false;
-      });
-      _snack('تم إيقاف الدخول بالبصمة');
-      return;
-    }
-
-    if (phone.isEmpty) {
-      _snack('رقم الهاتف غير متوفر في حسابك', color: Colors.orange);
-      return;
-    }
-
-    final password = await showDialog<String>(
-      context: context,
-      builder: (_) => const _PasswordDialog(),
-    );
-    if (password == null || password.isEmpty) return;
-
-    setState(() => _bioBusy = true);
-    final ok = await _bio.enableBiometrics(phone, password);
-    if (!mounted) return;
-    setState(() {
-      _bioEnabled = ok;
-      _bioBusy = false;
-    });
-    _snack(
-      ok ? 'تم تفعيل الدخول بالبصمة ✅' : 'تعذر تفعيل البصمة، حاول مجدداً',
-      color: ok ? Colors.green : Colors.red,
-    );
   }
 
   Future<void> _logout() async {
@@ -1298,33 +1289,22 @@ class _SimpleProfileScreenState extends State<SimpleProfileScreen> {
       builder: (_) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
         backgroundColor: Colors.white,
-        title: const Text('تسجيل الخروج',
-            textAlign: TextAlign.right,
-            style: TextStyle(fontFamily: 'Tajawal', color: textDark)),
-        content: const Text('هل أنت متأكد؟',
-            textAlign: TextAlign.right,
-            style: TextStyle(fontFamily: 'Tajawal')),
+        title: const Text('تسجيل الخروج', textAlign: TextAlign.right, style: TextStyle(fontFamily: 'Tajawal', color: textDark)),
+        content: const Text('هل أنت متأكد؟', textAlign: TextAlign.right, style: TextStyle(fontFamily: 'Tajawal')),
         actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(context, false),
-              child:
-                  const Text('إلغاء', style: TextStyle(fontFamily: 'Tajawal'))),
+          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('إلغاء', style: TextStyle(fontFamily: 'Tajawal'))),
           ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                  backgroundColor: primary, foregroundColor: Colors.white),
-              onPressed: () => Navigator.pop(context, true),
-              child: const Text('خروج',
-                  style: TextStyle(fontFamily: 'Tajawal'))),
+            style: ElevatedButton.styleFrom(backgroundColor: primary, foregroundColor: Colors.white),
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('خروج', style: TextStyle(fontFamily: 'Tajawal')),
+          ),
         ],
       ),
     );
     if (ok != true) return;
     await FirebaseAuth.instance.signOut();
     if (!mounted) return;
-    Navigator.pushAndRemoveUntil(
-        context,
-        MaterialPageRoute(builder: (_) => const FarahGlassLoginScreen()),
-        (route) => false);
+    Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (_) => const FarahGlassLoginScreen()), (route) => false);
   }
 
   @override
@@ -1375,12 +1355,8 @@ class _SimpleProfileScreenState extends State<SimpleProfileScreen> {
         if (snap.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator(color: primary));
         }
-        if (!snap.hasData || !snap.data!.exists) {
-          return const Center(
-              child: Text('تعذر تحميل البيانات',
-                  style: TextStyle(fontFamily: 'Tajawal')));
-        }
-
+        if (!snap.hasData || !snap.data!.exists) return const Center(child: Text('تعذر تحميل البيانات', style: TextStyle(fontFamily: 'Tajawal')));
+        
         final user = snap.data!.data() as Map<String, dynamic>;
         final name = user['fullName'] ?? 'مستخدم';
         final phone = user['phone'] ?? '';
@@ -1392,166 +1368,86 @@ class _SimpleProfileScreenState extends State<SimpleProfileScreen> {
             children: [
               const SizedBox(height: 16),
               Container(
-                width: 90,
-                height: 90,
-                decoration: const BoxDecoration(
-                    shape: BoxShape.circle,
-                    gradient:
-                        LinearGradient(colors: [primary, primaryDark])),
-                child: Icon(isProvider ? Icons.storefront : Icons.person,
-                    size: 45, color: Colors.white),
+                width: 90, height: 90,
+                decoration: const BoxDecoration(shape: BoxShape.circle, gradient: LinearGradient(colors: [primary, primaryDark])),
+                child: Icon(isProvider ? Icons.storefront : Icons.person, size: 45, color: Colors.white),
               ),
               const SizedBox(height: 12),
-              Text(name,
-                  style: const TextStyle(
-                      fontFamily: 'Tajawal',
-                      color: textDark,
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold)),
+              Text(name, style: const TextStyle(fontFamily: 'Tajawal', color: textDark, fontSize: 20, fontWeight: FontWeight.bold)),
               const SizedBox(height: 8),
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
-                decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                        colors: [primary, primaryDark]),
-                    borderRadius: BorderRadius.circular(20)),
-                child: Text(isProvider ? 'مزوّد خدمة' : 'زبون',
-                    style: const TextStyle(
-                        fontFamily: 'Tajawal',
-                        color: Colors.white,
-                        fontSize: 11,
-                        fontWeight: FontWeight.bold)),
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+                decoration: BoxDecoration(gradient: const LinearGradient(colors: [primary, primaryDark]), borderRadius: BorderRadius.circular(20)),
+                child: Text(isProvider ? 'مزوّد خدمة' : 'زبون', style: const TextStyle(fontFamily: 'Tajawal', color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold)),
               ),
               const SizedBox(height: 20),
-
+              
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: Container(
                   padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(16)),
-                  child: _infoRow(
-                      Icons.phone_outlined, 'رقم الهاتف', phone.isEmpty ? 'غير محدد' : phone),
+                  decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),
+                  child: _infoRow(Icons.phone_outlined, 'رقم الهاتف', phone.isEmpty ? 'غير محدد' : phone),
                 ),
               ),
               const SizedBox(height: 16),
-
+              
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: Column(
                   children: [
                     if (isProvider) ...[
-                      _menuItem(
-                          Icons.dashboard_outlined, 'لوحة المزود', 'إدارة حجوزاتك وأرباحك',
-                          () {
-                        Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (_) =>
-                                    const ProviderDashboardScreen()));
+                      _menuItem(Icons.dashboard_outlined, 'لوحة المزود', 'إدارة حجوزاتك وأرباحك', () {
+                        Navigator.push(context, MaterialPageRoute(builder: (_) => const ProviderDashboardScreen()));
                       }),
                       const SizedBox(height: 8),
                     ],
-                    _menuItem(Icons.calendar_month, 'حجوزاتي',
-                        'سجل حجوزاتك السابقة والقادمة', () {}),
+                    _menuItem(Icons.calendar_month, 'حجوزاتي', 'سجل حجوزاتك السابقة والقادمة', () {}),
                     const SizedBox(height: 8),
-                    _menuItem(Icons.account_balance_wallet, 'محفظتي',
-                        'رصيدك وطرق الدفع', () {
-                      Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (_) => const WalletScreen()));
+                    _menuItem(Icons.account_balance_wallet, 'محفظتي', 'رصيدك وطرق الدفع', () {
+                      Navigator.push(context, MaterialPageRoute(builder: (_) => const WalletScreen()));
                     }),
                     const SizedBox(height: 8),
-                    _menuItem(Icons.notifications_outlined, 'الإشعارات',
-                        'تخصيص التنبيهات', () {
-                      Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (_) => const NotificationsScreen()));
+                    _menuItem(Icons.notifications_outlined, 'الإشعارات', 'تخصيص التنبيهات', () {
+                      Navigator.push(context, MaterialPageRoute(builder: (_) => const NotificationsScreen()));
                     }),
                     const SizedBox(height: 8),
-                    _menuItem(Icons.edit_outlined, 'تعديل الملف الشخصي',
-                        'الاسم وكلمة المرور', () async {
-                      final result = await Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (_) => const EditProfileScreen()));
+                    _menuItem(Icons.edit_outlined, 'تعديل الملف الشخصي', 'الاسم وكلمة المرور', () async {
+                      final result = await Navigator.push(context, MaterialPageRoute(builder: (_) => const EditProfileScreen()));
                       if (result == true && mounted) {
                         setState(() {
-                          _userFuture = FirebaseFirestore.instance
-                              .collection('users')
-                              .doc(FirebaseAuth.instance.currentUser?.uid)
-                              .get();
+                          _userFuture = FirebaseFirestore.instance.collection('users').doc(FirebaseAuth.instance.currentUser?.uid).get();
                         });
                       }
                     }),
                     const SizedBox(height: 8),
-                    _menuItem(Icons.settings_outlined, 'الإعدادات',
-                        'اللغة والمظهر والخصوصية', () {}),
+                    _menuItem(Icons.settings_outlined, 'الإعدادات', 'اللغة والمظهر والخصوصية', () {}),
                     const SizedBox(height: 8),
-                    _menuItem(Icons.help_outline, 'المساعدة والدعم',
-                        'تواصل معنا', () {}),
-                    const SizedBox(height: 8),
-                    // ✅ إضافة مفتاح البصمة
-                    if (_bioSupported)
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        child: SwitchListTile(
-                          title: const Text('الدخول بالبصمة', style: TextStyle(fontFamily: 'Tajawal', color: textDark, fontSize: 14, fontWeight: FontWeight.bold)),
-                          subtitle: const Text('تسجيل الدخول السريع', style: TextStyle(fontFamily: 'Tajawal', color: textLight, fontSize: 10)),
-                          activeColor: primary,
-                          value: _bioEnabled,
-                          onChanged: _bioBusy ? null : (val) => _toggleBiometric(val, phone),
-                          secondary: Container(
-                            width: 38, height: 38,
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(colors: [primary.withValues(alpha: 0.9), primaryDark], begin: Alignment.topLeft, end: Alignment.bottomRight),
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: const Icon(Icons.fingerprint, color: Colors.white, size: 18),
-                          ),
-                        ),
-                      ),
+                    _menuItem(Icons.help_outline, 'المساعدة والدعم', 'تواصل معنا', () {}),
                   ],
                 ),
               ),
-
-              const SizedBox(height: 100),
-
+              
+              const SizedBox(height: 100), 
+              
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: GestureDetector(
                   onTap: _logout,
                   child: Container(
-                    width: double.infinity,
-                    height: 48,
+                    width: double.infinity, height: 48, 
                     decoration: BoxDecoration(
                       color: Colors.red.withValues(alpha: 0.08),
                       borderRadius: BorderRadius.circular(24),
-                      border: Border.all(
-                          color: Colors.redAccent.withValues(alpha: 0.4),
-                          width: 1.2),
+                      border: Border.all(color: Colors.redAccent.withValues(alpha: 0.4), width: 1.2),
                     ),
                     child: const Center(
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(Icons.logout,
-                              color: Colors.redAccent, size: 18),
+                          Icon(Icons.logout, color: Colors.redAccent, size: 18),
                           SizedBox(width: 8),
-                          Text('تسجيل الخروج',
-                              style: TextStyle(
-                                  fontFamily: 'Tajawal',
-                                  color: Colors.redAccent,
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.bold)),
+                          Text('تسجيل الخروج', style: TextStyle(fontFamily: 'Tajawal', color: Colors.redAccent, fontSize: 13, fontWeight: FontWeight.bold)),
                         ],
                       ),
                     ),
@@ -1569,32 +1465,17 @@ class _SimpleProfileScreenState extends State<SimpleProfileScreen> {
   Widget _infoRow(IconData icon, String label, String value) {
     return Row(
       children: [
-        Container(
-            width: 38,
-            height: 38,
-            decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                    colors: [primary, primaryDark]),
-                borderRadius: BorderRadius.circular(10)),
+        Container(width: 38, height: 38,
+            decoration: BoxDecoration(gradient: const LinearGradient(colors: [primary, primaryDark]), borderRadius: BorderRadius.circular(10)),
             child: Icon(icon, color: Colors.white, size: 18)),
         const SizedBox(width: 12),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(label,
-                  style: const TextStyle(
-                      fontFamily: 'Tajawal',
-                      color: textLight,
-                      fontSize: 10)),
+              Text(label, style: const TextStyle(fontFamily: 'Tajawal', color: textLight, fontSize: 10)),
               const SizedBox(height: 2),
-              Text(value,
-                  style: const TextStyle(
-                      fontFamily: 'Tajawal',
-                      color: textDark,
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600),
-                  overflow: TextOverflow.ellipsis),
+              Text(value, style: const TextStyle(fontFamily: 'Tajawal', color: textDark, fontSize: 13, fontWeight: FontWeight.w600), overflow: TextOverflow.ellipsis),
             ],
           ),
         ),
@@ -1607,18 +1488,12 @@ class _SimpleProfileScreenState extends State<SimpleProfileScreen> {
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-        decoration: BoxDecoration(
-            color: Colors.white, borderRadius: BorderRadius.circular(16)),
+        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),
         child: Row(
           children: [
-            Container(
-                width: 38,
-                height: 38,
+            Container(width: 38, height: 38,
                 decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                      colors: [primary.withValues(alpha: 0.9), primaryDark],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight),
+                  gradient: LinearGradient(colors: [primary.withValues(alpha: 0.9), primaryDark], begin: Alignment.topLeft, end: Alignment.bottomRight),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Icon(icon, color: Colors.white, size: 18)),
@@ -1627,20 +1502,9 @@ class _SimpleProfileScreenState extends State<SimpleProfileScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(title,
-                      style: const TextStyle(
-                          fontFamily: 'Tajawal',
-                          color: textDark,
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold)),
+                  Text(title, style: const TextStyle(fontFamily: 'Tajawal', color: textDark, fontSize: 14, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 2),
-                  Text(subtitle,
-                      style: const TextStyle(
-                          fontFamily: 'Tajawal',
-                          color: textLight,
-                          fontSize: 10),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis),
+                  Text(subtitle, style: const TextStyle(fontFamily: 'Tajawal', color: textLight, fontSize: 10), maxLines: 1, overflow: TextOverflow.ellipsis),
                 ],
               ),
             ),
@@ -1651,54 +1515,6 @@ class _SimpleProfileScreenState extends State<SimpleProfileScreen> {
           ],
         ),
       ),
-    );
-  }
-}
-
-class _PasswordDialog extends StatefulWidget {
-  const _PasswordDialog();
-
-  @override
-  State<_PasswordDialog> createState() => _PasswordDialogState();
-}
-
-class _PasswordDialogState extends State<_PasswordDialog> {
-  final _ctrl = TextEditingController();
-  bool _obscure = true;
-
-  @override
-  void dispose() {
-    _ctrl.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AlertDialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-      title: const Text('تأكيد كلمة المرور', style: TextStyle(fontFamily: 'Tajawal')),
-      content: TextField(
-        controller: _ctrl,
-        obscureText: _obscure,
-        decoration: InputDecoration(
-          hintText: 'كلمة المرور',
-          hintStyle: const TextStyle(fontFamily: 'Tajawal'),
-          suffixIcon: IconButton(
-            icon: Icon(_obscure ? Icons.visibility_outlined : Icons.visibility_off_outlined),
-            onPressed: () => setState(() => _obscure = !_obscure),
-          ),
-        ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: const Text('إلغاء', style: TextStyle(fontFamily: 'Tajawal')),
-        ),
-        ElevatedButton(
-          onPressed: () => Navigator.pop(context, _ctrl.text.trim()),
-          child: const Text('حفظ', style: TextStyle(fontFamily: 'Tajawal')),
-        ),
-      ],
     );
   }
 }
