@@ -148,11 +148,11 @@ class _HallListScreenState extends State<HallListScreen> {
         SliverToBoxAdapter(child: _buildHeader()),
         SliverToBoxAdapter(child: _buildAdvancedSearchBar()),
         
-        // ✅ تم إضافة البانر الجديد هنا
-        SliverToBoxAdapter(child: _buildNewBanner()),
-        
         if (_isAdvancedFiltering) SliverToBoxAdapter(child: _buildActiveFiltersBanner()),
+        
+        // ✅ البانرات (بما فيها صورتك الجديدة) تظهر هنا
         if (!_isAdvancedFiltering) SliverToBoxAdapter(child: _buildHeroBannersCarousel()),
+        
         if (!_isAdvancedFiltering) SliverToBoxAdapter(child: _buildCategoryIcons()),
         SliverToBoxAdapter(child: _buildFeaturedTitle()),
         if (_isAdvancedFiltering)
@@ -164,54 +164,108 @@ class _HallListScreenState extends State<HallListScreen> {
     );
   }
 
-  // ✅ دالة عرض البانر الجديد
-  Widget _buildNewBanner() {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 8, 20, 8),
-      child: GestureDetector(
-        onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (_) => const ExploreScreen()),
-          );
-        },
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(24),
-          child: Container(
-            height: 180, 
-            width: double.infinity,
-            decoration: BoxDecoration(
-              boxShadow: [
-                BoxShadow(
-                  color: primary.withValues(alpha: 0.2),
-                  blurRadius: 15,
-                  offset: const Offset(0, 8),
-                ),
-              ],
-            ),
-            child: Image.asset(
-              'assets/icons/Digen_image_1793993130303.jpg', // ✅ اسم الصورة الصحيح
-              fit: BoxFit.cover, 
-              errorBuilder: (context, error, stackTrace) {
-                return Container(
-                  decoration: const BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topRight, 
-                      end: Alignment.bottomLeft, 
-                      colors: [primary, primaryDark]
-                    ),
-                  ),
-                  child: const Center(
-                    child: Text(
-                      'ليلة العمر تبدأ من هنا',
-                      style: TextStyle(fontFamily: 'Tajawal', color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
+  Widget _buildHeroBannersCarousel() {
+    // دمج البانرات النصية مع صورتك الجديدة
+    final banners = [
+      {'type': 'text', 'title': 'ليلة العمر تبدأ من هنا', 'desc': 'اكتشف أرقى قاعات الأفراح في ليبيا واحجزها بضغطة واحدة.', 'btn': 'تصفّح القاعات'},
+      {'type': 'image', 'image': 'assets/icons/Digen_image_1793993130303.jpg'}, // ✅ صورتك هنا
+      {'type': 'text', 'title': 'عروض موسمية', 'desc': 'خصومات تصل إلى 30% على القاعات المميزة - لفترة محدودة.', 'btn': 'اكتشف العروض'},
+    ];
+
+    return Container(
+      margin: const EdgeInsets.fromLTRB(20, 8, 20, 12),
+      height: 175,
+      child: Stack(
+        children: [
+          PageView.builder(
+            controller: _bannersCtrl,
+            onPageChanged: (i) => setState(() => _currentBanner = i),
+            itemCount: banners.length,
+            itemBuilder: (context, i) {
+              final b = banners[i];
+
+              // 1. إذا كان البانر صورة (صورتك)
+              if (b['type'] == 'image') {
+                return GestureDetector(
+                  onTap: () {
+                    Navigator.push(context, MaterialPageRoute(builder: (_) => const ExploreScreen()));
+                  },
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(24),
+                    child: Image.asset(
+                      b['image']!,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) => Container(
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(colors: [primary, primaryDark]),
+                          borderRadius: BorderRadius.circular(24),
+                        ),
+                      ),
                     ),
                   ),
                 );
-              },
+              }
+
+              // 2. إذا كان البانر نصي (القديم)
+              return Container(
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(begin: Alignment.topRight, end: Alignment.bottomLeft, colors: [primary, primaryDark]),
+                  borderRadius: BorderRadius.circular(24),
+                ),
+                child: Stack(
+                  children: [
+                    Positioned(top: -40, left: -40, child: Container(width: 160, height: 160, decoration: BoxDecoration(shape: BoxShape.circle, color: Colors.white.withValues(alpha: 0.08)))),
+                    Positioned(bottom: -60, right: -40, child: Container(width: 180, height: 180, decoration: BoxDecoration(shape: BoxShape.circle, color: Colors.white.withValues(alpha: 0.06)))),
+                    Padding(
+                      padding: const EdgeInsets.all(22),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(b['title']!, textAlign: TextAlign.right, style: const TextStyle(fontFamily: 'Tajawal', color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
+                          const SizedBox(height: 10),
+                          Text(b['desc']!, textAlign: TextAlign.right, style: TextStyle(fontFamily: 'Tajawal', color: Colors.white.withValues(alpha: 0.9), fontSize: 12, height: 1.5)),
+                          const SizedBox(height: 18),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+                            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20)),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(b['btn']!, style: const TextStyle(fontFamily: 'Tajawal', color: primary, fontSize: 12, fontWeight: FontWeight.bold)),
+                                const SizedBox(width: 6),
+                                const Icon(Icons.arrow_forward_ios, color: primary, size: 12),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+          // النقاط السفلية
+          Positioned(
+            bottom: 12, left: 0, right: 0,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: List.generate(banners.length, (i) {
+                final active = i == _currentBanner;
+                return AnimatedContainer(
+                  duration: const Duration(milliseconds: 300),
+                  margin: const EdgeInsets.symmetric(horizontal: 3),
+                  width: active ? 20 : 6, height: 6,
+                  decoration: BoxDecoration(
+                    color: active ? Colors.white : Colors.white.withValues(alpha: 0.5),
+                    borderRadius: BorderRadius.circular(3),
+                  ),
+                );
+              }),
             ),
           ),
-        ),
+        ],
       ),
     );
   }
@@ -704,86 +758,6 @@ class _HallListScreenState extends State<HallListScreen> {
           ),
         );
       },
-    );
-  }
-
-  Widget _buildHeroBannersCarousel() {
-    final banners = [
-      {'title': 'ليلة العمر تبدأ من هنا', 'desc': 'اكتشف أرقى قاعات الأفراح في ليبيا واحجزها بضغطة واحدة.', 'btn': 'تصفّح القاعات'},
-      {'title': 'عروض موسمية', 'desc': 'خصومات تصل إلى 30% على القاعات المميزة - لفترة محدودة.', 'btn': 'اكتشف العروض'},
-      {'title': 'نصائح لتخطيط حفلك', 'desc': 'احجز مبكراً، قارن بين القاعات، واطلب صوراً حقيقية.', 'btn': 'اقرأ النصائح'},
-    ];
-
-    return Container(
-      margin: const EdgeInsets.fromLTRB(20, 8, 20, 12),
-      height: 175,
-      child: Stack(
-        children: [
-          PageView.builder(
-            controller: _bannersCtrl,
-            onPageChanged: (i) => setState(() => _currentBanner = i),
-            itemCount: banners.length,
-            itemBuilder: (context, i) {
-              final b = banners[i];
-              return Container(
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(begin: Alignment.topRight, end: Alignment.bottomLeft, colors: [primary, primaryDark]),
-                  borderRadius: BorderRadius.circular(24),
-                ),
-                child: Stack(
-                  children: [
-                    Positioned(top: -40, left: -40, child: Container(width: 160, height: 160, decoration: BoxDecoration(shape: BoxShape.circle, color: Colors.white.withValues(alpha: 0.08)))),
-                    Positioned(bottom: -60, right: -40, child: Container(width: 180, height: 180, decoration: BoxDecoration(shape: BoxShape.circle, color: Colors.white.withValues(alpha: 0.06)))),
-                    Padding(
-                      padding: const EdgeInsets.all(22),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(b['title']!, textAlign: TextAlign.right, style: const TextStyle(fontFamily: 'Tajawal', color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
-                          const SizedBox(height: 10),
-                          Text(b['desc']!, textAlign: TextAlign.right, style: TextStyle(fontFamily: 'Tajawal', color: Colors.white.withValues(alpha: 0.9), fontSize: 12, height: 1.5)),
-                          const SizedBox(height: 18),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
-                            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20)),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Text(b['btn']!, style: const TextStyle(fontFamily: 'Tajawal', color: primary, fontSize: 12, fontWeight: FontWeight.bold)),
-                                const SizedBox(width: 6),
-                                const Icon(Icons.arrow_forward_ios, color: primary, size: 12),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              );
-            },
-          ),
-          Positioned(
-            bottom: 12, left: 0, right: 0,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: List.generate(banners.length, (i) {
-                final active = i == _currentBanner;
-                return AnimatedContainer(
-                  duration: const Duration(milliseconds: 300),
-                  margin: const EdgeInsets.symmetric(horizontal: 3),
-                  width: active ? 20 : 6, height: 6,
-                  decoration: BoxDecoration(
-                    color: active ? Colors.white : Colors.white.withValues(alpha: 0.5),
-                    borderRadius: BorderRadius.circular(3),
-                  ),
-                );
-              }),
-            ),
-          ),
-        ],
-      ),
     );
   }
 
@@ -1322,7 +1296,7 @@ class _SimpleProfileScreenState extends State<SimpleProfileScreen> {
             ),
             const SizedBox(height: 10),
             const Text(
-              'سجل دخولك أو أنشئ حساباً للوصول إلى\nحجوزاتك، محفظتك، ومفضلك.',
+              'سجل دخولك أو أنشئ حساباً للوصول إلى\nحجوزاتك، محفظتك، ومفضلتك.',
               textAlign: TextAlign.center,
               style: TextStyle(fontFamily: 'Tajawal', color: textLight, fontSize: 14, height: 1.5),
             ),
