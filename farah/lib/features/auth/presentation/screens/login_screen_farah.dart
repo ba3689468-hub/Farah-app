@@ -12,6 +12,7 @@ import 'package:farah/features/provider_dashboard_screen.dart';
 import 'package:farah/features/provider_choice_screen.dart'; 
 import 'package:farah/features/store_dashboard_screen.dart'; 
 import 'package:farah/core/services/biometric_auth_service.dart'; 
+import 'package:farah/core/utils/auth_utils.dart'; // ✅ استدعاء ملف الدوال المساعدة
 
 class FarahGlassLoginScreen extends ConsumerStatefulWidget {
   const FarahGlassLoginScreen({super.key});
@@ -68,7 +69,6 @@ class _FarahGlassLoginScreenState extends ConsumerState<FarahGlassLoginScreen> {
   Future<void> _loginWithBiometrics() async {
     final credentials = await _bioService.loginWithBiometrics();
     if (credentials != null) {
-      // استخدام الرقم المحفوظ
       _phoneCtrl.text = credentials['phone']!;
       _passCtrl.text = credentials['password']!;
       await _login(isBiometricLogin: true); 
@@ -86,13 +86,43 @@ class _FarahGlassLoginScreenState extends ConsumerState<FarahGlassLoginScreen> {
     try {
       final phone = _phoneCtrl.text.trim();
       final password = _passCtrl.text.trim();
-
-      // ✅ الحل الجذري: تنظيف الرقم من رمز الدولة والأصفار لضمان تطابق البريد
-      final cleanPhone = phone.replaceAll('+218', '').replaceAll(RegExp(r'^0+'), '');
-      final fakeEmail = '$cleanPhone@farah.app';
-
       final repo = ref.read(authRepositoryProvider);
-      await repo.signIn(fakeEmail, password);
+      
+      // ✅ الحل الجذري: تجربة جميع صيغ البريد الإلكتروني (القديمة والجديدة)
+      bool loggedIn = false;
+      String? lastError;
+
+      // الصيغة الجديدة (بدون أصفار) - للحسابات الجديدة
+      final newEmail = AuthUtils.getFakeEmail(phone);
+      
+      // الصيغة القديمة 1 (مع صفر) - للحسابات القديمة
+      final cleanPhone = phone.replaceAll('+218', '').replaceAll(RegExp(r'^0+'), '');
+      final oldEmail1 = '0$cleanPhone@farah.app';
+      
+      // الصيغة القديمة 2 (مع +218) - للحسابات القديمة جداً
+      final oldEmail2 = '+218$cleanPhone@farah.app';
+
+      // تجربة الدخول بالصيغ الثلاث
+      for (String email in [newEmail, oldEmail1, oldEmail2]) {
+        try {
+          await repo.signIn(email, password);
+          loggedIn = true;
+          break; // نجح الدخول، توقف عن التجربة
+        } catch (e) {
+          lastError = e.toString();
+          // إذا كان الخطأ هو أن المستخدم غير موجود، نجرب الصيغة التالية
+          // أما إذا كان الخطأ هو كلمة المرور الخاطئة، فنتوقف (لأن الحساب موجود)
+          if (e.toString().contains('user-not-found')) {
+            continue; 
+          } else {
+            break; 
+          }
+        }
+      }
+
+      if (!loggedIn) {
+        throw lastError ?? 'بيانات الدخول غير صحيحة';
+      }
 
       final fbUser = FirebaseAuth.instance.currentUser;
       if (fbUser != null) {
