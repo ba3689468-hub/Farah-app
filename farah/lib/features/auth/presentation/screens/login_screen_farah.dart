@@ -12,7 +12,6 @@ import 'package:farah/features/provider_dashboard_screen.dart';
 import 'package:farah/features/provider_choice_screen.dart'; 
 import 'package:farah/features/store_dashboard_screen.dart'; 
 import 'package:farah/core/services/biometric_auth_service.dart'; 
-import 'package:farah/core/utils/auth_utils.dart'; // ✅ استدعاء ملف الدوال المساعدة
 
 class FarahGlassLoginScreen extends ConsumerStatefulWidget {
   const FarahGlassLoginScreen({super.key});
@@ -88,33 +87,27 @@ class _FarahGlassLoginScreenState extends ConsumerState<FarahGlassLoginScreen> {
       final password = _passCtrl.text.trim();
       final repo = ref.read(authRepositoryProvider);
       
+      // تنظيف الرقم
+      final cleanPhone = phone.replaceAll('+218', '').replaceAll(RegExp(r'^0+'), '');
+      
       bool loggedIn = false;
       String? lastError;
 
-      // ✅ الحل الجذري: تنظيف الرقم من الرموز والمسافات
-      final cleanPhone = phone.replaceAll('+218', '').replaceAll(RegExp(r'^0+'), '').replaceAll(RegExp(r'\s+'), '');
-      
-      // ✅ قائمة بجميع الصيغ المحتملة التي قد يكون بها الحساب القديم
-      List<String> emailsToTry = [
-        '$cleanPhone@farah.app',        // الصيغة الجديدة القياسية (بدون صفر)
-        '0$cleanPhone@farah.app',       // الصيغة القديمة 1 (مع صفر)
-        '+218$cleanPhone@farah.app',    // الصيغة القديمة 2 (مع رمز الدولة)
-        '$phone@farah.app',             // الرقم كما هو (للتأمين)
-      ];
-
-      // تجربة الدخول بكل صيغة حتى ينجح
-      for (String email in emailsToTry) {
-        try {
-          await repo.signIn(email, password);
-          loggedIn = true;
-          break; // نجح الدخول، اخرج من الحلقة
-        } catch (e) {
-          lastError = e.toString();
-          // إذا كان الخطأ هو أن المستخدم غير موجود، نستمر للصيغة التالية
-          if (!e.toString().contains('user-not-found')) {
-            // إذا كان الخطأ هو كلمة المرور الخاطئة، فهذا يعني أننا وجدنا الحساب
-            // نتوقف هنا ونظهر الخطأ لأن كلمة المرور هي المشكلة وليس الرقم
-            break; 
+      // المحاولة الأولى: الصيغة الجديدة (بدون صفر)
+      try {
+        await repo.signIn('$cleanPhone@farah.app', password);
+        loggedIn = true;
+      } catch (e) {
+        lastError = e.toString();
+        
+        // المحاولة الثانية: الصيغة القديمة (مع صفر)
+        // نقوم بها فقط إذا كان الخطأ هو أن المستخدم غير موجود
+        if (e.toString().contains('user-not-found') || e.toString().contains('invalid-credential')) {
+          try {
+            await repo.signIn('0$cleanPhone@farah.app', password);
+            loggedIn = true;
+          } catch (e2) {
+            lastError = e2.toString();
           }
         }
       }
