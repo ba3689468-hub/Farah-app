@@ -996,8 +996,35 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
                       ],
                     ),
                   if (!isManual) ...[
+                    // 1. إذا كان الحجز جديداً ولم يدفع العمولة
                     if (status == 'pending' && !isActuallyWaiting) _buildNewBookingActions(docId),
-                    if (isActuallyWaiting) _buildCheckInActions(docId),
+                    
+                    // 2. إذا كان بانتظار الحضور، نتحقق من الوقت
+                    if (isActuallyWaiting) ...[
+                      // إذا لم تنتهِ المدة، نعرض زر التأكيد
+                      if (remainingTime != 'انتهت المدة' && remainingTime.isNotEmpty) 
+                        _buildCheckInActions(docId)
+                      else
+                        // إذا انتهت المدة، نعرض رسالة أن الحجز انتهى (أو زر للإلغاء)
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          margin: const EdgeInsets.only(top: 10),
+                          decoration: BoxDecoration(
+                            color: Colors.grey.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: Colors.grey.withValues(alpha: 0.3)),
+                          ),
+                          child: const Center(
+                            child: Text(
+                              'انتهت مهلة الحضور، لم يتم تأكيد الحجز',
+                              style: TextStyle(fontFamily: 'Tajawal', color: Colors.grey, fontSize: 13, fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                        ),
+                    ],
+                    
+                    // 3. إذا كان مؤكداً
                     if (status == 'confirmed') _buildCompleteAction(docId, eventDate),
                   ] else ...[
                     Padding(
@@ -1660,7 +1687,7 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen> {
               ),
             ),
             const Directionality(
-              textDirection: ui.TextDirection.ltr, // ✅ تم إصلاح هذا السطر
+              textDirection: ui.TextDirection.ltr,
               child: Icon(Icons.arrow_forward_ios, color: textLight, size: 12),
             ),
           ],
