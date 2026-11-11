@@ -254,7 +254,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
         } else {
           Navigator.push(context,
               MaterialPageRoute(
-                  builder: (_) => StoreDetailsScreen(storeData: item)));
+                  builder: (_) => StoreDetailsScreen(storeId: item['_id'], storeData: item));
         }
       },
       child: Container(
