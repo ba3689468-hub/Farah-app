@@ -1327,6 +1327,8 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
       setState(() { _bookedDates = { ..._bookedDates, '${_selectedDate!.year}-${_selectedDate!.month.toString().padLeft(2, '0')}-${_selectedDate!.day.toString().padLeft(2, '0')}' }; });
 
       if (!mounted) return;
+      
+      // ✅ النص المعدل هنا (لم يعد يفرض دفع المبلغ كاملاً)
       await showDialog(
         context: context,
         barrierDismissible: false,
@@ -1334,10 +1336,11 @@ class _HallDetailsScreenState extends State<HallDetailsScreen> {
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           backgroundColor: Colors.white,
           title: const Row(children: [Icon(Icons.check_circle, color: Colors.green, size: 28), SizedBox(width: 10), Text('تم الحجز المبدئي!', style: TextStyle(fontFamily: 'Tajawal', color: textDark, fontSize: 18))]),
-          content: Text('تم دفع رسم الحجز بنجاح (60 د.ل).\n\nلديك 48 ساعة للتوجه إلى "${_hall['name'] ?? 'القاعة'}" ودفع سعر القاعة كاملاً ($total د.ل).\n\nخلال هذه المدة يمكنك إلغاء الحجز واسترداد 60 د.ل كاملة من "حجوزاتي".', style: const TextStyle(fontFamily: 'Tajawal', color: textDark, fontSize: 14, height: 1.6)),
+          content: Text('تم دفع رسم الحجز بنجاح (60 د.ل).\n\nلديك 48 ساعة للتوجه إلى "${_hall['name'] ?? 'القاعة'}" لإتمام إجراءات الحجز ودفع المبلغ المطلوب (حسب سياسة القاعة).\n\nخلال هذه المدة يمكنك إلغاء الحجز واسترداد 60 د.ل كاملة من "حجوزاتي".', style: const TextStyle(fontFamily: 'Tajawal', color: textDark, fontSize: 14, height: 1.6)),
           actions: [ElevatedButton(style: ElevatedButton.styleFrom(backgroundColor: primary, foregroundColor: Colors.white, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))), onPressed: () => Navigator.pop(context), child: const Text('حسناً', style: TextStyle(fontFamily: 'Tajawal')))],
         ),
       );
+      
       if (!mounted) return;
       Navigator.pop(context);
     } catch (e) {
