@@ -150,7 +150,7 @@ class _HallListScreenState extends State<HallListScreen> {
         
         if (_isAdvancedFiltering) SliverToBoxAdapter(child: _buildActiveFiltersBanner()),
         
-        // ✅ البانرات (بما فيها صورتك الجديدة) تظهر هنا
+        // ✅ البانرات (القاعات، المتاجر، المفضلة) تظهر هنا
         if (!_isAdvancedFiltering) SliverToBoxAdapter(child: _buildHeroBannersCarousel()),
         
         if (!_isAdvancedFiltering) SliverToBoxAdapter(child: _buildCategoryIcons()),
@@ -164,12 +164,36 @@ class _HallListScreenState extends State<HallListScreen> {
     );
   }
 
+  // ✅ البانرات الثلاثة الجديدة
   Widget _buildHeroBannersCarousel() {
-    // دمج البانرات النصية مع صورتك الجديدة
     final banners = [
-      {'type': 'text', 'title': 'ليلة العمر تبدأ من هنا', 'desc': 'اكتشف أرقى قاعات الأفراح في ليبيا واحجزها بضغطة واحدة.', 'btn': 'تصفّح القاعات'},
-      {'type': 'image', 'image': 'assets/icons/Digen_image_1793993130303.jpg'}, // ✅ صورتك هنا
-      {'type': 'text', 'title': 'عروض موسمية', 'desc': 'خصومات تصل إلى 30% على القاعات المميزة - لفترة محدودة.', 'btn': 'اكتشف العروض'},
+      {
+        'title': 'ليلة العمر تبدأ من هنا',
+        'desc': 'اكتشف أرقى قاعات الأفراح في ليبيا واحجزها بضغطة واحدة.',
+        'btn': 'تصفّح القاعات',
+        'icon': Icons.celebration,
+        'onTap': () {
+          Navigator.push(context, MaterialPageRoute(builder: (_) => const ExploreScreen(initialFilter: 'قاعات')));
+        }
+      },
+      {
+        'title': 'كل ما تحتاجه لزفافك',
+        'desc': 'فساتين، تجميل، ضيافة، وديكورات. تصفح أفضل المتاجر الآن.',
+        'btn': 'تصفّح المتاجر',
+        'icon': Icons.storefront,
+        'onTap': () {
+          Navigator.push(context, MaterialPageRoute(builder: (_) => const ExploreScreen(initialFilter: 'متاجر')));
+        }
+      },
+      {
+        'title': 'قاعاتك المفضلة في مكان واحد',
+        'desc': 'احفظ القاعات التي أعجبتك وارجع إليها في أي وقت لاتخاذ قرارك.',
+        'btn': 'تصفّح المفضلة',
+        'icon': Icons.favorite,
+        'onTap': () {
+          setState(() => _currentIndex = 2); 
+        }
+      },
     ];
 
     return Container(
@@ -183,65 +207,54 @@ class _HallListScreenState extends State<HallListScreen> {
             itemCount: banners.length,
             itemBuilder: (context, i) {
               final b = banners[i];
-
-              // 1. إذا كان البانر صورة (صورتك)
-              if (b['type'] == 'image') {
-                return GestureDetector(
-                  onTap: () {
-                    Navigator.push(context, MaterialPageRoute(builder: (_) => const ExploreScreen()));
-                  },
-                  child: ClipRRect(
+              return GestureDetector(
+                onTap: b['onTap'] as VoidCallback,
+                child: Container(
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(begin: Alignment.topRight, end: Alignment.bottomLeft, colors: [primary, primaryDark]),
                     borderRadius: BorderRadius.circular(24),
-                    child: Image.asset(
-                      b['image']!,
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) => Container(
-                        decoration: BoxDecoration(
-                          gradient: const LinearGradient(colors: [primary, primaryDark]),
-                          borderRadius: BorderRadius.circular(24),
+                    boxShadow: [BoxShadow(color: primary.withValues(alpha: 0.3), blurRadius: 15, offset: const Offset(0, 8))],
+                  ),
+                  child: Stack(
+                    children: [
+                      // دوائر الزينة
+                      Positioned(top: -40, left: -40, child: Container(width: 160, height: 160, decoration: BoxDecoration(shape: BoxShape.circle, color: Colors.white.withValues(alpha: 0.08)))),
+                      Positioned(bottom: -60, right: -40, child: Container(width: 180, height: 180, decoration: BoxDecoration(shape: BoxShape.circle, color: Colors.white.withValues(alpha: 0.06)))),
+                      
+                      // أيقونة في الخلفية للزينة
+                      Positioned(
+                        left: 10, bottom: 10,
+                        child: Icon(b['icon'] as IconData, size: 100, color: Colors.white.withValues(alpha: 0.1)),
+                      ),
+
+                      // النص والزر
+                      Padding(
+                        padding: const EdgeInsets.all(22),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(b['title'] as String, textAlign: TextAlign.right, style: const TextStyle(fontFamily: 'Tajawal', color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
+                            const SizedBox(height: 10),
+                            Text(b['desc'] as String, textAlign: TextAlign.right, style: TextStyle(fontFamily: 'Tajawal', color: Colors.white.withValues(alpha: 0.9), fontSize: 12, height: 1.5)),
+                            const SizedBox(height: 18),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+                              decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20)),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(b['btn'] as String, style: const TextStyle(fontFamily: 'Tajawal', color: primary, fontSize: 12, fontWeight: FontWeight.bold)),
+                                  const SizedBox(width: 6),
+                                  const Icon(Icons.arrow_back_ios_new_rounded, color: primary, size: 12),
+                                ],
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                    ),
+                    ],
                   ),
-                );
-              }
-
-              // 2. إذا كان البانر نصي (القديم)
-              return Container(
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(begin: Alignment.topRight, end: Alignment.bottomLeft, colors: [primary, primaryDark]),
-                  borderRadius: BorderRadius.circular(24),
-                ),
-                child: Stack(
-                  children: [
-                    Positioned(top: -40, left: -40, child: Container(width: 160, height: 160, decoration: BoxDecoration(shape: BoxShape.circle, color: Colors.white.withValues(alpha: 0.08)))),
-                    Positioned(bottom: -60, right: -40, child: Container(width: 180, height: 180, decoration: BoxDecoration(shape: BoxShape.circle, color: Colors.white.withValues(alpha: 0.06)))),
-                    Padding(
-                      padding: const EdgeInsets.all(22),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(b['title']!, textAlign: TextAlign.right, style: const TextStyle(fontFamily: 'Tajawal', color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
-                          const SizedBox(height: 10),
-                          Text(b['desc']!, textAlign: TextAlign.right, style: TextStyle(fontFamily: 'Tajawal', color: Colors.white.withValues(alpha: 0.9), fontSize: 12, height: 1.5)),
-                          const SizedBox(height: 18),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
-                            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20)),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Text(b['btn']!, style: const TextStyle(fontFamily: 'Tajawal', color: primary, fontSize: 12, fontWeight: FontWeight.bold)),
-                                const SizedBox(width: 6),
-                                const Icon(Icons.arrow_forward_ios, color: primary, size: 12),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
                 ),
               );
             },
@@ -1296,7 +1309,7 @@ class _SimpleProfileScreenState extends State<SimpleProfileScreen> {
             ),
             const SizedBox(height: 10),
             const Text(
-              'سجل دخولك أو أنشئ حساباً للوصول إلى\nحجوزاتك، محفظتك، ومفضلتك.',
+              'سجل دخولك أو أنشئ حساباً للوصول إلى\nحجوزاتك، محفظتك، ومفضلك.',
               textAlign: TextAlign.center,
               style: TextStyle(fontFamily: 'Tajawal', color: textLight, fontSize: 14, height: 1.5),
             ),
