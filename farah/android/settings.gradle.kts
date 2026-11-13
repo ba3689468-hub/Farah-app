@@ -21,11 +21,11 @@ plugins {
     id("com.google.gms.google-services") version "4.4.0" apply false
     id("dev.flutter.flutter-plugin-loader") version "1.0.0"
     
-    // ✅ تحديث إصدار Android Gradle Plugin (AGP) لحل مشكلة التوافق
-    id("com.android.application") version "8.5.2" apply false
+    // ✅ تم رفع إصدار Android Gradle Plugin (AGP) إلى 9.1.1 لحل مشكلة التوافق
+    id("com.android.application") version "9.1.1" apply false
     
-    // ✅ تحديث إصدار Kotlin ليتوافق مع AGP الجديد
-    id("org.jetbrains.kotlin.android") version "2.0.0" apply false
+    // ✅ تم رفع إصدار Kotlin إلى 2.1.0 ليتوافق مع الـ AGP الجديد
+    id("org.jetbrains.kotlin.android") version "2.1.0" apply false
 }
 
 include(":app")
