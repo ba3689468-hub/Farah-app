@@ -20,9 +20,12 @@ pluginManagement {
 plugins {
     id("com.google.gms.google-services") version "4.4.0" apply false
     id("dev.flutter.flutter-plugin-loader") version "1.0.0"
-    // ✅ تم تحديث إصدار Android Gradle Plugin هنا من 8.1.0 إلى 8.3.0
-    id("com.android.application") version "8.3.0" apply false
-    id("org.jetbrains.kotlin.android") version "1.9.0" apply false
+    
+    // ✅ تحديث إصدار Android Gradle Plugin (AGP) لحل مشكلة التوافق
+    id("com.android.application") version "8.5.2" apply false
+    
+    // ✅ تحديث إصدار Kotlin ليتوافق مع AGP الجديد
+    id("org.jetbrains.kotlin.android") version "2.0.0" apply false
 }
 
 include(":app")
