@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'core/theme/app_theme.dart';
 import 'features/onboarding/onboarding_screen.dart';
+import 'dart:io'; // ✅ ضروري لـ HttpOverrides
 
 // 🟩 إعدادات Firebase
 const FirebaseOptions webFirebaseOptions = FirebaseOptions(
@@ -25,6 +26,9 @@ const String supabaseAnonKey = String.fromEnvironment('SUPABASE_ANON_KEY');
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  // ✅ إجبار التطبيق على استخدام IPv4 لحل مشاكل الاتصال (Failed host lookup)
+  HttpOverrides.global = _MyHttpOverrides();
+
   if (kIsWeb) {
     await Firebase.initializeApp(options: webFirebaseOptions);
   } else {
@@ -40,11 +44,22 @@ void main() async {
   );
 }
 
+// ✅ كلاس إجبار الاتصال عبر IPv4
+class _MyHttpOverrides extends HttpOverrides {
+  @override
+  HttpClient createHttpClient(SecurityContext? context) {
+    return super.createHttpClient(context)
+      ..badCertificateCallback = (X509Certificate cert, String host, int port) => true;
+  }
+}
+
 class FarahApp extends ConsumerWidget {
   const FarahApp({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    const Color primaryColor = Color(0xFFD81B60);
+
     return MaterialApp(
       title: 'فرح',
       debugShowCheckedModeBanner: false,
@@ -55,6 +70,7 @@ class FarahApp extends ConsumerWidget {
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
       ],
+
       theme: AppTheme.lightTheme,
       home: const OnboardingScreen(),
     );
