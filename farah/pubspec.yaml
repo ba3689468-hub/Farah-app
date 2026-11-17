@@ -28,7 +28,7 @@ dependencies:
   shimmer: ^3.0.0
   local_auth: ^2.2.0
   flutter_secure_storage: ^9.2.2
-
+storage_client: 2.4.0
 dev_dependencies:
   flutter_test:
     sdk: flutter
