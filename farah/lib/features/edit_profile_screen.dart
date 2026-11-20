@@ -28,6 +28,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   bool _loading = false;
   bool _passLoading = false;
   bool _uploadingImage = false;
+  bool _hideCurrent = true;
+  bool _hideNew = true;
+  bool _hideConfirm = true;
   String? _existingImageUrl;
   File? _pickedImage;
 
@@ -46,42 +49,43 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     super.dispose();
   }
 
+  String _friendlyError(Object e) {
+    final s = e.toString();
+    if (s.contains('SocketException') ||
+        s.contains('Failed host lookup') ||
+        s.contains('ClientException')) {
+      return 'تعذر الاتصال بالخادم، تحقق من الإنترنت وأعد المحاولة';
+    }
+    return 'حدث خطأ غير متوقع، حاول مرة أخرى';
+  }
+
   Future<void> _loadUserData() async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
 
     try {
-      final doc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
+      final doc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .get();
       if (doc.exists && mounted) {
         final data = doc.data()!;
         setState(() {
           _nameCtrl.text = data['fullName'] ?? '';
-          _existingImageUrl = data['profileImage']; // تأكد من اسم الحقل في Firebase
+          _existingImageUrl = data['profileImage'];
         });
       }
     } catch (e) {
-      _showError('خطأ في تحميل البيانات: $e');
+      if (mounted) _showError('تعذر تحميل البيانات: ${_friendlyError(e)}');
     }
   }
 
-  // ✅ دالة اختيار ورفع الصورة
   Future<void> _pickAndUploadImage() async {
-    // 1. رسالة تأكيد أن الزر يعمل
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('جاري فتح المعرض...', style: TextStyle(fontFamily: 'Tajawal'))),
-      );
-    }
-
     final picker = ImagePicker();
     try {
-      // 2. فتح المعرض
-      final pickedFile = await picker.pickImage(source: ImageSource.gallery, imageQuality: 70);
-      
-      if (pickedFile == null) {
-        // إذا اختار المستخدم الإلغاء
-        return;
-      }
+      final pickedFile =
+          await picker.pickImage(source: ImageSource.gallery, imageQuality: 70);
+      if (pickedFile == null) return;
 
       setState(() {
         _pickedImage = File(pickedFile.path);
@@ -91,22 +95,23 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       final user = FirebaseAuth.instance.currentUser;
       if (user == null) throw 'يجب تسجيل الدخول';
 
-      // 3. الرفع إلى Supabase
       final file = File(pickedFile.path);
       final fileExt = pickedFile.path.split('.').last;
-      final fileName = '${user.uid}_${DateTime.now().millisecondsSinceEpoch}.$fileExt';
-      final filePath = 'avatars/$fileName'; // تأكد أن Bucket اسمه avatars
+      final fileName =
+          '${user.uid}_${DateTime.now().millisecondsSinceEpoch}.$fileExt';
+      final filePath = 'avatars/$fileName';
 
       await Supabase.instance.client.storage
           .from('avatars')
           .upload(filePath, file, fileOptions: const FileOptions(upsert: true));
-          
-      final publicUrl = Supabase.instance.client.storage.from('avatars').getPublicUrl(filePath);
 
-      // 4. تحديث رابط الصورة في Firebase
-      await FirebaseFirestore.instance.collection('users').doc(user.uid).update({
-        'profileImage': publicUrl,
-      });
+      final publicUrl =
+          Supabase.instance.client.storage.from('avatars').getPublicUrl(filePath);
+
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .update({'profileImage': publicUrl});
 
       if (mounted) {
         setState(() {
@@ -114,13 +119,16 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           _pickedImage = null;
         });
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('تم تحديث الصورة الشخصية بنجاح!', style: TextStyle(fontFamily: 'Tajawal')), backgroundColor: Colors.green),
+          const SnackBar(
+              content: Text('تم تحديث الصورة الشخصية بنجاح',
+                  style: TextStyle(fontFamily: 'Tajawal')),
+              backgroundColor: Colors.green),
         );
       }
     } catch (e) {
       if (mounted) {
         setState(() => _pickedImage = null);
-        _showError('فشل رفع الصورة: $e');
+        _showError('فشل رفع الصورة: ${_friendlyError(e)}');
       }
     } finally {
       if (mounted) setState(() => _uploadingImage = false);
@@ -137,18 +145,22 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       final user = FirebaseAuth.instance.currentUser;
       if (user == null) throw 'يجب تسجيل الدخول';
 
-      await FirebaseFirestore.instance.collection('users').doc(user.uid).update({
-        'fullName': _nameCtrl.text.trim(),
-      });
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .update({'fullName': _nameCtrl.text.trim()});
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('تم حفظ التعديلات بنجاح', style: TextStyle(fontFamily: 'Tajawal')), backgroundColor: Colors.green),
+          const SnackBar(
+              content: Text('تم حفظ التعديلات بنجاح',
+                  style: TextStyle(fontFamily: 'Tajawal')),
+              backgroundColor: Colors.green),
         );
         Navigator.pop(context, true);
       }
     } catch (e) {
-      _showError('خطأ في الحفظ: $e');
+      if (mounted) _showError('تعذر الحفظ: ${_friendlyError(e)}');
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -169,27 +181,33 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       final user = FirebaseAuth.instance.currentUser;
       if (user == null) throw 'يجب تسجيل الدخول';
 
-      final cred = EmailAuthProvider.credential(email: user.email!, password: _currentPassCtrl.text.trim());
+      final cred = EmailAuthProvider.credential(
+          email: user.email!, password: _currentPassCtrl.text.trim());
       await user.reauthenticateWithCredential(cred);
       await user.updatePassword(_newPassCtrl.text.trim());
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('تم تغيير كلمة المرور بنجاح', style: TextStyle(fontFamily: 'Tajawal')), backgroundColor: Colors.green),
+          const SnackBar(
+              content: Text('تم تغيير كلمة المرور بنجاح',
+                  style: TextStyle(fontFamily: 'Tajawal')),
+              backgroundColor: Colors.green),
         );
         _currentPassCtrl.clear();
         _newPassCtrl.clear();
         _confirmPassCtrl.clear();
       }
     } catch (e) {
-      _showError('خطأ: تأكد من كلمة المرور الحالية');
+      if (mounted) _showError('تأكد من كلمة المرور الحالية');
     } finally {
       if (mounted) setState(() => _passLoading = false);
     }
   }
 
   void _showError(String msg) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg, style: const TextStyle(fontFamily: 'Tajawal')), backgroundColor: Colors.redAccent));
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(msg, style: const TextStyle(fontFamily: 'Tajawal')),
+        backgroundColor: Colors.redAccent));
   }
 
   @override
@@ -200,51 +218,81 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         centerTitle: true,
-        title: const Text('تعديل الملف الشخصي', style: TextStyle(fontFamily: 'Tajawal', color: textDark, fontWeight: FontWeight.bold)),
+        title: const Text('تعديل الملف الشخصي',
+            style: TextStyle(
+                fontFamily: 'Tajawal',
+                color: textDark,
+                fontWeight: FontWeight.bold)),
         iconTheme: const IconThemeData(color: textDark),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
         child: Column(
           children: [
-            // ✅ صورة الملف الشخصي
             Center(
               child: Stack(
                 children: [
                   Container(
-                    width: 120, height: 120,
+                    width: 120,
+                    height: 120,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      gradient: const LinearGradient(colors: [primary, primaryDark], begin: Alignment.topLeft, end: Alignment.bottomRight),
-                      boxShadow: [BoxShadow(color: primary.withValues(alpha: 0.3), blurRadius: 20, offset: const Offset(0, 8))],
+                      gradient: const LinearGradient(
+                          colors: [primary, primaryDark],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight),
+                      boxShadow: [
+                        BoxShadow(
+                            color: primary.withValues(alpha: 0.3),
+                            blurRadius: 20,
+                            offset: const Offset(0, 8))
+                      ],
                       border: Border.all(color: Colors.white, width: 4),
                     ),
                     child: _uploadingImage
-                        ? const Center(child: CircularProgressIndicator(color: Colors.white))
+                        ? const Center(
+                            child:
+                                CircularProgressIndicator(color: Colors.white))
                         : ClipOval(
                             child: _pickedImage != null
-                                ? Image.file(_pickedImage!, fit: BoxFit.cover, width: 120, height: 120)
-                                : (_existingImageUrl != null && _existingImageUrl!.isNotEmpty)
+                                ? Image.file(_pickedImage!,
+                                    fit: BoxFit.cover, width: 120, height: 120)
+                                : (_existingImageUrl != null &&
+                                        _existingImageUrl!.isNotEmpty)
                                     ? CachedNetworkImage(
                                         imageUrl: _existingImageUrl!,
                                         fit: BoxFit.cover,
-                                        width: 120, height: 120,
-                                        placeholder: (context, url) => const Icon(Icons.person, size: 60, color: Colors.white),
-                                        errorWidget: (context, url, error) => const Icon(Icons.person, size: 60, color: Colors.white),
+                                        width: 120,
+                                        height: 120,
+                                        placeholder: (context, url) =>
+                                            const Icon(Icons.person,
+                                                size: 60, color: Colors.white),
+                                        errorWidget: (context, url, error) =>
+                                            const Icon(Icons.person,
+                                                size: 60, color: Colors.white),
                                       )
-                                    : const Icon(Icons.person, size: 60, color: Colors.white),
+                                    : const Icon(Icons.person,
+                                        size: 60, color: Colors.white),
                           ),
                   ),
-                  
-                  // ✅ زر الكاميرا
                   Positioned(
-                    bottom: 0, right: 0,
+                    bottom: 0,
+                    right: 0,
                     child: GestureDetector(
                       onTap: _uploadingImage ? null : _pickAndUploadImage,
                       child: Container(
                         padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(color: Colors.white, shape: BoxShape.circle, boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 10, offset: const Offset(0, 4))]),
-                        child: const Icon(Icons.camera_alt, color: primary, size: 20),
+                        decoration: BoxDecoration(
+                            color: Colors.white,
+                            shape: BoxShape.circle,
+                            boxShadow: [
+                              BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.1),
+                                  blurRadius: 10,
+                                  offset: const Offset(0, 4))
+                            ]),
+                        child: const Icon(Icons.camera_alt,
+                            color: primary, size: 20),
                       ),
                     ),
                   ),
@@ -253,90 +301,112 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             ),
             const SizedBox(height: 30),
 
-            // المعلومات الشخصية
-            const Align(
-              alignment: Alignment.centerRight,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  Text('المعلومات الشخصية', style: TextStyle(fontFamily: 'Tajawal', color: textDark, fontSize: 18, fontWeight: FontWeight.bold)),
-                  SizedBox(width: 8),
-                  Icon(Icons.person_outline, color: primary, size: 20),
-                ],
-              ),
-            ),
+            _sectionTitle('المعلومات الشخصية', Icons.person_outline),
             const SizedBox(height: 16),
 
-            _buildTextField(controller: _nameCtrl, hint: 'الاسم الكامل', icon: Icons.person_outline),
-            const SizedBox(height: 12),
-            
+            _field(
+                controller: _nameCtrl,
+                hint: 'الاسم الكامل',
+                icon: Icons.person_outline),
+            const SizedBox(height: 14),
+
             // رقم الهاتف (ثابت)
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-              decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), border: Border.all(color: Colors.grey.withValues(alpha: 0.2))),
+              height: 64,
+              padding: const EdgeInsets.symmetric(horizontal: 6),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(30),
+                boxShadow: [
+                  BoxShadow(
+                      color: primaryDark.withValues(alpha: 0.06),
+                      blurRadius: 12,
+                      offset: const Offset(0, 4))
+                ],
+              ),
               child: Row(
+                textDirection: TextDirection.rtl,
                 children: [
-                  Container(width: 40, height: 40, decoration: BoxDecoration(color: primary.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(10)), child: const Icon(Icons.phone_outlined, color: primary, size: 20)),
+                  _iconBox(Icons.phone_outlined),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text('رقم الهاتف', style: TextStyle(fontFamily: 'Tajawal', color: textLight, fontSize: 12)),
-                        Text(FirebaseAuth.instance.currentUser?.email?.replaceAll('@farah.app', '') ?? 'غير متوفر', style: const TextStyle(fontFamily: 'Tajawal', color: textDark, fontSize: 14, fontWeight: FontWeight.bold)),
+                        const Text('رقم الهاتف',
+                            style: TextStyle(
+                                fontFamily: 'Tajawal',
+                                color: textLight,
+                                fontSize: 12)),
+                        Text(
+                            FirebaseAuth.instance.currentUser?.email
+                                    ?.replaceAll('@farah.app', '') ??
+                                'غير متوفر',
+                            style: const TextStyle(
+                                fontFamily: 'Tajawal',
+                                color: textDark,
+                                fontSize: 14,
+                                fontWeight: FontWeight.bold)),
                       ],
                     ),
                   ),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(color: Colors.grey.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8)),
-                    child: const Text('ثابت', style: TextStyle(fontFamily: 'Tajawal', color: textLight, fontSize: 10)),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    margin: const EdgeInsets.only(left: 8),
+                    decoration: BoxDecoration(
+                        color: Colors.grey.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(10)),
+                    child: const Text('ثابت',
+                        style: TextStyle(
+                            fontFamily: 'Tajawal',
+                            color: textLight,
+                            fontSize: 10)),
                   ),
                 ],
               ),
             ),
-            
+
             const SizedBox(height: 24),
-            
-            // زر الحفظ
-            SizedBox(
-              width: double.infinity,
-              height: 54,
-              child: ElevatedButton.icon(
-                onPressed: _loading ? null : _saveProfile,
-                icon: _loading ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2)) : const Icon(Icons.save),
-                label: const Text('حفظ التعديلات', style: TextStyle(fontFamily: 'Tajawal', fontSize: 16, fontWeight: FontWeight.bold)),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: primary,
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                ),
-              ),
+
+            _gradientButton(
+              label: 'حفظ التعديلات',
+              icon: Icons.save,
+              loading: _loading,
+              onTap: _loading ? null : _saveProfile,
             ),
 
             const SizedBox(height: 30),
-            const Divider(),
+            Divider(color: primary.withValues(alpha: 0.15)),
             const SizedBox(height: 20),
 
-            // تغيير كلمة المرور
-            const Align(
-              alignment: Alignment.centerRight,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  Text('تغيير كلمة المرور', style: TextStyle(fontFamily: 'Tajawal', color: textDark, fontSize: 18, fontWeight: FontWeight.bold)),
-                  SizedBox(width: 8),
-                  Icon(Icons.lock_outline, color: primary, size: 20),
-                ],
-              ),
-            ),
+            _sectionTitle('تغيير كلمة المرور', Icons.lock_outline),
             const SizedBox(height: 16),
 
-            _buildPassField(controller: _currentPassCtrl, hint: 'كلمة المرور الحالية', icon: Icons.lock_outline),
-            const SizedBox(height: 12),
-            _buildPassField(controller: _newPassCtrl, hint: 'كلمة المرور الجديدة', icon: Icons.lock_reset),
-            const SizedBox(height: 12),
-            _buildPassField(controller: _confirmPassCtrl, hint: 'تأكيد كلمة المرور', icon: Icons.lock_reset),
+            _field(
+              controller: _currentPassCtrl,
+              hint: 'كلمة المرور الحالية',
+              icon: Icons.lock_outline,
+              obscure: _hideCurrent,
+              onToggle: () => setState(() => _hideCurrent = !_hideCurrent),
+            ),
+            const SizedBox(height: 14),
+            _field(
+              controller: _newPassCtrl,
+              hint: 'كلمة المرور الجديدة',
+              icon: Icons.lock_reset_outlined,
+              obscure: _hideNew,
+              onToggle: () => setState(() => _hideNew = !_hideNew),
+            ),
+            const SizedBox(height: 14),
+            _field(
+              controller: _confirmPassCtrl,
+              hint: 'تأكيد كلمة المرور',
+              icon: Icons.lock_reset_outlined,
+              obscure: _hideConfirm,
+              onToggle: () => setState(() => _hideConfirm = !_hideConfirm),
+            ),
 
             const SizedBox(height: 24),
             SizedBox(
@@ -344,12 +414,23 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               height: 54,
               child: OutlinedButton.icon(
                 onPressed: _passLoading ? null : _changePassword,
-                icon: _passLoading ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: primary, strokeWidth: 2)) : const Icon(Icons.lock_open),
-                label: const Text('تحديث كلمة المرور', style: TextStyle(fontFamily: 'Tajawal', fontSize: 16, fontWeight: FontWeight.bold)),
+                icon: _passLoading
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                            color: primary, strokeWidth: 2))
+                    : const Icon(Icons.lock_open),
+                label: const Text('تحديث كلمة المرور',
+                    style: TextStyle(
+                        fontFamily: 'Tajawal',
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold)),
                 style: OutlinedButton.styleFrom(
                   foregroundColor: primary,
                   side: const BorderSide(color: primary, width: 1.5),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(30)),
                 ),
               ),
             ),
@@ -360,38 +441,150 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     );
   }
 
-  Widget _buildTextField({required TextEditingController controller, required String hint, required IconData icon}) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), border: Border.all(color: primary.withValues(alpha: 0.3))),
-      child: TextField(
-        controller: controller,
-        textAlign: TextAlign.right,
-        style: const TextStyle(fontFamily: 'Tajawal', color: textDark, fontSize: 15),
-        decoration: InputDecoration(
-          hintText: hint,
-          hintStyle: const TextStyle(fontFamily: 'Tajawal', color: textLight),
-          border: InputBorder.none,
-          icon: Icon(icon, color: primary),
-        ),
+  Widget _sectionTitle(String title, IconData icon) {
+    return Align(
+      alignment: Alignment.centerRight,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          Text(title,
+              style: const TextStyle(
+                  fontFamily: 'Tajawal',
+                  color: textDark,
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold)),
+          const SizedBox(width: 8),
+          Icon(icon, color: primary, size: 20),
+        ],
       ),
     );
   }
 
-  Widget _buildPassField({required TextEditingController controller, required String hint, required IconData icon}) {
+  Widget _iconBox(IconData icon) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), border: Border.all(color: Colors.grey.withValues(alpha: 0.2))),
-      child: TextField(
-        controller: controller,
-        obscureText: true,
-        textAlign: TextAlign.right,
-        style: const TextStyle(fontFamily: 'Tajawal', color: textDark, fontSize: 15),
-        decoration: InputDecoration(
-          hintText: hint,
-          hintStyle: const TextStyle(fontFamily: 'Tajawal', color: textLight),
-          border: InputBorder.none,
-          icon: Icon(icon, color: primary),
+      width: 46,
+      height: 46,
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+            colors: [primary, primaryDark],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight),
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Icon(icon, color: Colors.white, size: 22),
+    );
+  }
+
+  /// حقل موحد بنفس شكل شاشتي الدخول والتسجيل
+  Widget _field({
+    required TextEditingController controller,
+    required String hint,
+    required IconData icon,
+    bool? obscure,
+    VoidCallback? onToggle,
+  }) {
+    return Container(
+      height: 58,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(30),
+        boxShadow: [
+          BoxShadow(
+              color: primaryDark.withValues(alpha: 0.06),
+              blurRadius: 12,
+              offset: const Offset(0, 4))
+        ],
+      ),
+      child: Row(
+        textDirection: TextDirection.rtl,
+        children: [
+          const SizedBox(width: 6),
+          _iconBox(icon),
+          const SizedBox(width: 12),
+          Expanded(
+            child: TextField(
+              controller: controller,
+              obscureText: obscure ?? false,
+              textAlign: TextAlign.right,
+              textDirection: TextDirection.rtl,
+              style: const TextStyle(
+                  fontFamily: 'Tajawal',
+                  color: textDark,
+                  fontSize: 15,
+                  fontWeight: FontWeight.w500),
+              decoration: InputDecoration(
+                hintText: hint,
+                hintStyle: TextStyle(
+                    fontFamily: 'Tajawal',
+                    color: textLight.withValues(alpha: 0.8),
+                    fontSize: 14),
+                filled: false,
+                border: InputBorder.none,
+                enabledBorder: InputBorder.none,
+                focusedBorder: InputBorder.none,
+                disabledBorder: InputBorder.none,
+                errorBorder: InputBorder.none,
+                focusedErrorBorder: InputBorder.none,
+                isDense: true,
+                contentPadding: const EdgeInsets.symmetric(vertical: 14),
+              ),
+            ),
+          ),
+          if (onToggle != null)
+            IconButton(
+              icon: Icon(
+                  (obscure ?? false)
+                      ? Icons.visibility_outlined
+                      : Icons.visibility_off_outlined,
+                  color: primary,
+                  size: 20),
+              onPressed: onToggle,
+            ),
+          const SizedBox(width: 6),
+        ],
+      ),
+    );
+  }
+
+  Widget _gradientButton({
+    required String label,
+    required IconData icon,
+    required bool loading,
+    required VoidCallback? onTap,
+  }) {
+    return Container(
+      width: double.infinity,
+      height: 54,
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(colors: [primary, primaryDark]),
+        borderRadius: BorderRadius.circular(30),
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(30),
+          onTap: onTap,
+          child: Center(
+            child: loading
+                ? const SizedBox(
+                    width: 24,
+                    height: 24,
+                    child: CircularProgressIndicator(
+                        color: Colors.white, strokeWidth: 2.5))
+                : Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(icon, color: Colors.white, size: 20),
+                      const SizedBox(width: 10),
+                      Text(label,
+                          style: const TextStyle(
+                              fontFamily: 'Tajawal',
+                              color: Colors.white,
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold)),
+                    ],
+                  ),
+          ),
         ),
       ),
     );
