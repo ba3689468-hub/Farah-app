@@ -7,6 +7,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
 
@@ -18,16 +19,37 @@ jobs:
       - uses: subosito/flutter-action@v2
         with:
           channel: stable
+          cache: true
+
+      - name: Cache Gradle
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: gradle-${{ runner.os }}-${{ hashFiles('farah/android/**/*.gradle*', 'farah/android/gradle/wrapper/gradle-wrapper.properties') }}
+          restore-keys: gradle-${{ runner.os }}-
 
       - name: Install dependencies
         run: cd farah && flutter pub get
 
-      - name: Build APK
+      - name: Build APK (يعيد المحاولة عند أخطاء الشبكة)
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
         run: |
           cd farah
-          flutter build apk --debug --split-per-abi \
-            --dart-define=SUPABASE_URL=${{ secrets.SUPABASE_URL }} \
-            --dart-define=SUPABASE_ANON_KEY=${{ secrets.SUPABASE_ANON_KEY }}
+          for attempt in 1 2 3; do
+            echo "المحاولة رقم $attempt"
+            if flutter build apk --debug --split-per-abi \
+              --dart-define=SUPABASE_URL="$SUPABASE_URL" \
+              --dart-define=SUPABASE_ANON_KEY="$SUPABASE_ANON_KEY"; then
+              exit 0
+            fi
+            echo "فشلت المحاولة، ننتظر قبل الإعادة..."
+            sleep $((attempt * 60))
+          done
+          exit 1
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
