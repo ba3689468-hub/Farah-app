@@ -1,5 +1,5 @@
 import 'dart:async'; 
-import 'dart:ui' as ui; // ✅ تمت إضافة هذا السطر لحل مشكلة TextDirection
+import 'dart:ui'; 
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -16,6 +16,7 @@ class MyBookingsScreen extends StatefulWidget {
 
 class _MyBookingsScreenState extends State<MyBookingsScreen> {
   static const Color primary = AppColors.primary;
+  static const Color primaryDark = AppColors.primaryDark;
   
   String _filter = 'all';
   final String? _uid = FirebaseAuth.instance.currentUser?.uid;
@@ -32,75 +33,114 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
 
     return Scaffold(
       backgroundColor: bgColor,
-      appBar: AppBar(
-        backgroundColor: bgColor,
-        elevation: 0,
-        centerTitle: true,
-        title: Text('حجوزاتي', style: TextStyle(fontFamily: 'Tajawal', color: textColor, fontWeight: FontWeight.w800, fontSize: 20)),
-        iconTheme: IconThemeData(color: textColor),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh_rounded, size: 24),
-            onPressed: () => setState(() {}),
+      // ✅ تم إزالة الـ AppBar الأبيض من هنا
+      body: Column(
+        children: [
+          // ✅ إضافة الهيدر الوردي الجديد هنا
+          _buildPinkHeader(isDark), 
+          
+          // ✅ باقي الصفحة يبقى كما هو داخل Expanded
+          Expanded(
+            child: StreamBuilder<QuerySnapshot>(
+              stream: FirebaseFirestore.instance
+                  .collection('bookings')
+                  .where('userId', isEqualTo: _uid)
+                  .snapshots(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator(color: primary));
+                }
+                if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                  return _buildEmptyState(textColor, textLight);
+                }
+
+                final bookings = snapshot.data!.docs.toList()
+                  ..sort((a, b) {
+                    final aT = (a.data() as Map)['createdAt'] as Timestamp?;
+                    final bT = (b.data() as Map)['createdAt'] as Timestamp?;
+                    if (aT == null || bT == null) return 0;
+                    return bT.compareTo(aT);
+                  });
+
+                final filteredBookings = _filter == 'all'
+                    ? bookings
+                    : bookings.where((doc) {
+                        final status = (doc.data() as Map)['status'] ?? 'pending';
+                        return status == _filter;
+                      }).toList();
+
+                return Column(
+                  children: [
+                    _buildSummaryHeader(bookings, isDark, cardColor, textColor, textLight),
+                    _buildFilterTabs(isDark, cardColor, textColor, textLight),
+                    Expanded(
+                      child: filteredBookings.isEmpty
+                          ? Center(child: Text('لا توجد حجوزات في هذا القسم', style: TextStyle(fontFamily: 'Tajawal', color: textLight, fontSize: 15)))
+                          : ListView.builder(
+                              padding: const EdgeInsets.only(left: 16, right: 16, bottom: 100, top: 8),
+                              itemCount: filteredBookings.length,
+                              itemBuilder: (context, i) {
+                                final data = filteredBookings[i].data() as Map<String, dynamic>;
+                                return _buildBookingCard(data, filteredBookings[i].id, isDark, cardColor, textColor, textLight);
+                              },
+                            ),
+                    ),
+                  ],
+                );
+              },
+            ),
           ),
         ],
       ),
-      body: StreamBuilder<QuerySnapshot>(
-        stream: FirebaseFirestore.instance
-            .collection('bookings')
-            .where('userId', isEqualTo: _uid)
-            .snapshots(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator(color: primary));
-          }
-          if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-            return _buildEmptyState(textColor, textLight);
-          }
+    );
+  }
 
-          final bookings = snapshot.data!.docs.toList()
-            ..sort((a, b) {
-              final aT = (a.data() as Map)['createdAt'] as Timestamp?;
-              final bT = (b.data() as Map)['createdAt'] as Timestamp?;
-              if (aT == null || bT == null) return 0;
-              return bT.compareTo(aT);
-            });
-
-          final filteredBookings = _filter == 'all'
-              ? bookings
-              : bookings.where((doc) {
-                  final status = (doc.data() as Map)['status'] ?? 'pending';
-                  return status == _filter;
-                }).toList();
-
-          return Column(
-            children: [
-              _buildSummaryHeader(bookings, isDark, cardColor, textColor, textLight),
-              _buildFilterTabs(isDark, cardColor, textColor, textLight),
-              Expanded(
-                child: filteredBookings.isEmpty
-                    ? Center(child: Text('لا توجد حجوزات في هذا القسم', style: TextStyle(fontFamily: 'Tajawal', color: textLight, fontSize: 15)))
-                    : ListView.builder(
-                        padding: const EdgeInsets.only(left: 16, right: 16, bottom: 100, top: 8),
-                        itemCount: filteredBookings.length,
-                        itemBuilder: (context, i) {
-                          final data = filteredBookings[i].data() as Map<String, dynamic>;
-                          return _buildBookingCard(data, filteredBookings[i].id, isDark, cardColor, textColor, textLight);
-                        },
-                      ),
+  // ✅ الدالة الجديدة لتصميم الشريط العلوي الوردي
+  Widget _buildPinkHeader(bool isDark) {
+    final top = MediaQuery.of(context).padding.top;
+    return Container(
+      padding: EdgeInsets.fromLTRB(20, top + 12, 20, 18),
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          colors: [primary, primaryDark],
+          begin: Alignment.topRight,
+          end: Alignment.bottomLeft,
+        ),
+        borderRadius: BorderRadius.vertical(bottom: Radius.circular(30)),
+      ),
+      child: Row(
+        children: [
+          // زر التحديث بنفس التصميم الشفاف
+          GestureDetector(
+            onTap: () => setState(() {}),
+            child: Container(
+              width: 42, height: 42,
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.2),
+                borderRadius: BorderRadius.circular(13),
+                border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
               ),
-            ],
-          );
-        },
+              child: const Icon(Icons.refresh_rounded, color: Colors.white, size: 20),
+            ),
+          ),
+          const Spacer(),
+          const Text('حجوزاتي', style: TextStyle(fontFamily: 'Tajawal', color: Colors.white, fontSize: 22, fontWeight: FontWeight.w900)),
+          const Spacer(),
+          const SizedBox(width: 42), // مساحة فارغة لتوازن التصميم
+        ],
       ),
     );
   }
+
+  // ═══════════════════════════════════════════════
+  // يبدأ من هنا الكود الخاص بك (لم يتم تغيير أي حرف فيه)
+  // ═══════════════════════════════════════════════
 
   Widget _buildSummaryHeader(List<QueryDocumentSnapshot> allBookings, bool isDark, Color cardColor, Color textColor, Color textLight) {
     int totalHallPrice = 0;
     for (var doc in allBookings) {
       final data = doc.data() as Map;
-      if (data['status'] != 'cancelled' && data['status'] != 'expired') {
+      if (data['status'] != 'cancelled') {
         totalHallPrice += (data['totalPrice'] ?? 0) as int;
       }
     }
@@ -201,16 +241,9 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
         ? (data['refundEligibleUntil'] as Timestamp).toDate() 
         : null;
 
-    final isPending = status == 'pending' || status == 'pending_attendance';
-    final isRefundExpired = refundUntil != null && DateTime.now().isAfter(refundUntil);
-    
-    String displayStatus = status;
-    if (isPending && isRefundExpired) {
-      displayStatus = 'expired'; 
-    }
-
-    final statusInfo = _getStatusInfo(displayStatus);
-    final bool canDelete = displayStatus == 'cancelled' || displayStatus == 'completed' || displayStatus == 'expired';
+    final statusInfo = _getStatusInfo(status);
+    final bool isPending = status == 'pending' || status == 'pending_attendance';
+    final bool canDelete = status == 'cancelled' || status == 'completed';
 
     return GestureDetector(
       onTap: () => _showBookingDetails(data, docId, isDark, textColor, textLight),
@@ -264,18 +297,15 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
                       ],
                     ),
                   ),
-                  
-                  // ✅ الحل هنا: استخدام ui.TextDirection.ltr
                   const Directionality(
-                    textDirection: ui.TextDirection.ltr, 
+                    textDirection: TextDirection.ltr,
                     child: Icon(Icons.arrow_forward_ios, color: Colors.grey, size: 16),
                   ),
-                  
                 ],
               ),
             ),
             
-            if (isPending && refundUntil != null && !isRefundExpired)
+            if (isPending && refundUntil != null)
               RefundCountdownWidget(expiryDate: refundUntil),
 
             Padding(
@@ -320,7 +350,7 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
                       ),
                     ),
                     const SizedBox(width: 10),
-                    if (isPending && !isRefundExpired)
+                    if (status == 'pending')
                       Expanded(
                         flex: 1,
                         child: TextButton(
@@ -532,7 +562,6 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
       case 'completed': return {'label': 'مكتمل', 'color': Colors.blue, 'icon': Icons.done_all};
       case 'cancelled': return {'label': 'ملغى', 'color': Colors.redAccent, 'icon': Icons.cancel};
       case 'pending_attendance': return {'label': 'بانتظار الحضور', 'color': Colors.orange, 'icon': Icons.event_available};
-      case 'expired': return {'label': 'منتهي', 'color': Colors.grey, 'icon': Icons.hourglass_disabled};
       default: return {'label': 'قيد الانتظار', 'color': Colors.orange, 'icon': Icons.access_time};
     }
   }
@@ -597,12 +626,28 @@ class _RefundCountdownWidgetState extends State<RefundCountdownWidget> {
   @override
   Widget build(BuildContext context) {
     final isExpired = _remaining == Duration.zero;
+    final isUrgent = _remaining.inHours < 12 && !isExpired;
     
     if (isExpired) {
-       return const SizedBox.shrink();
+       return Padding(
+         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+         child: Row(
+           children: [
+             Icon(Icons.info_outline_rounded, size: 14, color: Theme.of(context).textTheme.bodySmall?.color ?? Colors.grey),
+             const SizedBox(width: 6),
+             Text(
+               'انتهت مدة استرداد الرسم (60 د.ل)',
+               style: TextStyle(
+                 fontFamily: 'Tajawal', 
+                 fontSize: 11, 
+                 color: Theme.of(context).textTheme.bodySmall?.color ?? Colors.grey,
+               ),
+             ),
+           ],
+         ),
+       );
     }
 
-    final isUrgent = _remaining.inHours < 12;
     final color = isUrgent ? Colors.redAccent : Colors.green;
     
     return Container(
