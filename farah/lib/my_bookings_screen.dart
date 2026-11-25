@@ -1,6 +1,7 @@
 import 'dart:async'; 
 import 'dart:ui'; 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart'; // تمت إضافتها لضبط لون شريط الحالة
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart' hide TextDirection; 
@@ -18,6 +19,9 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
   static const Color primary = AppColors.primary;
   static const Color primaryDark = AppColors.primaryDark;
   
+  // اللون القرمزي الموحد مثل صفحة المتاجر
+  static const Color rubyRed = Color(0xFFC2185B); 
+  
   String _filter = 'all';
   final String? _uid = FirebaseAuth.instance.currentUser?.uid;
 
@@ -31,15 +35,18 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
     final textColor = Theme.of(context).textTheme.bodyLarge?.color ?? (isDark ? Colors.white : AppColors.textPrimary);
     final textLight = isDark ? Colors.grey.shade400 : AppColors.textSecondary;
 
+    // ضبط لون أيقونات شريط الحالة لتكون بيضاء
+    SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent,
+      statusBarIconBrightness: Brightness.light,
+    ));
+
     return Scaffold(
       backgroundColor: bgColor,
-      // ✅ تم إزالة الـ AppBar الأبيض من هنا
       body: Column(
         children: [
-          // ✅ إضافة الهيدر الوردي الجديد هنا
-          _buildPinkHeader(isDark), 
+          _buildRubyHeader(isDark), 
           
-          // ✅ باقي الصفحة يبقى كما هو داخل Expanded
           Expanded(
             child: StreamBuilder<QuerySnapshot>(
               stream: FirebaseFirestore.instance
@@ -95,22 +102,17 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
     );
   }
 
-  // ✅ الدالة الجديدة لتصميم الشريط العلوي الوردي
-  Widget _buildPinkHeader(bool isDark) {
+  // ✅ الهيدر الأحمر القرمزي الموحد (مثل صفحة المتاجر)
+  Widget _buildRubyHeader(bool isDark) {
     final top = MediaQuery.of(context).padding.top;
     return Container(
       padding: EdgeInsets.fromLTRB(20, top + 12, 20, 18),
       decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          colors: [primary, primaryDark],
-          begin: Alignment.topRight,
-          end: Alignment.bottomLeft,
-        ),
+        color: rubyRed, // لون قرمزي موحد بدون تدرج
         borderRadius: BorderRadius.vertical(bottom: Radius.circular(30)),
       ),
       child: Row(
         children: [
-          // زر التحديث بنفس التصميم الشفاف
           GestureDetector(
             onTap: () => setState(() {}),
             child: Container(
@@ -126,15 +128,11 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
           const Spacer(),
           const Text('حجوزاتي', style: TextStyle(fontFamily: 'Tajawal', color: Colors.white, fontSize: 22, fontWeight: FontWeight.w900)),
           const Spacer(),
-          const SizedBox(width: 42), // مساحة فارغة لتوازن التصميم
+          const SizedBox(width: 42),
         ],
       ),
     );
   }
-
-  // ═══════════════════════════════════════════════
-  // يبدأ من هنا الكود الخاص بك (لم يتم تغيير أي حرف فيه)
-  // ═══════════════════════════════════════════════
 
   Widget _buildSummaryHeader(List<QueryDocumentSnapshot> allBookings, bool isDark, Color cardColor, Color textColor, Color textLight) {
     int totalHallPrice = 0;
@@ -241,9 +239,20 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
         ? (data['refundEligibleUntil'] as Timestamp).toDate() 
         : null;
 
-    final statusInfo = _getStatusInfo(status);
-    final bool isPending = status == 'pending' || status == 'pending_attendance';
-    final bool canDelete = status == 'cancelled' || status == 'completed';
+    // 🚨 المنطق الجديد: فحص ما إذا كانت الـ 48 ساعة قد انتهت
+    final bool isTimeExpired = refundUntil != null && DateTime.now().isAfter(refundUntil);
+
+    // إذا كان الحجز قيد الانتظار ولكن الوقت انتهى، نعتبره "منتهي" في الواجهة
+    final bool isPending = (status == 'pending' || status == 'pending_attendance') && !isTimeExpired;
+    final bool canDelete = status == 'cancelled' || status == 'completed' || (status == 'pending' && isTimeExpired);
+
+    // تحديد الحالة المعروضة
+    String displayStatus = status;
+    if (status == 'pending' && isTimeExpired) {
+      displayStatus = 'expired'; // حالة وهمية للعرض فقط
+    }
+
+    final statusInfo = _getStatusInfo(displayStatus);
 
     return GestureDetector(
       onTap: () => _showBookingDetails(data, docId, isDark, textColor, textLight),
@@ -305,6 +314,7 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
               ),
             ),
             
+            // إظهار العداد فقط إذا كان الحجز قيد الانتظار ولم ينتهي الوقت
             if (isPending && refundUntil != null)
               RefundCountdownWidget(expiryDate: refundUntil),
 
@@ -350,7 +360,8 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
                       ),
                     ),
                     const SizedBox(width: 10),
-                    if (status == 'pending')
+                    // زر الإلغاء يظهر فقط إذا كان قيد الانتظار
+                    if (isPending)
                       Expanded(
                         flex: 1,
                         child: TextButton(
@@ -363,6 +374,7 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
                           child: const Text('إلغاء', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, fontSize: 13)),
                         ),
                       ),
+                    // زر الحذف يظهر إذا كان ملغياً، مكتملاً، أو منتهياً
                     if (canDelete)
                       Expanded(
                         flex: 1,
@@ -562,6 +574,7 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
       case 'completed': return {'label': 'مكتمل', 'color': Colors.blue, 'icon': Icons.done_all};
       case 'cancelled': return {'label': 'ملغى', 'color': Colors.redAccent, 'icon': Icons.cancel};
       case 'pending_attendance': return {'label': 'بانتظار الحضور', 'color': Colors.orange, 'icon': Icons.event_available};
+      case 'expired': return {'label': 'منتهي', 'color': Colors.grey, 'icon': Icons.history_toggle_off}; // الحالة الجديدة
       default: return {'label': 'قيد الانتظار', 'color': Colors.orange, 'icon': Icons.access_time};
     }
   }
