@@ -143,7 +143,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => HallDetailsScreen(hallId: hall['_id']), // تأكد من اسم كلاس صفحة التفاصيل
+            builder: (context) => HallDetailsScreen(hallData: hall),
           ),
         );
       },
