@@ -3,7 +3,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:intl/intl.dart';
+import 'package:intl/intl.dart' hide TextDirection; 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:farah/core/constants/app_colors.dart';
 
