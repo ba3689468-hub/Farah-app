@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart'; // تمت إضافتها لضبط شريط الحالة
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:farah/core/constants/app_colors.dart';
@@ -17,9 +18,9 @@ class ExploreScreen extends StatefulWidget {
 
 class _ExploreScreenState extends State<ExploreScreen> {
   static const Color primary = AppColors.primary;
-  static const Color primaryDark = AppColors.primaryDark;
   static const Color textDark = AppColors.textPrimary;
   static const Color textLight = AppColors.textSecondary;
+  static const Color rubyRed = Color(0xFFC2185B); // اللون القرمزي الموحد
 
   late Future<List<Map<String, dynamic>>> _exploreDataFuture;
   String _selectedCategory = 'الكل';
@@ -64,20 +65,26 @@ class _ExploreScreenState extends State<ExploreScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // ضبط لون أيقونات شريط الحالة العلوي
+    SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent,
+      statusBarIconBrightness: Brightness.light,
+    ));
+
     return Scaffold(
       backgroundColor: AppColors.background,
       body: Column(
         children: [
-          // ✅ الهيدر الوردي بنفس تصميم المتاجر
-          _buildPinkHeader(),
+          // ✅ الهيدر الأحمر الطويل (مثل المتاجر)
+          _buildLargeRubyHeader(),
 
-          // شريط التصنيفات
+          // شريط التصنيفات (على الخلفية البيضاء مثل المتاجر)
           Container(
             height: 50,
-            margin: const EdgeInsets.only(bottom: 10, top: 10),
+            margin: const EdgeInsets.only(bottom: 10, top: 15),
             child: ListView.separated(
               scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 5),
+              padding: const EdgeInsets.symmetric(horizontal: 16),
               itemCount: _categories.length,
               separatorBuilder: (_, __) => const SizedBox(width: 10),
               itemBuilder: (context, i) {
@@ -151,26 +158,47 @@ class _ExploreScreenState extends State<ExploreScreen> {
     );
   }
 
-  // ✅ دالة بناء الهيدر الوردي
-  Widget _buildPinkHeader() {
+  // ✅ الهيدر الأحمر الطويل مع شريط البحث
+  Widget _buildLargeRubyHeader() {
     final top = MediaQuery.of(context).padding.top;
     return Container(
-      padding: EdgeInsets.fromLTRB(20, top + 12, 20, 18),
+      padding: EdgeInsets.only(top: top + 12, bottom: 20),
       decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          colors: [primary, primaryDark],
-          begin: Alignment.topRight,
-          end: Alignment.bottomLeft,
-        ),
+        color: rubyRed,
         borderRadius: BorderRadius.vertical(bottom: Radius.circular(30)),
       ),
-      child: Row(
+      child: Column(
         children: [
-          _headerButton(icon: Icons.arrow_forward_ios_rounded, onTap: () => Navigator.pop(context)),
-          const Spacer(),
-          const Text('استكشاف', style: TextStyle(fontFamily: 'Tajawal', color: Colors.white, fontSize: 22, fontWeight: FontWeight.w900)),
-          const Spacer(),
-          const SizedBox(width: 42), // مساحة فارغة لتوسيط العنوان
+          // شريط العنوان
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Row(
+              children: [
+                _headerButton(icon: Icons.arrow_forward_ios_rounded, onTap: () => Navigator.pop(context)),
+                const Spacer(),
+                const Text('استكشاف', style: TextStyle(fontFamily: 'Tajawal', color: Colors.white, fontSize: 22, fontWeight: FontWeight.w900)),
+                const Spacer(),
+                const SizedBox(width: 42), // مساحة فارغة لتوسيط العنوان
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+          // شريط البحث
+          Container(
+            margin: const EdgeInsets.symmetric(horizontal: 20),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(15),
+            ),
+            child: const Row(
+              children: [
+                Icon(Icons.search, color: rubyRed),
+                SizedBox(width: 10),
+                Text('ابحث عن متجر أو تصنيف...', style: TextStyle(fontFamily: 'Tajawal', color: Colors.grey, fontSize: 14)),
+              ],
+            ),
+          ),
         ],
       ),
     );
@@ -191,7 +219,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
     );
   }
 
-  // ✅ بطاقة العرض المعدلة (بدون سعر للمتاجر)
+  // ✅ بطاقة العرض
   Widget _buildModernCard(Map<String, dynamic> item) {
     final isHall = item['_type'] == 'hall';
     final name = item['name'] ?? (isHall ? 'قاعة' : 'متجر');
