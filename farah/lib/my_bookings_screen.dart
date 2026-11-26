@@ -1,7 +1,7 @@
 import 'dart:async'; 
 import 'dart:ui'; 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart'; // تمت إضافتها لضبط لون شريط الحالة
+import 'package:flutter/services.dart'; 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart' hide TextDirection; 
@@ -18,9 +18,7 @@ class MyBookingsScreen extends StatefulWidget {
 class _MyBookingsScreenState extends State<MyBookingsScreen> {
   static const Color primary = AppColors.primary;
   static const Color primaryDark = AppColors.primaryDark;
-  
-  // اللون القرمزي الموحد مثل صفحة المتاجر
-  static const Color rubyRed = Color(0xFFC2185B); 
+  static const Color rubyRed = Color(0xFFC2185B); // اللون القرمزي الموحد
   
   String _filter = 'all';
   final String? _uid = FirebaseAuth.instance.currentUser?.uid;
@@ -35,7 +33,6 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
     final textColor = Theme.of(context).textTheme.bodyLarge?.color ?? (isDark ? Colors.white : AppColors.textPrimary);
     final textLight = isDark ? Colors.grey.shade400 : AppColors.textSecondary;
 
-    // ضبط لون أيقونات شريط الحالة لتكون بيضاء
     SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
       statusBarColor: Colors.transparent,
       statusBarIconBrightness: Brightness.light,
@@ -45,7 +42,8 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
       backgroundColor: bgColor,
       body: Column(
         children: [
-          _buildRubyHeader(isDark), 
+          // ✅ الهيدر الجديد الطويل الذي يشبه المتاجر
+          _buildLargeRubyHeader(), 
           
           Expanded(
             child: StreamBuilder<QuerySnapshot>(
@@ -79,7 +77,6 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
                 return Column(
                   children: [
                     _buildSummaryHeader(bookings, isDark, cardColor, textColor, textLight),
-                    _buildFilterTabs(isDark, cardColor, textColor, textLight),
                     Expanded(
                       child: filteredBookings.isEmpty
                           ? Center(child: Text('لا توجد حجوزات في هذا القسم', style: TextStyle(fontFamily: 'Tajawal', color: textLight, fontSize: 15)))
@@ -102,33 +99,44 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
     );
   }
 
-  // ✅ الهيدر الأحمر القرمزي الموحد (مثل صفحة المتاجر)
-  Widget _buildRubyHeader(bool isDark) {
+  // ✅ الهيدر الطويل (يحتوي على العنوان وأزرار الفلترة بداخله)
+  Widget _buildLargeRubyHeader() {
     final top = MediaQuery.of(context).padding.top;
     return Container(
-      padding: EdgeInsets.fromLTRB(20, top + 12, 20, 18),
+      padding: EdgeInsets.only(top: top + 12, bottom: 16),
       decoration: const BoxDecoration(
-        color: rubyRed, // لون قرمزي موحد بدون تدرج
+        color: rubyRed,
         borderRadius: BorderRadius.vertical(bottom: Radius.circular(30)),
       ),
-      child: Row(
+      child: Column(
         children: [
-          GestureDetector(
-            onTap: () => setState(() {}),
-            child: Container(
-              width: 42, height: 42,
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.2),
-                borderRadius: BorderRadius.circular(13),
-                border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
-              ),
-              child: const Icon(Icons.refresh_rounded, color: Colors.white, size: 20),
+          // شريط العنوان
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Row(
+              children: [
+                GestureDetector(
+                  onTap: () => setState(() {}),
+                  child: Container(
+                    width: 42, height: 42,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(13),
+                      border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
+                    ),
+                    child: const Icon(Icons.refresh_rounded, color: Colors.white, size: 20),
+                  ),
+                ),
+                const Spacer(),
+                const Text('حجوزاتي', style: TextStyle(fontFamily: 'Tajawal', color: Colors.white, fontSize: 22, fontWeight: FontWeight.w900)),
+                const Spacer(),
+                const SizedBox(width: 42),
+              ],
             ),
           ),
-          const Spacer(),
-          const Text('حجوزاتي', style: TextStyle(fontFamily: 'Tajawal', color: Colors.white, fontSize: 22, fontWeight: FontWeight.w900)),
-          const Spacer(),
-          const SizedBox(width: 42),
+          const SizedBox(height: 16),
+          // أزرار الفلترة أصبحت داخل الهيدر الأحمر
+          _buildFilterTabs(),
         ],
       ),
     );
@@ -149,13 +157,7 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
       decoration: BoxDecoration(
         color: cardColor,
         borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: isDark ? Colors.black26 : Colors.black.withValues(alpha: 0.03),
-            blurRadius: 15,
-            offset: const Offset(0, 5),
-          ),
-        ],
+        boxShadow: [BoxShadow(color: isDark ? Colors.black26 : Colors.black.withValues(alpha: 0.03), blurRadius: 15, offset: const Offset(0, 5))],
       ),
       child: Row(
         children: [
@@ -183,7 +185,8 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
     );
   }
 
-  Widget _buildFilterTabs(bool isDark, Color cardColor, Color textColor, Color textLight) {
+  // تم تعديل التصميم لتكون الأزرار شفافة تناسب الخلفية الحمراء
+  Widget _buildFilterTabs() {
     final tabs = [
       {'key': 'all', 'label': 'الكل', 'icon': Icons.grid_view_rounded},
       {'key': 'pending', 'label': 'قيد الانتظار', 'icon': Icons.access_time_rounded},
@@ -196,7 +199,7 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
       height: 45,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 5),
+        padding: const EdgeInsets.symmetric(horizontal: 20),
         itemCount: tabs.length,
         separatorBuilder: (_, __) => const SizedBox(width: 8),
         itemBuilder: (context, i) {
@@ -208,16 +211,15 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
               duration: const Duration(milliseconds: 250),
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               decoration: BoxDecoration(
-                color: active ? primary : cardColor,
+                color: active ? Colors.white : Colors.transparent,
                 borderRadius: BorderRadius.circular(30),
-                boxShadow: active ? [BoxShadow(color: primary.withValues(alpha: 0.25), blurRadius: 8, offset: const Offset(0, 3))] : [],
-                border: Border.all(color: active ? primary : (isDark ? Colors.grey.shade800 : Colors.grey.shade200)),
+                border: Border.all(color: active ? Colors.white : Colors.white.withValues(alpha: 0.4)),
               ),
               child: Row(
                 children: [
-                  Icon(t['icon'] as IconData, color: active ? Colors.white : textLight, size: 15),
+                  Icon(t['icon'] as IconData, color: active ? rubyRed : Colors.white, size: 15),
                   const SizedBox(width: 6),
-                  Text(t['label'] as String, style: TextStyle(fontFamily: 'Tajawal', color: active ? Colors.white : textColor, fontSize: 12, fontWeight: active ? FontWeight.bold : FontWeight.w600)),
+                  Text(t['label'] as String, style: TextStyle(fontFamily: 'Tajawal', color: active ? rubyRed : Colors.white, fontSize: 12, fontWeight: active ? FontWeight.bold : FontWeight.w600)),
                 ],
               ),
             ),
@@ -234,23 +236,14 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
     final timeSlot = data['timeSlot'] ?? 'غير محدد';
     final status = data['status'] ?? 'pending';
     final guests = data['guestsCount'] ?? 0;
-    
-    final refundUntil = data['refundEligibleUntil'] is Timestamp 
-        ? (data['refundEligibleUntil'] as Timestamp).toDate() 
-        : null;
+    final refundUntil = data['refundEligibleUntil'] is Timestamp ? (data['refundEligibleUntil'] as Timestamp).toDate() : null;
 
-    // 🚨 المنطق الجديد: فحص ما إذا كانت الـ 48 ساعة قد انتهت
     final bool isTimeExpired = refundUntil != null && DateTime.now().isAfter(refundUntil);
-
-    // إذا كان الحجز قيد الانتظار ولكن الوقت انتهى، نعتبره "منتهي" في الواجهة
     final bool isPending = (status == 'pending' || status == 'pending_attendance') && !isTimeExpired;
     final bool canDelete = status == 'cancelled' || status == 'completed' || (status == 'pending' && isTimeExpired);
 
-    // تحديد الحالة المعروضة
     String displayStatus = status;
-    if (status == 'pending' && isTimeExpired) {
-      displayStatus = 'expired'; // حالة وهمية للعرض فقط
-    }
+    if (status == 'pending' && isTimeExpired) displayStatus = 'expired'; 
 
     final statusInfo = _getStatusInfo(displayStatus);
 
@@ -261,13 +254,7 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
         decoration: BoxDecoration(
           color: cardColor,
           borderRadius: BorderRadius.circular(20),
-          boxShadow: [
-            BoxShadow(
-              color: isDark ? Colors.black26 : Colors.black.withValues(alpha: 0.03), 
-              blurRadius: 15, 
-              offset: const Offset(0, 5)
-            )
-          ],
+          boxShadow: [BoxShadow(color: isDark ? Colors.black26 : Colors.black.withValues(alpha: 0.03), blurRadius: 15, offset: const Offset(0, 5))],
         ),
         child: Column(
           children: [
@@ -306,27 +293,17 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
                       ],
                     ),
                   ),
-                  const Directionality(
-                    textDirection: TextDirection.ltr,
-                    child: Icon(Icons.arrow_forward_ios, color: Colors.grey, size: 16),
-                  ),
+                  const Directionality(textDirection: TextDirection.ltr, child: Icon(Icons.arrow_forward_ios, color: Colors.grey, size: 16)),
                 ],
               ),
             ),
-            
-            // إظهار العداد فقط إذا كان الحجز قيد الانتظار ولم ينتهي الوقت
             if (isPending && refundUntil != null)
               RefundCountdownWidget(expiryDate: refundUntil),
-
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               child: Container(
                 padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
-                decoration: BoxDecoration(
-                  color: isDark ? Colors.black12 : Colors.grey.shade50,
-                  borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: isDark ? Colors.grey.shade800 : Colors.grey.shade100),
-                ),
+                decoration: BoxDecoration(color: isDark ? Colors.black12 : Colors.grey.shade50, borderRadius: BorderRadius.circular(14), border: Border.all(color: isDark ? Colors.grey.shade800 : Colors.grey.shade100)),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
@@ -339,7 +316,6 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
                 ),
               ),
             ),
-            
             if (isPending || canDelete)
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
@@ -349,32 +325,20 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
                       flex: 2,
                       child: ElevatedButton(
                         onPressed: () => _showBookingDetails(data, docId, isDark, textColor, textLight),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: primary.withValues(alpha: 0.1),
-                          foregroundColor: primary,
-                          elevation: 0,
-                          minimumSize: const Size(0, 44),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                        ),
+                        style: ElevatedButton.styleFrom(backgroundColor: primary.withValues(alpha: 0.1), foregroundColor: primary, elevation: 0, minimumSize: const Size(0, 44), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
                         child: const Text('التفاصيل', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, fontSize: 13)),
                       ),
                     ),
                     const SizedBox(width: 10),
-                    // زر الإلغاء يظهر فقط إذا كان قيد الانتظار
                     if (isPending)
                       Expanded(
                         flex: 1,
                         child: TextButton(
                           onPressed: () => _cancelBooking(docId, data, textColor),
-                          style: TextButton.styleFrom(
-                            foregroundColor: Colors.redAccent,
-                            minimumSize: const Size(0, 44),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                          ),
+                          style: TextButton.styleFrom(foregroundColor: Colors.redAccent, minimumSize: const Size(0, 44), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
                           child: const Text('إلغاء', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, fontSize: 13)),
                         ),
                       ),
-                    // زر الحذف يظهر إذا كان ملغياً، مكتملاً، أو منتهياً
                     if (canDelete)
                       Expanded(
                         flex: 1,
@@ -382,11 +346,7 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
                           onPressed: () => _deleteBooking(docId),
                           icon: const Icon(Icons.delete_outline_rounded, size: 18),
                           label: const Text('حذف', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, fontSize: 13)),
-                          style: TextButton.styleFrom(
-                            foregroundColor: Colors.redAccent,
-                            minimumSize: const Size(0, 44),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                          ),
+                          style: TextButton.styleFrom(foregroundColor: Colors.redAccent, minimumSize: const Size(0, 44), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
                         ),
                       ),
                   ],
@@ -436,7 +396,6 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
             children: [
               Text('تفاصيل الحجز', style: TextStyle(fontFamily: 'Tajawal', fontSize: 20, fontWeight: FontWeight.bold, color: textColor)),
               const SizedBox(height: 16),
-              
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(color: Colors.green.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(12)),
@@ -455,7 +414,6 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
                 ),
               ),
               const SizedBox(height: 12),
-
               if (services.isNotEmpty) ...[
                 Text('الخدمات الإضافية المطلوبة:', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, color: textColor)),
                 const SizedBox(height: 8),
@@ -465,7 +423,6 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
                 )),
                 const Divider(height: 24),
               ],
-
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -474,7 +431,6 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
                 ],
               ),
               const SizedBox(height: 20),
-              
               SizedBox(
                 width: double.infinity,
                 height: 50,
@@ -501,17 +457,10 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
       builder: (_) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Text('إلغاء الحجز', style: TextStyle(fontFamily: 'Tajawal', color: textColor)),
-        content: Text(
-          isWithin48Hours ? 'هل أنت متأكد من إلغاء الحجز؟\nسيتم إرجاع مبلغ 60 د.ل إلى محفظتك فوراً.' : 'انتهت مدة الـ 48 ساعة المسموح بها للإلغاء، لن يتم استرداد الرسم.',
-          style: const TextStyle(fontFamily: 'Tajawal'),
-        ),
+        content: Text(isWithin48Hours ? 'هل أنت متأكد من إلغاء الحجز؟\nسيتم إرجاع مبلغ 60 د.ل إلى محفظتك فوراً.' : 'انتهت مدة الـ 48 ساعة المسموح بها للإلغاء، لن يتم استرداد الرسم.', style: const TextStyle(fontFamily: 'Tajawal')),
         actions: [
           TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('تراجع', style: TextStyle(fontFamily: 'Tajawal'))),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent),
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('تأكيد الإلغاء', style: TextStyle(color: Colors.white, fontFamily: 'Tajawal')),
-          ),
+          ElevatedButton(style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent), onPressed: () => Navigator.pop(context, true), child: const Text('تأكيد الإلغاء', style: TextStyle(color: Colors.white, fontFamily: 'Tajawal'))),
         ],
       ),
     );
@@ -533,9 +482,7 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
         });
       }
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(isWithin48Hours ? 'تم الإلغاء واسترداد 60 د.ل' : 'تم إلغاء الحجز', style: const TextStyle(fontFamily: 'Tajawal')), backgroundColor: Colors.green),
-        );
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(isWithin48Hours ? 'تم الإلغاء واسترداد 60 د.ل' : 'تم إلغاء الحجز', style: const TextStyle(fontFamily: 'Tajawal')), backgroundColor: Colors.green));
       }
     } catch (e) { _showError('حدث خطأ: $e'); }
   }
@@ -549,11 +496,7 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
         content: const Text('هل أنت متأكد من حذف هذا السجل نهائياً؟', style: TextStyle(fontFamily: 'Tajawal')),
         actions: [
           TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('تراجع', style: TextStyle(fontFamily: 'Tajawal'))),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent),
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('نعم، احذف', style: TextStyle(color: Colors.white, fontFamily: 'Tajawal')),
-          ),
+          ElevatedButton(style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent), onPressed: () => Navigator.pop(context, true), child: const Text('نعم، احذف', style: TextStyle(color: Colors.white, fontFamily: 'Tajawal'))),
         ],
       ),
     );
@@ -574,7 +517,7 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
       case 'completed': return {'label': 'مكتمل', 'color': Colors.blue, 'icon': Icons.done_all};
       case 'cancelled': return {'label': 'ملغى', 'color': Colors.redAccent, 'icon': Icons.cancel};
       case 'pending_attendance': return {'label': 'بانتظار الحضور', 'color': Colors.orange, 'icon': Icons.event_available};
-      case 'expired': return {'label': 'منتهي', 'color': Colors.grey, 'icon': Icons.history_toggle_off}; // الحالة الجديدة
+      case 'expired': return {'label': 'منتهي', 'color': Colors.grey, 'icon': Icons.history_toggle_off}; 
       default: return {'label': 'قيد الانتظار', 'color': Colors.orange, 'icon': Icons.access_time};
     }
   }
@@ -648,14 +591,7 @@ class _RefundCountdownWidgetState extends State<RefundCountdownWidget> {
            children: [
              Icon(Icons.info_outline_rounded, size: 14, color: Theme.of(context).textTheme.bodySmall?.color ?? Colors.grey),
              const SizedBox(width: 6),
-             Text(
-               'انتهت مدة استرداد الرسم (60 د.ل)',
-               style: TextStyle(
-                 fontFamily: 'Tajawal', 
-                 fontSize: 11, 
-                 color: Theme.of(context).textTheme.bodySmall?.color ?? Colors.grey,
-               ),
-             ),
+             Text('انتهت مدة استرداد الرسم (60 د.ل)', style: TextStyle(fontFamily: 'Tajawal', fontSize: 11, color: Theme.of(context).textTheme.bodySmall?.color ?? Colors.grey)),
            ],
          ),
        );
@@ -666,23 +602,14 @@ class _RefundCountdownWidgetState extends State<RefundCountdownWidget> {
     return Container(
       margin: const EdgeInsets.fromLTRB(16, 0, 16, 12),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(10),
-      ),
+      decoration: BoxDecoration(color: color.withValues(alpha: 0.08), borderRadius: BorderRadius.circular(10)),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(Icons.timer_rounded, color: color, size: 16),
           const SizedBox(width: 8),
-          Text(
-            'متبقي لاسترداد الرسم: ',
-            style: TextStyle(fontFamily: 'Tajawal', color: Theme.of(context).textTheme.bodyLarge?.color, fontSize: 12, fontWeight: FontWeight.w600),
-          ),
-          Text(
-            _formatDuration(_remaining),
-            style: TextStyle(fontFamily: 'Tajawal', color: color, fontSize: 14, fontWeight: FontWeight.bold, fontFeatures: const [FontFeature.tabularFigures()]),
-          ),
+          Text('متبقي لاسترداد الرسم: ', style: TextStyle(fontFamily: 'Tajawal', color: Theme.of(context).textTheme.bodyLarge?.color, fontSize: 12, fontWeight: FontWeight.w600)),
+          Text(_formatDuration(_remaining), style: TextStyle(fontFamily: 'Tajawal', color: color, fontSize: 14, fontWeight: FontWeight.bold, fontFeatures: const [FontFeature.tabularFigures()])),
         ],
       ),
     );
