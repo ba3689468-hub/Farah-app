@@ -296,14 +296,25 @@ class _HallListScreenState extends State<HallListScreen> {
             Navigator.push(context, MaterialPageRoute(builder: (_) => const NotificationsScreen()));
           }),
           const Spacer(),
+          // ✅ هنا تم تعديل الشعار
           Container(
             width: 50, height: 50,
             decoration: const BoxDecoration(
               gradient: LinearGradient(colors: [primary, primaryDark], begin: Alignment.topLeft, end: Alignment.bottomRight),
               shape: BoxShape.circle,
             ),
-            child: const Center(
-              child: Text('ف', style: TextStyle(fontFamily: 'Tajawal', color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold)),
+            child: ClipOval(
+              child: Image.asset(
+                'assets/icons/app_logo.png',
+                width: 50,
+                height: 50,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) {
+                  return const Center(
+                    child: Text('ف', style: TextStyle(fontFamily: 'Tajawal', color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold)),
+                  );
+                },
+              ),
             ),
           ),
           const Spacer(),
